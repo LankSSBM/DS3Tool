@@ -58,6 +58,7 @@ namespace DS3Tool
 
             freezeThread = new Thread(() => { freezeFunc(); });
             freezeThread.Start();
+
         }
 
         public void Dispose()
@@ -279,10 +280,44 @@ namespace DS3Tool
             FROST, FROST_MAX,
         }
 
+        public enum PlayerStats
+        {
+            VIGOR,
+            ATTUNEMENT,
+            ENDURANCE,
+            VITALITY,
+            STRENGTH,
+            DEXTERITY,
+            INTELLIGENCE,
+            FAITH,
+            LUCK
+        }
+
+        private readonly Dictionary<PlayerStats, int> statOffsets = new Dictionary<PlayerStats, int>
+    {
+        { PlayerStats.VIGOR, 0x44 },
+        { PlayerStats.ATTUNEMENT, 0x48 },
+        { PlayerStats.ENDURANCE, 0x4C },
+        { PlayerStats.VITALITY, 0x6C },
+        { PlayerStats.STRENGTH, 0x50 },
+        { PlayerStats.DEXTERITY, 0x54 },
+        { PlayerStats.INTELLIGENCE, 0x58 },
+        { PlayerStats.FAITH, 0x5C },
+        { PlayerStats.LUCK, 0x60 }
+    };
+
+        //1.15 stuff by shilkey
+        const int worldChrManOff = 0x4768E78;
+        const int hitboxOff = 0x4766B80;
+        const int gameDataManOff = 0x4740178;
+
+
+
         //offsets of main pointers/statics.
         //see aob scanner for aobs.
-        const int gameDataManOff = 0x47572B8; //NS_SPRJ::GameDataMan
-        const int worldChrManOff = 0x477FDB8; //NS_SPRJ::WorldChrManImp
+        // const int gameDataManOff = 0x47572B8; //NS_SPRJ::GameDataMan
+        //const int worldChrManOff = 0x477FDB8; //NS_SPRJ::WorldChrManImp
+
         const int gameManOff = 0x475AC00; //NS_SPRJ::GameMan
         const int fieldAreaOff = 0x475ABD0; //NS_SPRJ::FieldArea
         const int BaseEOff = 0x4756E48; //NS_SPRJ::FrpgNetManImp
@@ -295,7 +330,8 @@ namespace DS3Tool
         const int debug_flagsOff = 0x477FEA8; //also static? "all" debug flags, not specific to any character.
         const int GROUP_MASKOff = 0x456CBA8; //also static
         const int menuManOff = 0x4763258; //NS_SPRJ::MenuMan
-        const int hitboxOff = 0x477DAC0; //no name. damage management?
+        //const int hitboxOff = 0x477DAC0; //no name. damage management?
+       
         const int newMenuSystemOff = 0x478DA50; //AppMenu::NewMenuSystem
         const int worldAIManOff = 0x4751550; //NS_SPRJ::SprjWorldAiManagerImp
 
@@ -650,6 +686,10 @@ namespace DS3Tool
                 case DebugOpts.ALL_CHR_NO_DEATH: return (ds3Base + debug_flagsOff + 0x8, 1);
                 case DebugOpts.INSTANT_QUITOUT:
                 {
+
+
+
+
                     var ptr = ReadUInt64(ds3Base + menuManOff);
                     return ((IntPtr)(ptr + 0x250), 1); //likely other menu functions nearby
                 }
@@ -962,5 +1002,21 @@ namespace DS3Tool
 
             return (double)BitConverter.ToInt32(fourBytes, 0);
         }
+
+
+
+        public int GetSetPlayerStat(PlayerStats stat, int? newValue = null)
+        {
+            var ptr1 = ReadUInt64(ds3Base + gameDataManOff);
+            var ptr2 = ReadUInt64((IntPtr)(ptr1 + 0x10));
+            var finalAddress = (IntPtr)(ptr2 + (ulong)statOffsets[stat]);
+
+            if (newValue.HasValue)
+            {
+                WriteInt32(finalAddress, newValue.Value);
+            }
+            return ReadInt32(finalAddress);
+        }
+
     }
 }

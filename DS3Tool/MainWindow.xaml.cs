@@ -13,6 +13,7 @@ using MiscUtils;
 using System.Diagnostics;
 using System.Windows.Media;
 using System.Text;
+using static DS3Tool.DS3Process;
 
 namespace DS3Tool
 {
@@ -160,6 +161,8 @@ namespace DS3Tool
                 }
             }
         }
+
+       
 
         private void MainWindow_Closed(object sender, EventArgs e)
         {
@@ -950,6 +953,50 @@ namespace DS3Tool
                 }
             }
             catch (Exception ex) { Utils.debugWrite(ex.ToString()); }
+        }
+
+        
+
+        private void EditStat(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.Tag is string statName)
+            {
+                if (Enum.TryParse<PlayerStats>(statName, out var stat))
+                {
+                    var currentValue = _process.GetSetPlayerStat(stat);
+                    string input = Microsoft.VisualBasic.Interaction.InputBox(
+                        $"Enter new value for {CapitalizeFirst(statName)}:",
+                        "Edit Stat",
+                        currentValue.ToString());
+                    if (!string.IsNullOrEmpty(input) && int.TryParse(input, out int newValue))
+                    {
+                        _process.GetSetPlayerStat(stat, newValue);
+                        UpdateStatButtons();
+                    }
+                }
+            }
+        }
+
+        private void UpdateStatButtons()
+        {
+            if (_process == null) return;
+            foreach (Button button in StatGrid.Children.OfType<Button>())
+            {
+                if (button.Tag is string statName &&
+                    Enum.TryParse<PlayerStats>(statName, out var stat))
+                {
+                    var value = _process.GetSetPlayerStat(stat);
+                    button.Content = $"{CapitalizeFirst(stat.ToString())}: {value}";
+                }
+            }
+        }
+
+        private string CapitalizeFirst(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+                return input;
+
+            return char.ToUpper(input[0]) + input.Substring(1).ToLower();
         }
     }
 }

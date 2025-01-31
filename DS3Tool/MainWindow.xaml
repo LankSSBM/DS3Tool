@@ -123,5 +123,18 @@
             <Button Click="hotkeySetup" FontSize="10" HorizontalAlignment="Right" Margin="0,0" x:Name="btnHotkeys">Hotkey Setup</Button>
         </StackPanel>
         <Button Click="doQuitout" x:Name="quitoutButton" Height="30">Instant Quitout</Button>
+        <GroupBox Header="Stats" Margin="5">
+            <UniformGrid x:Name="StatGrid" Columns="3">
+                <Button Click="EditStat" Tag="VIGOR" Margin="2">Vigor: 0</Button>
+                <Button Click="EditStat" Tag="ATTUNEMENT" Margin="2">Attunement: 0</Button>
+                <Button Click="EditStat" Tag="ENDURANCE" Margin="2">Endurance: 0</Button>
+                <Button Click="EditStat" Tag="VITALITY" Margin="2">Vitality: 0</Button>
+                <Button Click="EditStat" Tag="STRENGTH" Margin="2">Strength: 0</Button>
+                <Button Click="EditStat" Tag="DEXTERITY" Margin="2">Dexterity: 0</Button>
+                <Button Click="EditStat" Tag="INTELLIGENCE" Margin="2">Intelligence: 0</Button>
+                <Button Click="EditStat" Tag="FAITH" Margin="2">Faith: 0</Button>
+                <Button Click="EditStat" Tag="LUCK" Margin="2">Luck: 0</Button>
+            </UniformGrid>
+        </GroupBox>
     </StackPanel>
 </Window>
