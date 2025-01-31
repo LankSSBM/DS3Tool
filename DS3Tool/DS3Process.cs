@@ -267,6 +267,7 @@ namespace DS3Tool
             ENEMY_TARGETING_A, ENEMY_TARGETING_B, SOUND_VIEW,
             FREE_CAMERA,
             NO_GRAVITY,
+            ONE_SHOT,
         }
 
         public enum TargetInfo
@@ -312,9 +313,11 @@ namespace DS3Tool
         const int worldChrManOff = 0x4768E78;
         const int hitboxOff = 0x4766B80;
         const int gameDataManOff = 0x4740178;
-        const int menuManOff = 0x4763258; 
+        const int menuManOff = 0x4763258;
+        const int debug_flagsOff = 0x4768f68;
 
-        
+
+
 
 
         //offsets of main pointers/statics.
@@ -331,7 +334,7 @@ namespace DS3Tool
         const int GameFlagDataOff = 0x4752F68; //no name //SprjEventFlagMan ?
         const int LockBonus_ptrOff = 0x477DBE0; //NS_SPRJ::LockTgtManImp
         //const int DrawNearOnly_ptrOff = 0x4766555; //not a pointer - static debug flag? (no refs to this addr) //not updated for 1.15.1
-        const int debug_flagsOff = 0x477FEA8; //also static? "all" debug flags, not specific to any character.
+        //const int debug_flagsOff = 0x477FEA8; //also static? "all" debug flags, not specific to any character.
         const int GROUP_MASKOff = 0x456CBA8; //also static
         //const int menuManOff = 0x4763258; //NS_SPRJ::MenuMan
         //const int hitboxOff = 0x477DAC0; //no name. damage management?
@@ -715,6 +718,7 @@ namespace DS3Tool
                 case DebugOpts.NO_STAM: return (ds3Base + debug_flagsOff + 0x2, 1);
                 case DebugOpts.NO_FP: return (ds3Base + debug_flagsOff + 0x3, 1);
                 case DebugOpts.NO_ARROW_CONSUM: return (ds3Base + debug_flagsOff + 0x4, 1);
+                case DebugOpts.ONE_SHOT: return (ds3Base + debug_flagsOff + 1, 1);
                 case DebugOpts.NO_GOODS_CONSUM:
                 {
                     var ptr = getPlayerInsPtr();

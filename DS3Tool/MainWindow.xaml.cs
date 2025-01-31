@@ -341,6 +341,17 @@ namespace DS3Tool
             _process.offAndUnFreeze(DS3Process.DebugOpts.NO_GOODS_CONSUM);
         }
 
+        private void oneShotOn(object sender, RoutedEventArgs e)
+        {
+            _process.freezeOn(DS3Process.DebugOpts.ONE_SHOT);
+        }
+
+        private void oneShotOff(object sender, RoutedEventArgs e)
+        {
+            _process.offAndUnFreeze(DS3Process.DebugOpts.ONE_SHOT);
+        }
+
+
         private void repeatActionOn(object sender, RoutedEventArgs e)
         {
             _process.setEnemyRepeatActionPatch(true);

@@ -39,6 +39,7 @@
                 <CheckBox Checked="noStamOn" Unchecked="noStamOff" x:Name="chkInfStam">Inf Stam</CheckBox>
                 <CheckBox Checked="noFPOn" Unchecked="noFPOff" Margin="5,0" x:Name="chkInfFP">Inf FP</CheckBox>
                 <CheckBox Checked="noGoodsOn" Unchecked="noGoodsOff" Margin="5,0" x:Name="chkInfConsum">Inf Consum.</CheckBox>
+                <CheckBox Checked="oneShotOn" Unchecked="oneShotOff" Margin="5,0" x:Name="chkOneShot">One shot</CheckBox>
             </StackPanel>
             <StackPanel Orientation="Horizontal">
                 <CheckBox Checked="noGravOn" Unchecked="noGravOff" x:Name="chkPlayerNoGrav">No Gravity</CheckBox>
