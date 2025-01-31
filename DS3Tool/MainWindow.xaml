@@ -138,5 +138,17 @@
                 <Button Click="EditStat" Tag="SOULS" Margin="2">Souls: 0</Button>
             </UniformGrid>
         </GroupBox>
+        <StackPanel>
+            <ComboBox x:Name="itemList" 
+        Width="200" 
+        MaxDropDownHeight="200"
+        VirtualizingPanel.IsVirtualizing="True"
+        VirtualizingPanel.VirtualizationMode="Recycling"/>
+            <Button x:Name="spawnButton"
+        Content="Spawn Item"
+        Width="200"
+        Margin="0,10,0,0"
+        Click="SpawnButton_Click"/>
+        </StackPanel>
     </StackPanel>
 </Window>

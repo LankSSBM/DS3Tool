@@ -315,6 +315,8 @@ namespace DS3Tool
         const int gameDataManOff = 0x4740178;
         const int menuManOff = 0x4763258;
         const int debug_flagsOff = 0x4768f68;
+        const int meshesOff = 0x4743A98;
+        const int spawnItem = 0x7bba70;
 
 
 
@@ -346,7 +348,7 @@ namespace DS3Tool
         const int enemyTargetDrawAOff = 0x4750C04; //in 1.15, this is accessed at +41E6CA, which sadly is obfuscated in the exe. in 1.15.1, +41e74a (barely moved)
         const int enemyTargetDrawBOff = 0x4750C05;
 
-        const int meshesOff = 0x477DBAC; //no name. lots of static stuff around here.
+        //const int meshesOff = 0x477DBAC; //no name. lots of static stuff around here.
         //maybe ?$DLRuntimeClassImpl @VSprjDrawStep@NS_SPRJ@@$0A@@DLRF@@ + 18C
 
         //offsets from a main pointer
@@ -694,9 +696,6 @@ namespace DS3Tool
                 case DebugOpts.INSTANT_QUITOUT:
                 {
 
-
-
-
                     var ptr = ReadUInt64(ds3Base + menuManOff);
                     return ((IntPtr)(ptr + 0x250), 1); //likely other menu functions nearby
                 }
@@ -1025,6 +1024,8 @@ namespace DS3Tool
             }
             return ReadInt32(finalAddress);
         }
+
+
 
     }
 }

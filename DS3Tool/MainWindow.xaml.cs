@@ -14,6 +14,7 @@ using System.Diagnostics;
 using System.Windows.Media;
 using System.Text;
 using static DS3Tool.DS3Process;
+using System.Collections.ObjectModel;
 
 namespace DS3Tool
 {
@@ -31,11 +32,20 @@ namespace DS3Tool
         bool _playerNoDeathStateWas = false;
         bool _noClipActive = false;
 
+        public Dictionary<string, string> ItemDictionary { get; private set; }
+   
+
         (float, float, float, float)? savedPos = null;
 
         public MainWindow()
         {
             InitializeComponent();
+
+            string projectDirectory = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).Parent.Parent.FullName;
+            string path = Path.Combine(projectDirectory, "data", "items.csv");
+            LoadItemsFromCsv(path);
+
+
             var assInfo = Assembly.GetEntryAssembly().GetName();
             Title = "DS3Tool v" + assInfo.Version;
             _normalTitle = Title;
@@ -65,6 +75,38 @@ namespace DS3Tool
                 _timer.Tick += _timer_Tick;
                 _timer.Interval = TimeSpan.FromSeconds(0.1);
                 _timer.Start();
+                UpdateStatButtons();
+            }
+        }
+
+        private void LoadItemsFromCsv(string filePath)
+        {
+            ItemDictionary = new Dictionary<string, string>();
+
+        
+            string[] lines = File.ReadAllLines(filePath);
+
+        
+            itemList.Items.Clear();
+
+         
+            for (int i = 1; i < lines.Length; i++)
+            {
+      
+                string[] columns = lines[i].Split(',');
+
+        
+                if (columns.Length >= 2)
+                {
+
+                    string firstColumnValue = columns[0].Trim('"', ' ');
+                    string secondColumnValue = columns[1].Trim('"', ' ');
+
+                   
+                    itemList.Items.Add(firstColumnValue);
+
+                    ItemDictionary[firstColumnValue] = secondColumnValue;
+                }
             }
         }
 
@@ -997,6 +1039,21 @@ namespace DS3Tool
                     Enum.TryParse<PlayerStats>(statName, out var stat))
                 {
                     var value = _process.GetSetPlayerStat(stat);
+
+                
+                    if (stat != PlayerStats.SOULS)
+                    {
+                        if (value <= 0 || value >= 100)
+                        {
+                            MessageBox.Show(
+                                $"Stat value for {CapitalizeFirst(stat.ToString())} must be between 1 and 99. Current value: {value}",
+                                "Invalid Stat Value",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Warning);
+                            return;
+                        }
+                    }
+
                     button.Content = $"{CapitalizeFirst(stat.ToString())}: {value}";
                 }
             }
@@ -1009,5 +1066,6 @@ namespace DS3Tool
 
             return char.ToUpper(input[0]) + input.Substring(1).ToLower();
         }
+
     }
 }
