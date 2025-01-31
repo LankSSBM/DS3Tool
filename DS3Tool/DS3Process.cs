@@ -310,9 +310,9 @@ namespace DS3Tool
         const int worldChrManOff = 0x4768E78;
         const int hitboxOff = 0x4766B80;
         const int gameDataManOff = 0x4740178;
+        const int menuManOff = 0x474c2e8; 
 
-
-
+       
         //offsets of main pointers/statics.
         //see aob scanner for aobs.
         // const int gameDataManOff = 0x47572B8; //NS_SPRJ::GameDataMan
@@ -329,7 +329,7 @@ namespace DS3Tool
         //const int DrawNearOnly_ptrOff = 0x4766555; //not a pointer - static debug flag? (no refs to this addr) //not updated for 1.15.1
         const int debug_flagsOff = 0x477FEA8; //also static? "all" debug flags, not specific to any character.
         const int GROUP_MASKOff = 0x456CBA8; //also static
-        const int menuManOff = 0x4763258; //NS_SPRJ::MenuMan
+        //const int menuManOff = 0x4763258; //NS_SPRJ::MenuMan
         //const int hitboxOff = 0x477DAC0; //no name. damage management?
        
         const int newMenuSystemOff = 0x478DA50; //AppMenu::NewMenuSystem
