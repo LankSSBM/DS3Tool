@@ -290,7 +290,8 @@ namespace DS3Tool
             DEXTERITY,
             INTELLIGENCE,
             FAITH,
-            LUCK
+            LUCK,
+            SOULS
         }
 
         private readonly Dictionary<PlayerStats, int> statOffsets = new Dictionary<PlayerStats, int>
@@ -303,16 +304,19 @@ namespace DS3Tool
         { PlayerStats.DEXTERITY, 0x54 },
         { PlayerStats.INTELLIGENCE, 0x58 },
         { PlayerStats.FAITH, 0x5C },
-        { PlayerStats.LUCK, 0x60 }
+        { PlayerStats.LUCK, 0x60 },
+        {PlayerStats.SOULS, 0x74 }
     };
 
         //1.15 stuff by shilkey
         const int worldChrManOff = 0x4768E78;
         const int hitboxOff = 0x4766B80;
         const int gameDataManOff = 0x4740178;
-        const int menuManOff = 0x474c2e8; 
+        const int menuManOff = 0x4763258; 
 
-       
+        
+
+
         //offsets of main pointers/statics.
         //see aob scanner for aobs.
         // const int gameDataManOff = 0x47572B8; //NS_SPRJ::GameDataMan

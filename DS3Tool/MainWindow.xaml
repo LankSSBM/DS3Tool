@@ -134,6 +134,7 @@
                 <Button Click="EditStat" Tag="INTELLIGENCE" Margin="2">Intelligence: 0</Button>
                 <Button Click="EditStat" Tag="FAITH" Margin="2">Faith: 0</Button>
                 <Button Click="EditStat" Tag="LUCK" Margin="2">Luck: 0</Button>
+                <Button Click="EditStat" Tag="SOULS" Margin="2">Souls: 0</Button>
             </UniformGrid>
         </GroupBox>
     </StackPanel>
