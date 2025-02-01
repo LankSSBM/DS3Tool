@@ -23,6 +23,7 @@ namespace DS3Tool
     {
         DS3Process _process = null;
         private BonfireService _bonfireService;
+        private ItemSpawnService _itemSpawnService;
 
         private bool disposedValue;
 
@@ -80,9 +81,11 @@ namespace DS3Tool
                 _timer.Interval = TimeSpan.FromSeconds(0.1);
                 _timer.Start();
                 UpdateStatButtons();
+                _bonfireService = new BonfireService(_process);
+                _itemSpawnService = new ItemSpawnService(_process);
             }
 
-            _bonfireService = new BonfireService(_process);
+            
         }
 
         private void LoadItemsFromCsv(string filePath)
