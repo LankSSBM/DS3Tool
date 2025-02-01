@@ -321,7 +321,11 @@ namespace DS3Tool
         const int spawnItem = 0x7bba70;
         const int enemyTargetDrawAOff = 0x41E6CA;
         const int GameFlagDataOff = 0x473BE28;
-    
+        const int globalSpeedOff = 0x999C28;
+        const int targetHookLoc = 0x85A74A;
+        const int codeCavePtrLoc = 0x1914670;
+        const int codeCaveCodeLoc = codeCavePtrLoc + 0x10;
+
 
 
         //offsets of main pointers/statics.
@@ -368,7 +372,7 @@ namespace DS3Tool
         //others
         const int playerDebugFlagsOff = 0x1EEA; //expect this to change if any patches occur
 
-        const int globalSpeedOff = 0x9A3D48;
+        //const int globalSpeedOff = 0x9A3D48;
         public float getSetGameSpeed(float? val = null)
         {
             var ptr = ds3Base + globalSpeedOff;
@@ -426,10 +430,11 @@ namespace DS3Tool
         const int noLogoPatchLoc = 0xBF42BF;
         readonly byte[] noLogoPatchCode = new byte[] { 0x48, 0x31, 0xC0, 0x48, 0x89, 0x02, 0x49, 0x89, 0x04, 0x24, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 };
 
-        const int codeCavePtrLoc = 0x271AC00; //end-of-file zero block
-        const int targetHookLoc = 0x862CBA;
+
+        //const int codeCavePtrLoc = 0x271AC00; //end-of-file zero block
+       // const int targetHookLoc = 0x862CBA;
         
-        const int codeCaveCodeLoc = codeCavePtrLoc + 0x10;
+        //const int codeCaveCodeLoc = codeCavePtrLoc + 0x10;
 
         static readonly byte[] targetHookOrigCode = new byte[] { 0x48, 0x8B, 0x80, 0x90, 0x1F, 0x00, 0x00, };
         /*
@@ -468,7 +473,10 @@ namespace DS3Tool
         }
 
         public bool installTargetHook()
+
+
         {
+          
             //generate code first
             var targetHookReplacementCode = getTargetHookReplacementCode();
             var targetHookCaveCode = getTargetHookCaveCodeTemplate(); //still needs to have ptr addr added in
