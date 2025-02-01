@@ -15,12 +15,15 @@ using System.Windows.Media;
 using System.Text;
 using static DS3Tool.DS3Process;
 using System.Collections.ObjectModel;
+using DS3Tool.services;
 
 namespace DS3Tool
 {
     public partial class MainWindow : Window, IDisposable
     {
         DS3Process _process = null;
+        private BonfireService _bonfireService;
+
         private bool disposedValue;
 
         System.Windows.Threading.DispatcherTimer _timer = new System.Windows.Threading.DispatcherTimer();
@@ -78,6 +81,8 @@ namespace DS3Tool
                 _timer.Start();
                 UpdateStatButtons();
             }
+
+            _bonfireService = new BonfireService(_process);
         }
 
         private void LoadItemsFromCsv(string filePath)
@@ -1073,17 +1078,22 @@ namespace DS3Tool
 
         }
 
-        private void UnlockButton_Click(object sender, RoutedEventArgs e)
+        private void UnlockSelectedButton_Click(object sender, RoutedEventArgs e)
         {
             if (BonfireDropdown.SelectedItem is ComboBoxItem selectedItem)
             {
                 string selectedBonfire = selectedItem.Content.ToString();
-                _process.unlockBonfire(selectedBonfire);
+                _bonfireService.unlockBonfire(selectedBonfire);
             }
             else
             {
                 MessageBox.Show("Please select a bonfire location.");
             }
+        }
+
+        private void UnlockAllButton_Click(object sender, RoutedEventArgs e)
+        {
+            _bonfireService.unlockAllBonfires();
         }
     }
 }

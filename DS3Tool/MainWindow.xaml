@@ -153,7 +153,8 @@
 
         <Grid>
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                <ComboBox x:Name="BonfireDropdown" Width="200" Height="30">
+                <ComboBox x:Name="BonfireDropdown" Width="200" Height="30" Text="Bonfires" IsEditable="True" SelectedIndex="-1">
+                    <ComboBoxItem Content="Coiled Sword"/>
                     <ComboBoxItem Content="Cemetery of Ash"/>
                     <ComboBoxItem Content="Iudex Gundyr"/>
                     <ComboBoxItem Content="Firelink Shrine"/>
@@ -212,8 +213,27 @@
                     <ComboBoxItem Content="Flameless Shrine"/>
                     <ComboBoxItem Content="Kiln of the First Flame"/>
                     <ComboBoxItem Content="Soul of Cinder"/>
+                    <ComboBoxItem Content="Snowfield"/>
+                    <ComboBoxItem Content="Rope Bridge Cave"/>
+                    <ComboBoxItem Content="Ariandel Chapel"/>
+                    <ComboBoxItem Content="Corvian Settlement"/>
+                    <ComboBoxItem Content="Snowy Mountain Pass"/>
+                    <ComboBoxItem Content="Depths of the Painting"/>
+                    <ComboBoxItem Content="The Dreg Heap"/>
+                    <ComboBoxItem Content="Earthen Peak Ruins"/>
+                    <ComboBoxItem Content="Within the Earthen Peak Ruins"/>
+                    <ComboBoxItem Content="The Demon Prince"/>
+                    <ComboBoxItem Content="Mausoleum Lookout"/>
+                    <ComboBoxItem Content="Ringed Inner Wall"/>
+                    <ComboBoxItem Content="Ringed City Streets"/>
+                    <ComboBoxItem Content="Shared Grave"/>
+                    <ComboBoxItem Content="Church of Filianore"/>
+                    <ComboBoxItem Content="Darkeater Midir"/>
+                    <ComboBoxItem Content="Filianore's Rest"/>
+                    <ComboBoxItem Content="Slave Knight Gael"/>
                 </ComboBox>
-                <Button Content="Unlock" Width="200" Height="30" Margin="5" Click="UnlockButton_Click"/>
+                <Button Content="Unlock Selected Bonfire" Width="200" Height="30" Margin="5" Click="UnlockSelectedButton_Click"/>
+                <Button Content="Unlock All Bonfires" Width="200" Height="30" Margin="5" Click="UnlockAllButton_Click"/>
             </StackPanel>
         </Grid>
     </StackPanel>
