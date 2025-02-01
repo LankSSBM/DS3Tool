@@ -33,6 +33,7 @@ namespace DS3Tool
         bool _noClipActive = false;
 
         public Dictionary<string, string> ItemDictionary { get; private set; }
+
    
 
         (float, float, float, float)? savedPos = null;
@@ -1067,5 +1068,22 @@ namespace DS3Tool
             return char.ToUpper(input[0]) + input.Substring(1).ToLower();
         }
 
+        private void SpawnButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void UnlockButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (BonfireDropdown.SelectedItem is ComboBoxItem selectedItem)
+            {
+                string selectedBonfire = selectedItem.Content.ToString();
+                _process.unlockBonfire(selectedBonfire);
+            }
+            else
+            {
+                MessageBox.Show("Please select a bonfire location.");
+            }
+        }
     }
 }

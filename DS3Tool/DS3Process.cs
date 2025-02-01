@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using MiscUtils;
 using System.Xml.Linq;
+using System.Net.Sockets;
 
 namespace DS3Tool
 {
@@ -309,17 +310,102 @@ namespace DS3Tool
         {PlayerStats.SOULS, 0x74 }
     };
 
+        public struct BonfireLocation
+        {
+            public int Offset { get; }
+            public int StartBit { get; }
+       
+
+      
+
+            public BonfireLocation(int offset, int startBit)
+            {
+       
+                Offset = offset;
+                StartBit = startBit;
+            
+            }
+        }
+
+        Dictionary<string, BonfireLocation> bonfireLocations = new Dictionary<string, BonfireLocation>
+{
+    {"Cemetery of Ash", new BonfireLocation(0x5A03, startBit: 6)},
+    {"Iudex Gundyr", new BonfireLocation(0x5A03, startBit: 5)},
+    {"Firelink Shrine", new BonfireLocation(0x5A03, startBit: 7)},
+    {"Untended Graves", new BonfireLocation(0x5A03, startBit: 4)},
+    {"Champion Gundyr", new BonfireLocation(0x5A03, startBit: 3)},
+    {"High Wall of Lothric", new BonfireLocation(0xF02, startBit: 6)},
+    {"Tower on the Wall", new BonfireLocation(0xF03, startBit: 2)},
+    {"Vordt of the Boreal Valley", new BonfireLocation(0xF03, startBit: 5)},
+    {"Dancer of the Boreal Valley", new BonfireLocation(0xF03, startBit: 3)},
+    {"Oceiros the Consumed King", new BonfireLocation(0xF03, startBit: 6)},
+    {"Foot of the High Wall", new BonfireLocation(0x1903, startBit: 3)},
+    {"Undead Settlement", new BonfireLocation(0x1903, startBit: 7)},
+    {"Dilapidated Bridge", new BonfireLocation(0x1903, startBit: 4)},
+    {"Cliff Underside", new BonfireLocation(0x1903, startBit: 5)},
+    {"Pit of Hollows", new BonfireLocation(0x2D03, startBit: 1)},
+    {"Road of Sacrifices", new BonfireLocation(0x2D03, startBit: 1)},
+    {"Halfway Fortress", new BonfireLocation(0x2D03, startBit: 7)},
+    {"Crucifixion Woods", new BonfireLocation(0x2D03, startBit: 0)},
+    {"Farron Keep", new BonfireLocation(0x2D03, startBit: 4)},
+    {"Keep Ruins", new BonfireLocation(0x2D03, startBit: 3)},
+    {"Old Wolf of Farron", new BonfireLocation(0x2D03, startBit: 2)},
+    {"Cathedral of the Deep", new BonfireLocation(0x3C03, startBit: 4)},
+    {"Cleansing Chapel", new BonfireLocation(0x3C03, startBit: 7)},
+    {"Rosaria's Bed Chamber", new BonfireLocation(0x3C03, startBit: 5)},
+    {"Catacombs of Carthus", new BonfireLocation(0x5003, startBit: 1)},
+    {"Abandoned Tomb", new BonfireLocation(0x5003, startBit: 6)},
+    {"Demon Ruins", new BonfireLocation(0x5003, startBit: 4)},
+    {"Old King's Antechamber", new BonfireLocation(0x5003, startBit: 5)},
+    {"Irithyll of the Boreal Valley", new BonfireLocation(0x4B03, startBit: 0)},
+    {"Central Irithyll", new BonfireLocation(0x4B03, startBit: 3)},
+    {"Church of Yorshka", new BonfireLocation(0x4B03, startBit: 7)},
+    {"Distant Manor", new BonfireLocation(0x4B03, startBit: 2)},
+    {"Water Reserve", new BonfireLocation(0x4B03, startBit: 1)},
+    {"Anor Londo", new BonfireLocation(0x4B03, startBit: 4)},
+    {"Prison Tower", new BonfireLocation(0x4B02, startBit: 7)},
+    {"Irithyll Dungeon", new BonfireLocation(0x5503, startBit: 7)},
+    {"Profaned Capital", new BonfireLocation(0x5503, startBit: 5)},
+    {"Archdragon Peak", new BonfireLocation(0x2303, startBit: 7)},
+    {"Dragon-Kin Mausoleum", new BonfireLocation(0x2303, startBit: 4)},
+    {"Great Belfry", new BonfireLocation(0x2303, startBit: 5)},
+    {"Lothric Castle", new BonfireLocation(0x1403, startBit: 7)},
+    {"Dragon Barracks", new BonfireLocation(0x1403, startBit: 5)},
+    {"Grand Archives", new BonfireLocation(0x3703, startBit: 6)},
+    {"Flameless Shrine", new BonfireLocation(0x5F03, startBit: 7)},
+    {"Kiln of the First Flame", new BonfireLocation(0x5F03, startBit: 6)},
+    {"Snowfield", new BonfireLocation(0x6403, startBit: 6)},
+    {"Rope Bridge Cave", new BonfireLocation(0x6403, startBit: 5)},
+    {"Ariandel Chapel", new BonfireLocation(0x6403, startBit: 2)},
+    {"Corvian Settlement", new BonfireLocation(0x6403, startBit: 4)},
+    {"Snowy Mountain Pass", new BonfireLocation(0x6403, startBit: 3)},
+    {"Depths of the Painting", new BonfireLocation(0x6403, startBit: 0)},
+    {"The Dreg Heap", new BonfireLocation(0x7303, startBit: 6)},
+    {"Earthen Peak Ruins", new BonfireLocation(0x7303, startBit: 5)},
+    {"Within the Earthen Peak Ruins", new BonfireLocation(0x7303, startBit: 4)},
+    {"The Demon Prince", new BonfireLocation(0x7303, startBit: 7)},
+    {"Mausoleum Lookout", new BonfireLocation(0x7803, startBit: 5)},
+    {"Ringed Inner Wall", new BonfireLocation(0x7803, startBit: 4)},
+    {"Ringed City Streets", new BonfireLocation(0x7803, startBit: 3)},
+    {"Shared Grave", new BonfireLocation(0x7803, startBit: 2)},
+    {"Church of Filianore", new BonfireLocation(0x7803, startBit: 7)},
+    {"Darkeater Midir", new BonfireLocation(0x7803, startBit: 6)},
+    {"Filianore's Rest", new BonfireLocation(0x7D03, startBit: 6)},
+    {"Slave Knight Gael", new BonfireLocation(0x7D03, startBit: 7)},
+};
+
+
         //1.15 stuff by shilkey
         const int worldChrManOff = 0x4768E78;
         const int hitboxOff = 0x4766B80;
         const int gameDataManOff = 0x4740178;
-        const int menuManOff = 0x4763258;
+        const int menuManOff = 0x474c2e8;
         const int debug_flagsOff = 0x4768f68;
         const int meshesOff = 0x4743A98;
         const int spawnItem = 0x7bba70;
-
-
-
+        const int enemyTargetDrawAOff = 0x41E6CA;
+        const int GameFlagDataOff = 0x473BE28;
+    
 
 
         //offsets of main pointers/statics.
@@ -333,7 +419,7 @@ namespace DS3Tool
         const int BaseFOff = 0x4751EB8; //no name, seems lua related? //SprjDebugEvent ?
         const int worldChrManDbgOff = 0x477FED8; //NS_SPRJ::WorldChrManDbgImp. all debug drawing is under here. presumably others like 'all no death' and such
         const int ParamOff = 0x4798118; //NS_SPRJ::SoloParamRepositoryImp
-        const int GameFlagDataOff = 0x4752F68; //no name //SprjEventFlagMan ?
+        //const int GameFlagDataOff = 0x4752F68; //no name //SprjEventFlagMan ?
         const int LockBonus_ptrOff = 0x477DBE0; //NS_SPRJ::LockTgtManImp
         //const int DrawNearOnly_ptrOff = 0x4766555; //not a pointer - static debug flag? (no refs to this addr) //not updated for 1.15.1
         //const int debug_flagsOff = 0x477FEA8; //also static? "all" debug flags, not specific to any character.
@@ -345,7 +431,7 @@ namespace DS3Tool
         const int worldAIManOff = 0x4751550; //NS_SPRJ::SprjWorldAiManagerImp
 
         //targeting is static, but maybe ?$DLRuntimeClassImpl@VSprjTargetingSystem@NS_SPRJ@@$0A@@DLRF@@ + 54
-        const int enemyTargetDrawAOff = 0x4750C04; //in 1.15, this is accessed at +41E6CA, which sadly is obfuscated in the exe. in 1.15.1, +41e74a (barely moved)
+        //const int enemyTargetDrawAOff = 0x4750C04; //in 1.15, this is accessed at +41E6CA, which sadly is obfuscated in the exe. in 1.15.1, +41e74a (barely moved)
         const int enemyTargetDrawBOff = 0x4750C05;
 
         //const int meshesOff = 0x477DBAC; //no name. lots of static stuff around here.
@@ -1025,7 +1111,27 @@ namespace DS3Tool
             return ReadInt32(finalAddress);
         }
 
+        public void unlockBonfire(String name)
+        {
+           
+                var ptr1 = ReadUInt64(ds3Base + GameFlagDataOff); 
+             
 
+                var ptr2 = ReadUInt64((IntPtr)ptr1);
 
+            var flagLoc = bonfireLocations[name];
+
+            var finalAddress = (IntPtr)(ptr2 + (ulong)flagLoc.Offset);
+        
+
+                uint currentValue = ReadUInt32(finalAddress);
+               
+                uint mask = ((1u << 1) - 1) << flagLoc.StartBit;
+                currentValue |= mask;
+
+                WriteUInt32(finalAddress, currentValue);
+       
+           
+        }
     }
 }

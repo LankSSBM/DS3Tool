@@ -150,5 +150,71 @@
         Margin="0,10,0,0"
         Click="SpawnButton_Click"/>
         </StackPanel>
+
+        <Grid>
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <ComboBox x:Name="BonfireDropdown" Width="200" Height="30">
+                    <ComboBoxItem Content="Cemetery of Ash"/>
+                    <ComboBoxItem Content="Iudex Gundyr"/>
+                    <ComboBoxItem Content="Firelink Shrine"/>
+                    <ComboBoxItem Content="Untended Graves"/>
+                    <ComboBoxItem Content="Champion Gundyr"/>
+                    <ComboBoxItem Content="High Wall of Lothric"/>
+                    <ComboBoxItem Content="Tower on the Wall"/>
+                    <ComboBoxItem Content="Vordt of the Boreal Valley"/>
+                    <ComboBoxItem Content="Dancer of the Boreal Valley"/>
+                    <ComboBoxItem Content="Oceiros the Consumed King"/>
+                    <ComboBoxItem Content="Foot of the High Wall"/>
+                    <ComboBoxItem Content="Undead Settlement"/>
+                    <ComboBoxItem Content="Dilapidated Bridge"/>
+                    <ComboBoxItem Content="Cliff Underside"/>
+                    <ComboBoxItem Content="Pit of Hollows"/>
+                    <ComboBoxItem Content="Road of Sacrifices"/>
+                    <ComboBoxItem Content="Halfway Fortress"/>
+                    <ComboBoxItem Content="Crucifixion Woods"/>
+                    <ComboBoxItem Content="Farron Keep"/>
+                    <ComboBoxItem Content="Keep Ruins"/>
+                    <ComboBoxItem Content="Old Wolf of Farron"/>
+                    <ComboBoxItem Content="Crystal Sage"/>
+                    <ComboBoxItem Content="Farron Keep Perimeter"/>
+                    <ComboBoxItem Content="Abyss Watchers"/>
+                    <ComboBoxItem Content="Cathedral of the Deep"/>
+                    <ComboBoxItem Content="Cleansing Chapel"/>
+                    <ComboBoxItem Content="Deacons of the Deep"/>
+                    <ComboBoxItem Content="Rosaria's Bed Chamber"/>
+                    <ComboBoxItem Content="Catacombs of Carthus"/>
+                    <ComboBoxItem Content="Abandoned Tomb"/>
+                    <ComboBoxItem Content="Demon Ruins"/>
+                    <ComboBoxItem Content="Old King's Antechamber"/>
+                    <ComboBoxItem Content="High Lord Wolnir"/>
+                    <ComboBoxItem Content="Old Demon King"/>
+                    <ComboBoxItem Content="Irithyll of the Boreal Valley"/>
+                    <ComboBoxItem Content="Central Irithyll"/>
+                    <ComboBoxItem Content="Church of Yorshka"/>
+                    <ComboBoxItem Content="Distant Manor"/>
+                    <ComboBoxItem Content="Pontiff Sulyvahn"/>
+                    <ComboBoxItem Content="Water Reserve"/>
+                    <ComboBoxItem Content="Anor Londo"/>
+                    <ComboBoxItem Content="Prison Tower"/>
+                    <ComboBoxItem Content="Aldrich Devourer of Gods"/>
+                    <ComboBoxItem Content="Irithyll Dungeon"/>
+                    <ComboBoxItem Content="Profaned Capital"/>
+                    <ComboBoxItem Content="Yhorm the Giant"/>
+                    <ComboBoxItem Content="Archdragon Peak"/>
+                    <ComboBoxItem Content="Kin Mausoleum"/>
+                    <ComboBoxItem Content="Great Belfry"/>
+                    <ComboBoxItem Content="Nameless King"/>
+                    <ComboBoxItem Content="Lothric Castle"/>
+                    <ComboBoxItem Content="Dragon Barracks"/>
+                    <ComboBoxItem Content="Dragonslayer Armor"/>
+                    <ComboBoxItem Content="Grand Archives"/>
+                    <ComboBoxItem Content="Twin Princes"/>
+                    <ComboBoxItem Content="Flameless Shrine"/>
+                    <ComboBoxItem Content="Kiln of the First Flame"/>
+                    <ComboBoxItem Content="Soul of Cinder"/>
+                </ComboBox>
+                <Button Content="Unlock" Width="200" Height="30" Margin="5" Click="UnlockButton_Click"/>
+            </StackPanel>
+        </Grid>
     </StackPanel>
 </Window>
