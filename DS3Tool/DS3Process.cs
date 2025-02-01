@@ -1026,5 +1026,16 @@ namespace DS3Tool
             }
             return ReadInt32(finalAddress);
         }
+
+        public int GetSetNewGameLevel(int? newValue = null)
+        {
+            var ptr1 = ReadUInt64(ds3Base + gameDataManOff);
+            var finalAddress = (IntPtr)(ptr1 + 0x78);
+            if (newValue.HasValue)
+            {
+                WriteInt32(finalAddress, newValue.Value);
+            }
+            return ReadInt32(finalAddress);
+        }
     }
 }

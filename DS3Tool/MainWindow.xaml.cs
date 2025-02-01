@@ -80,10 +80,15 @@ namespace DS3Tool
                 _timer.Interval = TimeSpan.FromSeconds(0.1);
                 _timer.Start();
                 UpdateStatButtons();
+                SetSelectedNewGameLevel();
+
+                _bonfireService = new BonfireService(_process);
             }
 
-            _bonfireService = new BonfireService(_process);
+            
         }
+
+        
 
         private void LoadItemsFromCsv(string filePath)
         {
@@ -1094,6 +1099,45 @@ namespace DS3Tool
         private void UnlockAllButton_Click(object sender, RoutedEventArgs e)
         {
             _bonfireService.unlockAllBonfires();
+        }
+
+        private void SetSelectedNewGameLevel(int? actualValue = null)
+        {
+            var currentValue = actualValue ?? _process.GetSetNewGameLevel();  // Only read if no value provided
+            string formattedNgLevel = currentValue == 0 ? "NG" : $"NG+{currentValue}";
+
+            if (NgLevelComboBox != null)
+            {
+                foreach (ComboBoxItem item in NgLevelComboBox.Items)
+                {
+                    if (item.Content.ToString() == formattedNgLevel)
+                    {
+                        NgLevelComboBox.SelectedItem = item;
+                        break;
+                    }
+                }
+            }
+        }
+
+
+        private void NgLevelComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (sender is ComboBox comboBox && comboBox.SelectedItem is ComboBoxItem selectedItem)
+            {
+                string selectedNgLevel = selectedItem.Content.ToString();
+
+                int ngLevel;
+
+                if (selectedNgLevel == "NG")
+                    ngLevel = 0;
+                else if (selectedNgLevel.StartsWith("NG+") && int.TryParse(selectedNgLevel.Substring(3), out int number))
+                    ngLevel = number;
+                else
+                    ngLevel = -1;
+
+                var newValue = _process.GetSetNewGameLevel(ngLevel);
+        SetSelectedNewGameLevel(newValue); 
+            }
         }
     }
 }
