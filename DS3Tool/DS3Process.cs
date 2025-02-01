@@ -1016,15 +1016,28 @@ namespace DS3Tool
 
         public int GetSetPlayerStat(PlayerStats stat, int? newValue = null)
         {
-            var ptr1 = ReadUInt64(ds3Base + gameDataManOff);
-            var ptr2 = ReadUInt64((IntPtr)(ptr1 + 0x10));
-            var finalAddress = (IntPtr)(ptr2 + (ulong)statOffsets[stat]);
+            var gameDataPtr = ReadUInt64(ds3Base + gameDataManOff);
+            var playerStatsPtr = ReadUInt64((IntPtr)(gameDataPtr + 0x10));
+            var statAddress = (IntPtr)(playerStatsPtr + (ulong)statOffsets[stat]);
 
             if (newValue.HasValue)
             {
-                WriteInt32(finalAddress, newValue.Value);
+                UpdatePlayerStat(stat, statAddress, playerStatsPtr, newValue.Value);
             }
-            return ReadInt32(finalAddress);
+
+            return ReadInt32(statAddress);
+        }
+
+        private void UpdatePlayerStat(PlayerStats stat, IntPtr statAddress, ulong playerStatsPtr, int newValue)
+        {
+            WriteInt32(statAddress, newValue);
+
+            if (stat == PlayerStats.SOULS)
+            {
+                var totalSoulsAddress = (IntPtr)(playerStatsPtr + 0x78);
+                int currentTotalSouls = ReadInt32(totalSoulsAddress);
+                WriteInt32(totalSoulsAddress, currentTotalSouls + newValue);
+            }
         }
     }
 }
