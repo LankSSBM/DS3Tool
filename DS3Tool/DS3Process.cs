@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using MiscUtils;
 using System.Xml.Linq;
+using System.Net.Sockets;
 
 namespace DS3Tool
 {
@@ -58,6 +59,7 @@ namespace DS3Tool
 
             freezeThread = new Thread(() => { freezeFunc(); });
             freezeThread.Start();
+
         }
 
         public void Dispose()
@@ -266,6 +268,7 @@ namespace DS3Tool
             ENEMY_TARGETING_A, ENEMY_TARGETING_B, SOUND_VIEW,
             FREE_CAMERA,
             NO_GRAVITY,
+            ONE_SHOT,
         }
 
         public enum TargetInfo
@@ -279,31 +282,75 @@ namespace DS3Tool
             FROST, FROST_MAX,
         }
 
+        public enum PlayerStats
+        {
+            VIGOR,
+            ATTUNEMENT,
+            ENDURANCE,
+            VITALITY,
+            STRENGTH,
+            DEXTERITY,
+            INTELLIGENCE,
+            FAITH,
+            LUCK,
+            SOULS
+        }
+
+        private readonly Dictionary<PlayerStats, int> statOffsets = new Dictionary<PlayerStats, int>
+    {
+        { PlayerStats.VIGOR, 0x44 },
+        { PlayerStats.ATTUNEMENT, 0x48 },
+        { PlayerStats.ENDURANCE, 0x4C },
+        { PlayerStats.VITALITY, 0x6C },
+        { PlayerStats.STRENGTH, 0x50 },
+        { PlayerStats.DEXTERITY, 0x54 },
+        { PlayerStats.INTELLIGENCE, 0x58 },
+        { PlayerStats.FAITH, 0x5C },
+        { PlayerStats.LUCK, 0x60 },
+        {PlayerStats.SOULS, 0x74 }
+    };
+
+ 
+        //1.15 stuff by shilkey
+        const int worldChrManOff = 0x4768E78;
+        const int hitboxOff = 0x4766B80;
+        const int gameDataManOff = 0x4740178;
+        const int menuManOff = 0x474c2e8;
+        const int debug_flagsOff = 0x4768f68;
+        const int meshesOff = 0x4743A98;
+        const int spawnItem = 0x7bba70;
+        const int enemyTargetDrawAOff = 0x41E6CA;
+        const int GameFlagDataOff = 0x473BE28;
+    
+
+
         //offsets of main pointers/statics.
         //see aob scanner for aobs.
-        const int gameDataManOff = 0x47572B8; //NS_SPRJ::GameDataMan
-        const int worldChrManOff = 0x477FDB8; //NS_SPRJ::WorldChrManImp
+        // const int gameDataManOff = 0x47572B8; //NS_SPRJ::GameDataMan
+        //const int worldChrManOff = 0x477FDB8; //NS_SPRJ::WorldChrManImp
+
         const int gameManOff = 0x475AC00; //NS_SPRJ::GameMan
         const int fieldAreaOff = 0x475ABD0; //NS_SPRJ::FieldArea
         const int BaseEOff = 0x4756E48; //NS_SPRJ::FrpgNetManImp
         const int BaseFOff = 0x4751EB8; //no name, seems lua related? //SprjDebugEvent ?
         const int worldChrManDbgOff = 0x477FED8; //NS_SPRJ::WorldChrManDbgImp. all debug drawing is under here. presumably others like 'all no death' and such
         const int ParamOff = 0x4798118; //NS_SPRJ::SoloParamRepositoryImp
-        const int GameFlagDataOff = 0x4752F68; //no name //SprjEventFlagMan ?
+        //const int GameFlagDataOff = 0x4752F68; //no name //SprjEventFlagMan ?
         const int LockBonus_ptrOff = 0x477DBE0; //NS_SPRJ::LockTgtManImp
         //const int DrawNearOnly_ptrOff = 0x4766555; //not a pointer - static debug flag? (no refs to this addr) //not updated for 1.15.1
-        const int debug_flagsOff = 0x477FEA8; //also static? "all" debug flags, not specific to any character.
+        //const int debug_flagsOff = 0x477FEA8; //also static? "all" debug flags, not specific to any character.
         const int GROUP_MASKOff = 0x456CBA8; //also static
-        const int menuManOff = 0x4763258; //NS_SPRJ::MenuMan
-        const int hitboxOff = 0x477DAC0; //no name. damage management?
+        //const int menuManOff = 0x4763258; //NS_SPRJ::MenuMan
+        //const int hitboxOff = 0x477DAC0; //no name. damage management?
+       
         const int newMenuSystemOff = 0x478DA50; //AppMenu::NewMenuSystem
         const int worldAIManOff = 0x4751550; //NS_SPRJ::SprjWorldAiManagerImp
 
         //targeting is static, but maybe ?$DLRuntimeClassImpl@VSprjTargetingSystem@NS_SPRJ@@$0A@@DLRF@@ + 54
-        const int enemyTargetDrawAOff = 0x4750C04; //in 1.15, this is accessed at +41E6CA, which sadly is obfuscated in the exe. in 1.15.1, +41e74a (barely moved)
+        //const int enemyTargetDrawAOff = 0x4750C04; //in 1.15, this is accessed at +41E6CA, which sadly is obfuscated in the exe. in 1.15.1, +41e74a (barely moved)
         const int enemyTargetDrawBOff = 0x4750C05;
 
-        const int meshesOff = 0x477DBAC; //no name. lots of static stuff around here.
+        //const int meshesOff = 0x477DBAC; //no name. lots of static stuff around here.
         //maybe ?$DLRuntimeClassImpl @VSprjDrawStep@NS_SPRJ@@$0A@@DLRF@@ + 18C
 
         //offsets from a main pointer
@@ -650,6 +697,7 @@ namespace DS3Tool
                 case DebugOpts.ALL_CHR_NO_DEATH: return (ds3Base + debug_flagsOff + 0x8, 1);
                 case DebugOpts.INSTANT_QUITOUT:
                 {
+
                     var ptr = ReadUInt64(ds3Base + menuManOff);
                     return ((IntPtr)(ptr + 0x250), 1); //likely other menu functions nearby
                 }
@@ -671,6 +719,7 @@ namespace DS3Tool
                 case DebugOpts.NO_STAM: return (ds3Base + debug_flagsOff + 0x2, 1);
                 case DebugOpts.NO_FP: return (ds3Base + debug_flagsOff + 0x3, 1);
                 case DebugOpts.NO_ARROW_CONSUM: return (ds3Base + debug_flagsOff + 0x4, 1);
+                case DebugOpts.ONE_SHOT: return (ds3Base + debug_flagsOff + 1, 1);
                 case DebugOpts.NO_GOODS_CONSUM:
                 {
                     var ptr = getPlayerInsPtr();
@@ -961,6 +1010,34 @@ namespace DS3Tool
             }
 
             return (double)BitConverter.ToInt32(fourBytes, 0);
+        }
+
+
+
+        public int GetSetPlayerStat(PlayerStats stat, int? newValue = null)
+        {
+            var gameDataPtr = ReadUInt64(ds3Base + gameDataManOff);
+            var playerStatsPtr = ReadUInt64((IntPtr)(gameDataPtr + 0x10));
+            var statAddress = (IntPtr)(playerStatsPtr + (ulong)statOffsets[stat]);
+
+            if (newValue.HasValue)
+            {
+                UpdatePlayerStat(stat, statAddress, playerStatsPtr, newValue.Value);
+            }
+
+            return ReadInt32(statAddress);
+        }
+
+        private void UpdatePlayerStat(PlayerStats stat, IntPtr statAddress, ulong playerStatsPtr, int newValue)
+        {
+            WriteInt32(statAddress, newValue);
+
+            if (stat == PlayerStats.SOULS)
+            {
+                var totalSoulsAddress = (IntPtr)(playerStatsPtr + 0x78);
+                int currentTotalSouls = ReadInt32(totalSoulsAddress);
+                WriteInt32(totalSoulsAddress, currentTotalSouls + newValue);
+            }
         }
     }
 }

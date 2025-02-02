@@ -13,12 +13,17 @@ using MiscUtils;
 using System.Diagnostics;
 using System.Windows.Media;
 using System.Text;
+using static DS3Tool.DS3Process;
+using System.Collections.ObjectModel;
+using DS3Tool.services;
 
 namespace DS3Tool
 {
     public partial class MainWindow : Window, IDisposable
     {
         DS3Process _process = null;
+        private BonfireService _bonfireService;
+
         private bool disposedValue;
 
         System.Windows.Threading.DispatcherTimer _timer = new System.Windows.Threading.DispatcherTimer();
@@ -30,11 +35,21 @@ namespace DS3Tool
         bool _playerNoDeathStateWas = false;
         bool _noClipActive = false;
 
+        public Dictionary<string, string> ItemDictionary { get; private set; }
+
+   
+
         (float, float, float, float)? savedPos = null;
 
         public MainWindow()
         {
             InitializeComponent();
+
+            string projectDirectory = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).Parent.Parent.FullName;
+            string path = Path.Combine(projectDirectory, "data", "items.csv");
+            LoadItemsFromCsv(path);
+
+
             var assInfo = Assembly.GetEntryAssembly().GetName();
             Title = "DS3Tool v" + assInfo.Version;
             _normalTitle = Title;
@@ -64,6 +79,40 @@ namespace DS3Tool
                 _timer.Tick += _timer_Tick;
                 _timer.Interval = TimeSpan.FromSeconds(0.1);
                 _timer.Start();
+                UpdateStatButtons();
+            }
+
+            _bonfireService = new BonfireService(_process);
+        }
+
+        private void LoadItemsFromCsv(string filePath)
+        {
+            ItemDictionary = new Dictionary<string, string>();
+
+        
+            string[] lines = File.ReadAllLines(filePath);
+
+        
+            itemList.Items.Clear();
+
+         
+            for (int i = 1; i < lines.Length; i++)
+            {
+      
+                string[] columns = lines[i].Split(',');
+
+        
+                if (columns.Length >= 2)
+                {
+
+                    string firstColumnValue = columns[0].Trim('"', ' ');
+                    string secondColumnValue = columns[1].Trim('"', ' ');
+
+                   
+                    itemList.Items.Add(firstColumnValue);
+
+                    ItemDictionary[firstColumnValue] = secondColumnValue;
+                }
             }
         }
 
@@ -160,6 +209,8 @@ namespace DS3Tool
                 }
             }
         }
+
+       
 
         private void MainWindow_Closed(object sender, EventArgs e)
         {
@@ -337,6 +388,17 @@ namespace DS3Tool
         {
             _process.offAndUnFreeze(DS3Process.DebugOpts.NO_GOODS_CONSUM);
         }
+
+        private void oneShotOn(object sender, RoutedEventArgs e)
+        {
+            _process.freezeOn(DS3Process.DebugOpts.ONE_SHOT);
+        }
+
+        private void oneShotOff(object sender, RoutedEventArgs e)
+        {
+            _process.offAndUnFreeze(DS3Process.DebugOpts.ONE_SHOT);
+        }
+
 
         private void repeatActionOn(object sender, RoutedEventArgs e)
         {
@@ -950,6 +1012,88 @@ namespace DS3Tool
                 }
             }
             catch (Exception ex) { Utils.debugWrite(ex.ToString()); }
+        }
+
+        
+
+        private void EditStat(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.Tag is string statName)
+            {
+                if (Enum.TryParse<PlayerStats>(statName, out var stat))
+                {
+                    var currentValue = _process.GetSetPlayerStat(stat);
+                    string input = Microsoft.VisualBasic.Interaction.InputBox(
+                        $"Enter new value for {CapitalizeFirst(statName)}:",
+                        "Edit Stat",
+                        currentValue.ToString());
+                    if (!string.IsNullOrEmpty(input) && int.TryParse(input, out int newValue))
+                    {
+                        _process.GetSetPlayerStat(stat, newValue);
+                        UpdateStatButtons();
+                    }
+                }
+            }
+        }
+
+        private void UpdateStatButtons()
+        {
+            if (_process == null) return;
+            foreach (Button button in StatGrid.Children.OfType<Button>())
+            {
+                if (button.Tag is string statName &&
+                    Enum.TryParse<PlayerStats>(statName, out var stat))
+                {
+                    var value = _process.GetSetPlayerStat(stat);
+
+                
+                    if (stat != PlayerStats.SOULS)
+                    {
+                        if (value <= 0 || value >= 100)
+                        {
+                            MessageBox.Show(
+                                $"Stat value for {CapitalizeFirst(stat.ToString())} must be between 1 and 99. Current value: {value}",
+                                "Invalid Stat Value",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Warning);
+                            return;
+                        }
+                    }
+
+                    button.Content = $"{CapitalizeFirst(stat.ToString())}: {value}";
+                }
+            }
+        }
+
+        private string CapitalizeFirst(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+                return input;
+
+            return char.ToUpper(input[0]) + input.Substring(1).ToLower();
+        }
+
+        private void SpawnButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void UnlockSelectedButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (BonfireDropdown.SelectedItem is ComboBoxItem selectedItem)
+            {
+                string selectedBonfire = selectedItem.Content.ToString();
+                _bonfireService.unlockBonfire(selectedBonfire);
+            }
+            else
+            {
+                MessageBox.Show("Please select a bonfire location.");
+            }
+        }
+
+        private void UnlockAllButton_Click(object sender, RoutedEventArgs e)
+        {
+            _bonfireService.unlockAllBonfires();
         }
     }
 }

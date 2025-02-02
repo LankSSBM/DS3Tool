@@ -39,6 +39,7 @@
                 <CheckBox Checked="noStamOn" Unchecked="noStamOff" x:Name="chkInfStam">Inf Stam</CheckBox>
                 <CheckBox Checked="noFPOn" Unchecked="noFPOff" Margin="5,0" x:Name="chkInfFP">Inf FP</CheckBox>
                 <CheckBox Checked="noGoodsOn" Unchecked="noGoodsOff" Margin="5,0" x:Name="chkInfConsum">Inf Consum.</CheckBox>
+                <CheckBox Checked="oneShotOn" Unchecked="oneShotOff" Margin="5,0" x:Name="chkOneShot">One shot</CheckBox>
             </StackPanel>
             <StackPanel Orientation="Horizontal">
                 <CheckBox Checked="noGravOn" Unchecked="noGravOff" x:Name="chkPlayerNoGrav">No Gravity</CheckBox>
@@ -123,5 +124,117 @@
             <Button Click="hotkeySetup" FontSize="10" HorizontalAlignment="Right" Margin="0,0" x:Name="btnHotkeys">Hotkey Setup</Button>
         </StackPanel>
         <Button Click="doQuitout" x:Name="quitoutButton" Height="30">Instant Quitout</Button>
+        <GroupBox Header="Stats" Margin="5">
+            <UniformGrid x:Name="StatGrid" Columns="3">
+                <Button Click="EditStat" Tag="VIGOR" Margin="2">Vigor: 0</Button>
+                <Button Click="EditStat" Tag="ATTUNEMENT" Margin="2">Attunement: 0</Button>
+                <Button Click="EditStat" Tag="ENDURANCE" Margin="2">Endurance: 0</Button>
+                <Button Click="EditStat" Tag="VITALITY" Margin="2">Vitality: 0</Button>
+                <Button Click="EditStat" Tag="STRENGTH" Margin="2">Strength: 0</Button>
+                <Button Click="EditStat" Tag="DEXTERITY" Margin="2">Dexterity: 0</Button>
+                <Button Click="EditStat" Tag="INTELLIGENCE" Margin="2">Intelligence: 0</Button>
+                <Button Click="EditStat" Tag="FAITH" Margin="2">Faith: 0</Button>
+                <Button Click="EditStat" Tag="LUCK" Margin="2">Luck: 0</Button>
+                <Button Click="EditStat" Tag="SOULS" Margin="2">Souls: 0</Button>
+            </UniformGrid>
+        </GroupBox>
+        <StackPanel>
+            <ComboBox x:Name="itemList" 
+        Width="200" 
+        MaxDropDownHeight="200"
+        VirtualizingPanel.IsVirtualizing="True"
+        VirtualizingPanel.VirtualizationMode="Recycling"/>
+            <Button x:Name="spawnButton"
+        Content="Spawn Item"
+        Width="200"
+        Margin="0,10,0,0"
+        Click="SpawnButton_Click"/>
+        </StackPanel>
+
+        <Grid>
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <ComboBox x:Name="BonfireDropdown" Width="200" Height="30" Text="Bonfires" IsEditable="True" SelectedIndex="-1">
+                    <ComboBoxItem Content="Coiled Sword"/>
+                    <ComboBoxItem Content="Cemetery of Ash"/>
+                    <ComboBoxItem Content="Iudex Gundyr"/>
+                    <ComboBoxItem Content="Firelink Shrine"/>
+                    <ComboBoxItem Content="Untended Graves"/>
+                    <ComboBoxItem Content="Champion Gundyr"/>
+                    <ComboBoxItem Content="High Wall of Lothric"/>
+                    <ComboBoxItem Content="Tower on the Wall"/>
+                    <ComboBoxItem Content="Vordt of the Boreal Valley"/>
+                    <ComboBoxItem Content="Dancer of the Boreal Valley"/>
+                    <ComboBoxItem Content="Oceiros the Consumed King"/>
+                    <ComboBoxItem Content="Foot of the High Wall"/>
+                    <ComboBoxItem Content="Undead Settlement"/>
+                    <ComboBoxItem Content="Dilapidated Bridge"/>
+                    <ComboBoxItem Content="Cliff Underside"/>
+                    <ComboBoxItem Content="Pit of Hollows"/>
+                    <ComboBoxItem Content="Road of Sacrifices"/>
+                    <ComboBoxItem Content="Halfway Fortress"/>
+                    <ComboBoxItem Content="Crucifixion Woods"/>
+                    <ComboBoxItem Content="Farron Keep"/>
+                    <ComboBoxItem Content="Keep Ruins"/>
+                    <ComboBoxItem Content="Old Wolf of Farron"/>
+                    <ComboBoxItem Content="Crystal Sage"/>
+                    <ComboBoxItem Content="Farron Keep Perimeter"/>
+                    <ComboBoxItem Content="Abyss Watchers"/>
+                    <ComboBoxItem Content="Cathedral of the Deep"/>
+                    <ComboBoxItem Content="Cleansing Chapel"/>
+                    <ComboBoxItem Content="Deacons of the Deep"/>
+                    <ComboBoxItem Content="Rosaria's Bed Chamber"/>
+                    <ComboBoxItem Content="Catacombs of Carthus"/>
+                    <ComboBoxItem Content="Abandoned Tomb"/>
+                    <ComboBoxItem Content="Demon Ruins"/>
+                    <ComboBoxItem Content="Old King's Antechamber"/>
+                    <ComboBoxItem Content="High Lord Wolnir"/>
+                    <ComboBoxItem Content="Old Demon King"/>
+                    <ComboBoxItem Content="Irithyll of the Boreal Valley"/>
+                    <ComboBoxItem Content="Central Irithyll"/>
+                    <ComboBoxItem Content="Church of Yorshka"/>
+                    <ComboBoxItem Content="Distant Manor"/>
+                    <ComboBoxItem Content="Pontiff Sulyvahn"/>
+                    <ComboBoxItem Content="Water Reserve"/>
+                    <ComboBoxItem Content="Anor Londo"/>
+                    <ComboBoxItem Content="Prison Tower"/>
+                    <ComboBoxItem Content="Aldrich Devourer of Gods"/>
+                    <ComboBoxItem Content="Irithyll Dungeon"/>
+                    <ComboBoxItem Content="Profaned Capital"/>
+                    <ComboBoxItem Content="Yhorm the Giant"/>
+                    <ComboBoxItem Content="Archdragon Peak"/>
+                    <ComboBoxItem Content="Kin Mausoleum"/>
+                    <ComboBoxItem Content="Great Belfry"/>
+                    <ComboBoxItem Content="Nameless King"/>
+                    <ComboBoxItem Content="Lothric Castle"/>
+                    <ComboBoxItem Content="Dragon Barracks"/>
+                    <ComboBoxItem Content="Dragonslayer Armor"/>
+                    <ComboBoxItem Content="Grand Archives"/>
+                    <ComboBoxItem Content="Twin Princes"/>
+                    <ComboBoxItem Content="Flameless Shrine"/>
+                    <ComboBoxItem Content="Kiln of the First Flame"/>
+                    <ComboBoxItem Content="Soul of Cinder"/>
+                    <ComboBoxItem Content="Snowfield"/>
+                    <ComboBoxItem Content="Rope Bridge Cave"/>
+                    <ComboBoxItem Content="Ariandel Chapel"/>
+                    <ComboBoxItem Content="Corvian Settlement"/>
+                    <ComboBoxItem Content="Snowy Mountain Pass"/>
+                    <ComboBoxItem Content="Depths of the Painting"/>
+                    <ComboBoxItem Content="The Dreg Heap"/>
+                    <ComboBoxItem Content="Earthen Peak Ruins"/>
+                    <ComboBoxItem Content="Within the Earthen Peak Ruins"/>
+                    <ComboBoxItem Content="The Demon Prince"/>
+                    <ComboBoxItem Content="Mausoleum Lookout"/>
+                    <ComboBoxItem Content="Ringed Inner Wall"/>
+                    <ComboBoxItem Content="Ringed City Streets"/>
+                    <ComboBoxItem Content="Shared Grave"/>
+                    <ComboBoxItem Content="Church of Filianore"/>
+                    <ComboBoxItem Content="Darkeater Midir"/>
+                    <ComboBoxItem Content="Filianore's Rest"/>
+                    <ComboBoxItem Content="Slave Knight Gael"/>
+                </ComboBox>
+                <Button Content="Unlock Selected Bonfire" Width="200" Height="30" Margin="5" Click="UnlockSelectedButton_Click"/>
+                <Button Content="Unlock All Bonfires" Width="200" Height="30" Margin="5" Click="UnlockAllButton_Click"/>
+            </StackPanel>
+        </Grid>
     </StackPanel>
 </Window>
