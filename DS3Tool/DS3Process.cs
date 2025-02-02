@@ -18,6 +18,7 @@ namespace DS3Tool
         private Process _targetProcess = null;
         private IntPtr _targetProcessHandle = IntPtr.Zero;
         public IntPtr ds3Base = IntPtr.Zero;
+        public const int CodeCavePtrLoc = 0x1914670;
 
         protected bool disposed = false;
 
@@ -1033,6 +1034,129 @@ namespace DS3Tool
                 WriteInt32(finalAddress, newValue.Value);
             }
             return ReadInt32(finalAddress);
+        }
+
+        private const int ANIMATION_OFFSET_1 = 0x1F90;
+        private const int ANIMATION_OFFSET_2 = 0x58;
+        private const int ANIMATION_FINAL = 0x20; // Final offset for animation ID write
+
+        public IntPtr GetCurrentTarget()
+        {
+            // Read the target pointer from our hook's storage location
+            return new IntPtr(ReadInt64(ds3Base + codeCavePtrLoc));
+        }
+
+        public void ForceAnimation(int animationId)
+        {
+            var storedPtr = ReadInt64(ds3Base + codeCavePtrLoc);
+            Console.WriteLine($"Initial stored pointer: {storedPtr:X}");
+            if (storedPtr == 0)
+            {
+                Console.WriteLine("No target selected!");
+                return;
+            }
+
+            // The Lua script uses a different pointer path:
+            // [[address+1F90]+110]+E8 for animation offset
+            // [[address+1F90]+58]+20 for setting animation
+
+            var basePtr = new IntPtr(storedPtr);
+            var ptr1 = ReadInt64(basePtr + ANIMATION_OFFSET_1); // +1F90
+            Console.WriteLine($"After +1F90: {ptr1:X}");
+            if (ptr1 == 0)
+            {
+                Console.WriteLine("First pointer is null");
+                return;
+            }
+
+            // Follow the working Lua script path
+            var ptr2 = ReadInt64(new IntPtr(ptr1) + 0x58);  // Different from original implementation
+            Console.WriteLine($"After +58: {ptr2:X}");
+            if (ptr2 == 0)
+            {
+                Console.WriteLine("Second pointer is null");
+                return;
+            }
+
+            // Write directly to +20 offset as shown in Lua script
+            var finalAddr = new IntPtr(ptr2) + 0x20;
+            Console.WriteLine($"Final write address: {finalAddr:X}");
+
+            // Try reading the current value before writing
+            var currentValue = ReadInt32(finalAddr);
+            Console.WriteLine($"Current value at address: {currentValue}");
+
+            // Write the new animation ID
+            WriteInt32(finalAddr, animationId);
+
+            // Verify the write
+            var newValue = ReadInt32(finalAddr);
+            Console.WriteLine($"New value after write: {newValue}");
+        }
+
+        public int GetAnimationOffset()
+        {
+            var storedPtr = ReadInt64(ds3Base + codeCavePtrLoc);
+            if (storedPtr == 0) return 0;
+
+            var ptr1 = ReadInt64(new IntPtr(storedPtr) + 0x1F90);
+            if (ptr1 == 0) return 0;
+
+            var ptr2 = ReadInt64(new IntPtr(ptr1) + 0x110);
+            if (ptr2 == 0) return 0;
+
+            var offset = ReadInt32(new IntPtr(ptr2) + 0xE8);
+            return offset == -1 ? 0 : offset;
+        }
+
+        // Method to set lua numbers (from Lua script)
+        public void SetLuaNumber(int numberIndex, float value)
+        {
+            var storedPtr = ReadInt64(ds3Base + codeCavePtrLoc);
+            if (storedPtr == 0) return;
+
+            var ptr1 = ReadInt64(new IntPtr(storedPtr) + 0x58);
+            if (ptr1 == 0) return;
+
+            var baseAddr = ReadInt64(new IntPtr(ptr1) + 0x320);
+            if (baseAddr == 0) return;
+
+            var finalAddr = new IntPtr(baseAddr) + 0x6BC + (4 * numberIndex);
+            WriteFloat(finalAddr, value);
+        }
+
+        // Combined method to force phase transition
+        public void ForcePhaseTransition(int phaseIndex)
+        {
+            // Phase definitions matching Lua script
+            var phases = new Dictionary<int, (string Name, int Animation, int Offset, int Act)>
+    {
+        { 0, ("Sword", 20000, 0, 30) },
+        { 1, ("Lance", 20001, 1000000, 31) },
+        { 2, ("Curved", 20002, 2000000, 32) },
+        { 3, ("Staff", 20004, 4000000, 33) },
+        { 4, ("Gwyn", 20010, 5000000, 0) }
+    };
+
+            if (!phases.ContainsKey(phaseIndex))
+            {
+                Console.WriteLine($"Invalid phase index: {phaseIndex}");
+                return;
+            }
+
+            var phase = phases[phaseIndex];
+            ForceAnimation(phase.Animation);
+
+            // Clear lua numbers as done in Lua script
+            SetLuaNumber(0, 0);
+            SetLuaNumber(1, 0);
+            SetLuaNumber(2, 0);
+        }
+
+        public void TestTargetAnimation()
+        {
+            // Force sword phase animation (20000)
+            ForceAnimation(20001);
         }
     }
 }

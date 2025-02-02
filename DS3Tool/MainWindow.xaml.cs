@@ -1095,5 +1095,11 @@ namespace DS3Tool
         {
             _bonfireService.unlockAllBonfires();
         }
+
+        private void TestSwordAnimation_Click(object sender, RoutedEventArgs e)
+        {
+            // Force the sword animation (ID 20000)
+            _process.ForcePhaseTransition(2);
+        }
     }
 }

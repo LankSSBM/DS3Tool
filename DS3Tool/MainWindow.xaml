@@ -234,6 +234,7 @@
                 </ComboBox>
                 <Button Content="Unlock Selected Bonfire" Width="200" Height="30" Margin="5" Click="UnlockSelectedButton_Click"/>
                 <Button Content="Unlock All Bonfires" Width="200" Height="30" Margin="5" Click="UnlockAllButton_Click"/>
+                <Button Content="Cinder" Width="200" Height="30" Margin="5" Click="TestSwordAnimation_Click"/>
             </StackPanel>
         </Grid>
     </StackPanel>
