@@ -1035,5 +1035,6 @@ namespace DS3Tool
             }
             return ReadInt32(finalAddress);
         }
+
     }
 }

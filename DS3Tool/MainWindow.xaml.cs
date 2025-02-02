@@ -23,7 +23,7 @@ namespace DS3Tool
     {
         DS3Process _process = null;
         private BonfireService _bonfireService;
-        private CinderService _cinderService;
+        private CinderPhaseManager _cinderManager;
 
         private bool disposedValue;
 
@@ -82,7 +82,7 @@ namespace DS3Tool
                 _timer.Start();
                 UpdateStatButtons();
                     _bonfireService = new BonfireService(_process);
-                _cinderService = new CinderService(_process);
+                _cinderManager = new CinderPhaseManager(_process);
             }
 
             
@@ -1099,10 +1099,22 @@ namespace DS3Tool
             _bonfireService.unlockAllBonfires();
         }
 
-        private void TestSwordAnimation_Click(object sender, RoutedEventArgs e)
+        private void OnPhaseButtonClick(object sender, RoutedEventArgs e)
         {
-            // Force the sword animation (ID 20000)
-            _cinderService.ForcePhaseTransition(0);
+            var button = (Button)sender;
+            if (int.TryParse(button.Tag?.ToString(), out int phaseIndex))
+            {
+                _cinderManager.SetPhase(phaseIndex, chkLockPhase.IsChecked ?? false);
+            }
+            else
+            {
+                Debug.WriteLine($"Failed to parse phase index from button tag: {button.Tag}");
+            }
+        }
+
+        private void OnLockPhaseChanged(object sender, RoutedEventArgs e)
+        {
+            _cinderManager.TogglePhaseLock(chkLockPhase.IsChecked ?? false);
         }
     }
 }

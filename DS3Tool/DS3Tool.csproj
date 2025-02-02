@@ -62,7 +62,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="services\BonfireService.cs" />
-    <Compile Include="services\CinderService.cs" />
+    <Compile Include="services\CinderPhaseManager.cs" />
     <Compile Include="Utils.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
