@@ -23,6 +23,7 @@ namespace DS3Tool
     {
         DS3Process _process = null;
         private BonfireService _bonfireService;
+        private CinderService _cinderService;
 
         private bool disposedValue;
 
@@ -80,9 +81,11 @@ namespace DS3Tool
                 _timer.Interval = TimeSpan.FromSeconds(0.1);
                 _timer.Start();
                 UpdateStatButtons();
+                    _bonfireService = new BonfireService(_process);
+                _cinderService = new CinderService(_process);
             }
 
-            _bonfireService = new BonfireService(_process);
+            
         }
 
         private void LoadItemsFromCsv(string filePath)
@@ -1099,7 +1102,7 @@ namespace DS3Tool
         private void TestSwordAnimation_Click(object sender, RoutedEventArgs e)
         {
             // Force the sword animation (ID 20000)
-            _process.ForcePhaseTransition(2);
+            _cinderService.ForcePhaseTransition(0);
         }
     }
 }

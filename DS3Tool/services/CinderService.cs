@@ -72,6 +72,29 @@ namespace DS3Tool.services
             _ds3Process.WriteInt32(finalAddr, animationId);
         }
 
+        public int GetAnimationOffset()
+        {
+            var storedPtr = _ds3Process.ReadInt64(_ds3Process.ds3Base + codeCavePtrLoc);
 
+            var ptr1 = _ds3Process.ReadInt64(new IntPtr(storedPtr) + 0x1F90);
+            
+            var ptr2 = _ds3Process.ReadInt64(new IntPtr(ptr1) + 0x110);
+          
+
+            var offset = _ds3Process.ReadInt32(new IntPtr(ptr2) + 0xE8);
+            return offset == -1 ? 0 : offset;
+        }
+
+        private void SetLuaNumber(int numberIndex, float value)
+        {
+            var storedPtr = _ds3Process.ReadInt64(_ds3Process.ds3Base + codeCavePtrLoc);
+
+            var ptr1 = _ds3Process.ReadInt64(new IntPtr(storedPtr) + 0x58);
+
+            var baseAddr = _ds3Process.ReadInt64(new IntPtr(ptr1) + 0x320);
+
+            var finalAddr = new IntPtr(baseAddr) + 0x6BC + (4 * numberIndex);
+            _ds3Process.WriteFloat(finalAddr, value);
+        }
     }
 }
