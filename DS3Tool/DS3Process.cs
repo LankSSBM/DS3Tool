@@ -16,7 +16,7 @@ namespace DS3Tool
     {
         public const uint PROCESS_ALL_ACCESS = 2035711;
         private Process _targetProcess = null;
-        private IntPtr _targetProcessHandle = IntPtr.Zero;
+        public IntPtr _targetProcessHandle = IntPtr.Zero;
         public IntPtr ds3Base = IntPtr.Zero;
         public const int CodeCavePtrLoc = 0x1914670;
 
@@ -215,6 +215,28 @@ namespace DS3Tool
             return array;
         }
 
+        public string ReadString(IntPtr addr, int maxLength = 32)
+        {
+            var bytes = ReadBytes(addr, maxLength * 2);
+
+            int stringLength = 0;
+            for (int i = 0; i < bytes.Length - 1; i += 2)
+            {
+                if (bytes[i] == 0 && bytes[i + 1] == 0)
+                {
+                    stringLength = i;
+                    break;
+                }
+            }
+
+            if (stringLength == 0)
+            {
+                stringLength = bytes.Length - (bytes.Length % 2);
+            }
+
+            return System.Text.Encoding.Unicode.GetString(bytes, 0, stringLength);
+        }
+
         public void WriteInt32(IntPtr addr, int val)
         {
             WriteBytes(addr, BitConverter.GetBytes(val));
@@ -247,6 +269,14 @@ namespace DS3Tool
             {
                 WriteProcessMemory(_targetProcessHandle, addr, val, val.Length, 0); //can take as long as 15ms!
             }
+        }
+
+        public void WriteString(IntPtr addr, string value, int maxLength = 32)
+        {
+            var bytes = new byte[maxLength];
+            var stringBytes = System.Text.Encoding.Unicode.GetBytes(value);
+            Array.Copy(stringBytes, bytes, Math.Min(stringBytes.Length, maxLength));
+            WriteBytes(addr, bytes);
         }
 
         public enum DebugOpts
@@ -1021,7 +1051,20 @@ namespace DS3Tool
             return (double)BitConverter.ToInt32(fourBytes, 0);
         }
 
+        public string GetSetTargetEnemyID(string newValue = null)
+        {
+            var targetPtr = ReadInt64(ds3Base + CodeCavePtrLoc);
+            var modulesPtr = ReadInt64((IntPtr)targetPtr + 0x1F90);
+            var chrDataPtr = ReadInt64((IntPtr)modulesPtr + 0x18);
+            var enemyIdPtr = (IntPtr)(chrDataPtr + 0x130);
 
+            if (newValue != null)
+            {
+                WriteString(enemyIdPtr, newValue);
+            }
+
+            return ReadString(enemyIdPtr);
+        }
 
         public int GetSetPlayerStat(PlayerStats stat, int? newValue = null)
         {
@@ -1035,6 +1078,5 @@ namespace DS3Tool
             }
             return ReadInt32(finalAddress);
         }
-
     }
 }

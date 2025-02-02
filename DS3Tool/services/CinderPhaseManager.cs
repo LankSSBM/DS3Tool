@@ -5,12 +5,23 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Threading;
 using System;
+using System.Windows;
 
 internal class CinderPhaseManager : IDisposable
 
 {
+    private const string CINDER_ENEMY_ID = "c5280_0000";
+    private const int CodeCavePointerOffset = 0x1914670;
+    private const int AnimationPointerChainOffset1 = 0x1F90;
+    private const int AnimationPointerChainOffset2 = 0x58;
+    private const int AnimationFinalOffset = 0x20;
+    private const int LuaStateOffset = 0x58;
+    private const int LuaNumbersBaseOffset = 0x320;
+    private const int LuaCounterOffset = 0x6C4;
+
+
     private readonly DS3Process _ds3Process;
-    private const int CODE_CAVE_PTR_LOC = 0x1914670;
+   
     private CancellationTokenSource _monitorCancellation;
     private Task _monitoringTask;
     private int _currentPhase;
@@ -52,8 +63,17 @@ internal class CinderPhaseManager : IDisposable
 
     public void SetPhase(int phaseIndex, bool lockPhase)
     {
+       
         if (!_phases.ContainsKey(phaseIndex))
             throw new ArgumentException($"Invalid phase index: {phaseIndex}");
+
+        if (!ValidateTargetIsCinder())
+        {
+            MessageBox.Show("Please ensure you are locked onto Soul of Cinder before changing phases.",
+                          "Invalid Target",
+                          MessageBoxButton.OK);
+            return;
+        }
 
         _currentPhase = phaseIndex;
         var phase = _phases[phaseIndex];
@@ -97,18 +117,26 @@ internal class CinderPhaseManager : IDisposable
 
     private void StopPhaseLock()
     {
-        _monitorCancellation?.Cancel();
-        try
+        if (_monitorCancellation != null)
         {
-            _monitoringTask?.Wait();
-        }
-        catch (AggregateException) { }
+            _monitorCancellation.Cancel();
 
-        _monitorCancellation?.Dispose();
-        _monitorCancellation = null;
-        _monitoringTask = null;
-        _isLocked = false;
-      
+            var cancelTask = Task.Run(() =>
+            {
+                try
+                {
+                    _monitoringTask?.Wait(TimeSpan.FromSeconds(2));
+                }
+                catch (AggregateException) { }
+                catch (TaskCanceledException) { }
+            });
+
+        
+            _monitorCancellation?.Dispose();
+            _monitorCancellation = null;
+            _monitoringTask = null;
+            _isLocked = false;
+        }
     }
 
 
@@ -118,54 +146,68 @@ internal class CinderPhaseManager : IDisposable
         {
             try
             {
-
-                if (_currentPhase == 4) 
+                if (IsCurrentPhaseGwyn)
                 {
                     await Task.Delay(1000, token);
                     continue;
                 }
 
-                var targetPtr = _ds3Process.ReadInt64(_ds3Process.ds3Base + CODE_CAVE_PTR_LOC);
-                if (targetPtr != 0)
+                var codeCavePointer = _ds3Process.ReadInt64(_ds3Process.ds3Base + CodeCavePointerOffset);
+                if (codeCavePointer != 0)
                 {
-                    var luaPtr = _ds3Process.ReadInt64(new IntPtr(targetPtr) + 0x58);
-                    if (luaPtr != 0)
-                    {
-                        var luaBase = _ds3Process.ReadInt64(new IntPtr(luaPtr) + 0x320);
-                        if (luaBase != 0)
-                        {
-                            var currentValue = _ds3Process.ReadFloat(new IntPtr(luaBase) + 0x6C4);
-                            _ds3Process.WriteFloat(new IntPtr(luaBase) + 0x6C4, 0);
-
-                            if (currentValue > 50)
-                            {
-                                var phase = _phases[_currentPhase];
-                                ForceAnimation(phase.AnimationId);
-                                ResetLuaNumbers();
-                            }
-                        }
-                    }
+                    CheckAndResetLuaCounter(codeCavePointer);
                 }
                 await Task.Delay(1000, token);
             }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
             catch (Exception ex)
             {
-           
+             
+                Debug.WriteLine($"Error in phase monitoring: {ex.Message}");
                 await Task.Delay(1000, token);
+            }
+        }
+    }
+
+    private bool IsCurrentPhaseGwyn => _currentPhase == 4;
+
+    private void CheckAndResetLuaCounter(long targetPtr)
+    {
+        var luaPtr = _ds3Process.ReadInt64(new IntPtr(targetPtr) + LuaStateOffset);
+        if (luaPtr != 0)
+        {
+            var luaBase = _ds3Process.ReadInt64(new IntPtr(luaPtr) + LuaNumbersBaseOffset);
+            if (luaBase != 0)
+            {
+                var currentValue = _ds3Process.ReadFloat(new IntPtr(luaBase) + LuaCounterOffset);
+                _ds3Process.WriteFloat(new IntPtr(luaBase) + LuaCounterOffset, 0);
+
+                if (currentValue > 50)
+                {
+                    var phase = _phases[_currentPhase];
+                    ForceAnimation(phase.AnimationId);
+                    ResetLuaNumbers();
+                }
             }
         }
     }
 
     private void ForceAnimation(int animationId)
     {
-        var storedPtr = _ds3Process.ReadInt64(_ds3Process.ds3Base + CODE_CAVE_PTR_LOC);
-        if (storedPtr == 0)
-            throw new InvalidOperationException("No target selected!");
+        var codeCavePointer = _ds3Process.ReadInt64(_ds3Process.ds3Base + CodeCavePointerOffset);
+        if (codeCavePointer == 0)
+        {
+            MessageBox.Show("Please lock on to Cinder and Enable target options before selecting a phase", "Error", MessageBoxButton.OK);
+            return; 
+        }
 
-        var basePtr = new IntPtr(storedPtr);
-        var ptr1 = _ds3Process.ReadInt64(basePtr + 0x1F90);
-        var ptr2 = _ds3Process.ReadInt64(new IntPtr(ptr1) + 0x58);
-        var finalAddr = new IntPtr(ptr2) + 0x20;
+        var basePtr = new IntPtr(codeCavePointer);
+        var ptr1 = _ds3Process.ReadInt64(basePtr + AnimationPointerChainOffset1);
+        var ptr2 = _ds3Process.ReadInt64(new IntPtr(ptr1) + AnimationPointerChainOffset2);
+        var finalAddr = new IntPtr(ptr2) + AnimationFinalOffset;
         _ds3Process.WriteInt32(finalAddr, animationId);
     }
 
@@ -178,10 +220,10 @@ internal class CinderPhaseManager : IDisposable
 
     private void SetLuaNumber(int numberIndex, float value)
     {
-        var storedPtr = _ds3Process.ReadInt64(_ds3Process.ds3Base + CODE_CAVE_PTR_LOC);
-        var ptr1 = _ds3Process.ReadInt64(new IntPtr(storedPtr) + 0x58);
-        var baseAddr = _ds3Process.ReadInt64(new IntPtr(ptr1) + 0x320);
-        var finalAddr = new IntPtr(baseAddr) + 0x6BC + (4 * numberIndex);
+        var codeCavePointer = _ds3Process.ReadInt64(_ds3Process.ds3Base + CodeCavePointerOffset);
+        var luaStatePointer = _ds3Process.ReadInt64(new IntPtr(codeCavePointer) + LuaStateOffset);
+        var luaBaseAddress = _ds3Process.ReadInt64(new IntPtr(luaStatePointer) + LuaNumbersBaseOffset);
+        var finalAddr = new IntPtr(luaBaseAddress) + 0x6BC + (4 * numberIndex);
         _ds3Process.WriteFloat(finalAddr, value);
     }
 
@@ -189,4 +231,15 @@ internal class CinderPhaseManager : IDisposable
     {
         StopPhaseLock();
     }
+
+    private bool ValidateTargetIsCinder()
+    {
+        var codeCavePointer = _ds3Process.ReadInt64(_ds3Process.ds3Base + CodeCavePointerOffset);
+        if (codeCavePointer == 0)
+            return false;
+
+        string targetId = _ds3Process.GetSetTargetEnemyID();
+        return targetId == CINDER_ENEMY_ID;
+    }
+
 }
