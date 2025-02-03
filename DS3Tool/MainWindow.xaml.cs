@@ -1078,7 +1078,13 @@ namespace DS3Tool
 
         private void SpawnButton_Click(object sender, RoutedEventArgs e)
         {
-
+            _itemSpawnService.SpawnItem(
+    baseItemId: 0x003DA540, 
+    infusionType: "Fire",
+    upgradeLevel: "+10",
+    quantity: 1,
+    durability: 100
+);
         }
 
         private void UnlockSelectedButton_Click(object sender, RoutedEventArgs e)
