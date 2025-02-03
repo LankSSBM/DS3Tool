@@ -38,7 +38,7 @@ namespace DS3Tool
 
         public Dictionary<string, string> ItemDictionary { get; private set; }
 
-   
+
 
         (float, float, float, float)? savedPos = null;
 
@@ -59,7 +59,7 @@ namespace DS3Tool
             Closing += MainWindow_Closing;
             Loaded += MainWindow_Loaded;
 
-            retry:
+        retry:
             try
             {
                 _process = new DS3Process();
@@ -86,7 +86,7 @@ namespace DS3Tool
                 initItemAdjustments();
 
             }
- 
+
         }
 
         private void initItemAdjustments()
@@ -94,7 +94,7 @@ namespace DS3Tool
             infusionTypeComboBox.ItemsSource = _itemSpawnService.INFUSION_TYPES.Keys;
             infusionTypeComboBox.SelectedIndex = 0;
 
-       
+
             upgradeComboBox.ItemsSource = _itemSpawnService.UPGRADES.Keys;
             upgradeComboBox.SelectedIndex = 0;
         }
@@ -103,26 +103,26 @@ namespace DS3Tool
         {
             ItemDictionary = new Dictionary<string, string>();
 
-        
+
             string[] lines = File.ReadAllLines(filePath);
 
-        
+
             itemList.Items.Clear();
 
-         
+
             for (int i = 1; i < lines.Length; i++)
             {
-      
+
                 string[] columns = lines[i].Split(',');
 
-        
+
                 if (columns.Length >= 2)
                 {
 
                     string firstColumnValue = columns[0].Trim('"', ' ');
                     string secondColumnValue = columns[1].Trim('"', ' ');
 
-                   
+
                     itemList.Items.Add(firstColumnValue);
 
                     ItemDictionary[firstColumnValue] = secondColumnValue;
@@ -141,7 +141,7 @@ namespace DS3Tool
 
         private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {//TODO: window state save?
-            
+
         }
 
         private void _timer_Tick(object sender, EventArgs e)
@@ -224,7 +224,7 @@ namespace DS3Tool
             }
         }
 
-       
+
 
         private void MainWindow_Closed(object sender, EventArgs e)
         {
@@ -1028,7 +1028,7 @@ namespace DS3Tool
             catch (Exception ex) { Utils.debugWrite(ex.ToString()); }
         }
 
-        
+
 
         private void EditStat(object sender, RoutedEventArgs e)
         {
@@ -1060,7 +1060,7 @@ namespace DS3Tool
                 {
                     var value = _process.GetSetPlayerStat(stat);
 
-                
+
                     if (stat != PlayerStats.SOULS)
                     {
                         if (value <= 0 || value >= 100)
@@ -1104,24 +1104,25 @@ namespace DS3Tool
                 return;
             }
 
-            uint formattedId = formatItemId(hexId);
+            uint formattedId = FormatItemId(hexId);
             string selectedInfusion = infusionTypeComboBox.SelectedItem.ToString();
             string selectedUpgrade = upgradeComboBox.SelectedItem.ToString();
+            uint quantity = (uint)quantitySlider.Value;
 
             _itemSpawnService.SpawnItem(
         baseItemId: formattedId,
         infusionType: selectedInfusion,
         upgradeLevel: selectedUpgrade,
-        quantity: 1,
+        quantity: quantity,
         durability: 100
     );
         }
 
-        private uint formatItemId(String hexId)
+        private uint FormatItemId(String hexId)
         {
             hexId = hexId.Replace("0x", "").Trim();
 
-          
+
             return uint.Parse(hexId, System.Globalization.NumberStyles.HexNumber);
         }
 

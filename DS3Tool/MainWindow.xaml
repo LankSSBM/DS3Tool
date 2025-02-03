@@ -155,7 +155,29 @@
                     Margin="0,5"
                     MaxDropDownHeight="200"
                     VirtualizingPanel.IsVirtualizing="True"
-                    VirtualizingPanel.VirtualizationMode="Recycling"/>
+                    VirtualizingPanel.VirtualizationMode="Recycling"
+                              IsTextSearchEnabled="True"
+                              StaysOpenOnEdit="True"
+                              />
+
+                    <StackPanel Orientation="Horizontal" 
+                    Margin="0,5" 
+                    Width="200">
+                        <TextBlock Text="Quantity: " 
+                       VerticalAlignment="Center"/>
+                        <Slider x:Name="quantitySlider"
+                    Minimum="1"
+                    Maximum="99"
+                    Value="1"
+                    Width="130"
+                    VerticalAlignment="Center"
+                    IsSnapToTickEnabled="True"
+                    TickFrequency="1"/>
+                        <TextBlock Text="{Binding ElementName=quantitySlider, Path=Value, StringFormat={}{0:0}}"
+                       Margin="5,0,0,0"
+                       Width="30"
+                       VerticalAlignment="Center"/>
+                    </StackPanel>
                     <Button x:Name="spawnButton"
                     Content="Spawn Item"
                     Width="200"
