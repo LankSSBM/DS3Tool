@@ -38,6 +38,7 @@ namespace DS3Tool
         bool _noClipActive = false;
 
         public Dictionary<string, string> ItemDictionary { get; private set; }
+        public List<LoadoutTemplate> Templates { get; set; }
 
 
 
@@ -85,10 +86,10 @@ namespace DS3Tool
                 _bonfireService = new BonfireService(_process);
                 _itemSpawnService = new ItemSpawnService(_process);
                 initItemAdjustments();
-
+                loadItemTemplates();
             }
-
         }
+
 
         private void initItemAdjustments()
         {
@@ -98,6 +99,19 @@ namespace DS3Tool
 
             upgradeComboBox.ItemsSource = _itemSpawnService.UPGRADES.Keys;
             upgradeComboBox.SelectedIndex = 0;
+        }
+
+
+        private void loadItemTemplates()
+        {
+            Templates = new List<LoadoutTemplate>
+            {
+                LoadoutPreset.SL1NoUpgrades,
+                LoadoutPreset.SL1,
+                LoadoutPreset.MetaLeveled
+            };
+            TemplateComboBox.ItemsSource = Templates;
+            TemplateComboBox.SelectedIndex = 0;
         }
 
         private void LoadItemsFromCsv(string filePath)
@@ -1120,22 +1134,23 @@ namespace DS3Tool
         }
 
 
-        private void TemplateButton_Click(object sender, RoutedEventArgs e)
+        private void ApplyTemplateButton_Click(object sender, RoutedEventArgs e)
         {
-            var template = LoadoutPreset.SL1NoUpgrades;
-
-            foreach (var item in template.Items)
+            if (TemplateComboBox.SelectedItem is LoadoutTemplate selectedTemplate)
             {
-                if (ItemDictionary.TryGetValue(item.ItemName, out string hexId))
+                foreach (var item in selectedTemplate.Items)
                 {
-                    uint formattedId = uint.Parse(hexId, System.Globalization.NumberStyles.HexNumber);
-                    _itemSpawnService.SpawnItem(
-                        baseItemId: formattedId,
-                        infusionType: item.Infusion,
-                        upgradeLevel: item.Upgrade,
-                        quantity: item.Quantity,
-                        durability: 100
-                    );
+                    if (ItemDictionary.TryGetValue(item.ItemName, out string hexId))
+                    {
+                        uint formattedId = uint.Parse(hexId, System.Globalization.NumberStyles.HexNumber);
+                        _itemSpawnService.SpawnItem(
+                            baseItemId: formattedId,
+                            infusionType: item.Infusion,
+                            upgradeLevel: item.Upgrade,
+                            quantity: item.Quantity,
+                            durability: 100
+                        );
+                    }
                 }
             }
         }
