@@ -136,6 +136,17 @@
                 <Button Click="EditStat" Tag="FAITH" Margin="2">Faith: 0</Button>
                 <Button Click="EditStat" Tag="LUCK" Margin="2">Luck: 0</Button>
                 <Button Click="EditStat" Tag="SOULS" Margin="2">Souls: 0</Button>
+                <ComboBox Width="80" Height="30" Margin="5" Text="NG" IsEditable="True" SelectedIndex="-1"
+                          SelectionChanged="NgLevelComboBox_SelectionChanged" x:Name="NgLevelComboBox" >
+                    <ComboBoxItem Content="NG"/>
+                    <ComboBoxItem Content="NG+1"/>
+                    <ComboBoxItem Content="NG+2"/>
+                    <ComboBoxItem Content="NG+3"/>
+                    <ComboBoxItem Content="NG+4"/>
+                    <ComboBoxItem Content="NG+5"/>
+                    <ComboBoxItem Content="NG+6"/>
+                    <ComboBoxItem Content="NG+7"/>
+                </ComboBox>
             </UniformGrid>
         </GroupBox>
         <StackPanel>
