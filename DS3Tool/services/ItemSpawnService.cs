@@ -13,7 +13,7 @@ namespace DS3Tool.services
         private const int MAP_ITEM_MANAGER_OFFSET = 0x4752300;
         private const long BASE_MEMORY_LOCATION = 0x143B40C1E;
 
-        private readonly Dictionary<string, uint> INFUSION_TYPES = new Dictionary<string, uint>
+        public readonly Dictionary<string, uint> INFUSION_TYPES = new Dictionary<string, uint>
         {
             { "Normal", 0 }, { "Heavy", 100 }, { "Sharp", 200 },
             { "Refined", 300 }, { "Simple", 400 }, { "Crystal", 500 },
@@ -23,7 +23,7 @@ namespace DS3Tool.services
             { "Hollow", 1500 }
         };
 
-        private readonly Dictionary<string, uint> UPGRADES = new Dictionary<string, uint>
+        public readonly Dictionary<string, uint> UPGRADES = new Dictionary<string, uint>
         {
             { "+0", 0 }, { "+1", 1 }, { "+2", 2 }, { "+3", 3 }, { "+4", 4 },
             { "+5", 5 }, { "+6", 6 }, { "+7", 7 }, { "+8", 8 }, { "+9", 9 },
@@ -137,7 +137,7 @@ namespace DS3Tool.services
             shellcode.AddRange(BitConverter.GetBytes(outputPtr));
             shellcode.AddRange(new byte[] { 0x48, 0xB8 });  // mov rax, spawnFunc
             shellcode.AddRange(BitConverter.GetBytes(spawnFunc));
-            shellcode.AddRange(new byte[]
+            shellcode.AddRange(new byte[] 
             {
                 0xFF, 0xD0,              // call rax
                 0x48, 0x83, 0xC4, 0x28,  // add rsp, 28h

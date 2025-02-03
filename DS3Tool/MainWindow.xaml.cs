@@ -83,9 +83,20 @@ namespace DS3Tool
                 UpdateStatButtons();
                 _bonfireService = new BonfireService(_process);
                 _itemSpawnService = new ItemSpawnService(_process);
-            }
+                initItemAdjustments();
 
-            
+            }
+ 
+        }
+
+        private void initItemAdjustments()
+        {
+            infusionTypeComboBox.ItemsSource = _itemSpawnService.INFUSION_TYPES.Keys;
+            infusionTypeComboBox.SelectedIndex = 0;
+
+       
+            upgradeComboBox.ItemsSource = _itemSpawnService.UPGRADES.Keys;
+            upgradeComboBox.SelectedIndex = 0;
         }
 
         private void LoadItemsFromCsv(string filePath)
@@ -1077,14 +1088,41 @@ namespace DS3Tool
         }
 
         private void SpawnButton_Click(object sender, RoutedEventArgs e)
+
         {
+
+            if (itemList.SelectedItem == null)
+            {
+                MessageBox.Show("Please select an item to spawn.");
+                return;
+            }
+
+            string selectedItem = itemList.SelectedItem.ToString();
+            if (!ItemDictionary.TryGetValue(selectedItem, out string hexId))
+            {
+                MessageBox.Show("Item not found in dictionary.");
+                return;
+            }
+
+            uint formattedId = formatItemId(hexId);
+            string selectedInfusion = infusionTypeComboBox.SelectedItem.ToString();
+            string selectedUpgrade = upgradeComboBox.SelectedItem.ToString();
+
             _itemSpawnService.SpawnItem(
-    baseItemId: 0x003DA540, 
-    infusionType: "Fire",
-    upgradeLevel: "+10",
-    quantity: 1,
-    durability: 100
-);
+        baseItemId: formattedId,
+        infusionType: selectedInfusion,
+        upgradeLevel: selectedUpgrade,
+        quantity: 1,
+        durability: 100
+    );
+        }
+
+        private uint formatItemId(String hexId)
+        {
+            hexId = hexId.Replace("0x", "").Trim();
+
+          
+            return uint.Parse(hexId, System.Globalization.NumberStyles.HexNumber);
         }
 
         private void UnlockSelectedButton_Click(object sender, RoutedEventArgs e)
