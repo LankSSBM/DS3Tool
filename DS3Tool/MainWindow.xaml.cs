@@ -16,6 +16,7 @@ using System.Text;
 using static DS3Tool.DS3Process;
 using System.Collections.ObjectModel;
 using DS3Tool.services;
+using DS3Tool.templates;
 
 namespace DS3Tool
 {
@@ -102,29 +103,21 @@ namespace DS3Tool
         private void LoadItemsFromCsv(string filePath)
         {
             ItemDictionary = new Dictionary<string, string>();
-
-
             string[] lines = File.ReadAllLines(filePath);
 
-
             itemList.Items.Clear();
-
+            VirtualizingPanel.SetIsVirtualizing(itemList, true);
+            VirtualizingPanel.SetVirtualizationMode(itemList, VirtualizationMode.Recycling);
 
             for (int i = 1; i < lines.Length; i++)
             {
-
                 string[] columns = lines[i].Split(',');
-
-
                 if (columns.Length >= 2)
                 {
-
                     string firstColumnValue = columns[0].Trim('"', ' ');
                     string secondColumnValue = columns[1].Trim('"', ' ');
 
-
                     itemList.Items.Add(firstColumnValue);
-
                     ItemDictionary[firstColumnValue] = secondColumnValue;
                 }
             }
@@ -1090,6 +1083,8 @@ namespace DS3Tool
         private void SpawnButton_Click(object sender, RoutedEventArgs e)
 
         {
+            const string MIN_WEAPON_ID = "000D9490";
+            const string MAX_WEAPON_ID = "015F1AD0";
 
             if (itemList.SelectedItem == null)
             {
@@ -1104,10 +1099,16 @@ namespace DS3Tool
                 return;
             }
 
-            uint formattedId = FormatItemId(hexId);
+            uint formattedId = uint.Parse(hexId, System.Globalization.NumberStyles.HexNumber);
             string selectedInfusion = infusionTypeComboBox.SelectedItem.ToString();
             string selectedUpgrade = upgradeComboBox.SelectedItem.ToString();
             uint quantity = (uint)quantitySlider.Value;
+
+            if (hexId.CompareTo(MIN_WEAPON_ID) < 0 || hexId.CompareTo(MAX_WEAPON_ID) > 0)
+            {
+                selectedInfusion = "Normal";
+                selectedUpgrade = "+0";
+            }
 
             _itemSpawnService.SpawnItem(
         baseItemId: formattedId,
@@ -1118,13 +1119,27 @@ namespace DS3Tool
     );
         }
 
-        private uint FormatItemId(String hexId)
+
+        private void TemplateButton_Click(object sender, RoutedEventArgs e)
         {
-            hexId = hexId.Replace("0x", "").Trim();
+            var template = LoadoutPreset.SL1NoUpgrades;
 
-
-            return uint.Parse(hexId, System.Globalization.NumberStyles.HexNumber);
+            foreach (var item in template.Items)
+            {
+                if (ItemDictionary.TryGetValue(item.ItemName, out string hexId))
+                {
+                    uint formattedId = uint.Parse(hexId, System.Globalization.NumberStyles.HexNumber);
+                    _itemSpawnService.SpawnItem(
+                        baseItemId: formattedId,
+                        infusionType: item.Infusion,
+                        upgradeLevel: item.Upgrade,
+                        quantity: item.Quantity,
+                        durability: 100
+                    );
+                }
+            }
         }
+
 
         private void UnlockSelectedButton_Click(object sender, RoutedEventArgs e)
         {

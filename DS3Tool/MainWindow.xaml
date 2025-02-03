@@ -150,16 +150,19 @@
                     Width="200"
                     Height="25"/>
                     <ComboBox x:Name="itemList" 
-                    Width="200" 
-                    Height="25"
-                    Margin="0,5"
-                    MaxDropDownHeight="200"
-                    VirtualizingPanel.IsVirtualizing="True"
-                    VirtualizingPanel.VirtualizationMode="Recycling"
-                              IsTextSearchEnabled="True"
-                              StaysOpenOnEdit="True"
-                              />
-
+                     Width="200" 
+                     Height="25"
+                     Margin="0,5"
+                     MaxDropDownHeight="200"
+                     IsTextSearchEnabled="True"
+                     IsEditable="True"
+                     StaysOpenOnEdit="True">
+                        <ComboBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <VirtualizingStackPanel />
+                            </ItemsPanelTemplate>
+                        </ComboBox.ItemsPanel>
+                    </ComboBox>
                     <StackPanel Orientation="Horizontal" 
                     Margin="0,5" 
                     Width="200">
@@ -184,7 +187,9 @@
                     Height="25"
                     Margin="0,5"
                     Click="SpawnButton_Click"/>
+                    <Button Content="Select template" Width="200" Height="30" Margin="5" Click="TemplateButton_Click"/>
                 </StackPanel>
+                
             </GroupBox>
         </StackPanel>
 

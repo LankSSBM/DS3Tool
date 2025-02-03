@@ -54,7 +54,7 @@ namespace DS3Tool.services
             this.process = process;
         }
 
-        public void SpawnItem(uint baseItemId, string infusionType, string upgradeLevel, uint quantity, uint durability = 0)
+        public void SpawnItem(uint baseItemId, string infusionType = "Normal", string upgradeLevel = "+0", uint quantity = 1, uint durability = 0)
         {
 
             IntPtr requestLocation = new IntPtr(BASE_MEMORY_LOCATION);
