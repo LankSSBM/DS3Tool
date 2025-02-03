@@ -16,8 +16,9 @@ namespace DS3Tool
     {
         public const uint PROCESS_ALL_ACCESS = 2035711;
         private Process _targetProcess = null;
-        private IntPtr _targetProcessHandle = IntPtr.Zero;
+        public IntPtr _targetProcessHandle = IntPtr.Zero;
         public IntPtr ds3Base = IntPtr.Zero;
+        public const int CodeCavePtrLoc = 0x1914670;
 
         protected bool disposed = false;
 
@@ -214,6 +215,28 @@ namespace DS3Tool
             return array;
         }
 
+        public string ReadString(IntPtr addr, int maxLength = 32)
+        {
+            var bytes = ReadBytes(addr, maxLength * 2);
+
+            int stringLength = 0;
+            for (int i = 0; i < bytes.Length - 1; i += 2)
+            {
+                if (bytes[i] == 0 && bytes[i + 1] == 0)
+                {
+                    stringLength = i;
+                    break;
+                }
+            }
+
+            if (stringLength == 0)
+            {
+                stringLength = bytes.Length - (bytes.Length % 2);
+            }
+
+            return System.Text.Encoding.Unicode.GetString(bytes, 0, stringLength);
+        }
+
         public void WriteInt32(IntPtr addr, int val)
         {
             WriteBytes(addr, BitConverter.GetBytes(val));
@@ -246,6 +269,14 @@ namespace DS3Tool
             {
                 WriteProcessMemory(_targetProcessHandle, addr, val, val.Length, 0); //can take as long as 15ms!
             }
+        }
+
+        public void WriteString(IntPtr addr, string value, int maxLength = 32)
+        {
+            var bytes = new byte[maxLength];
+            var stringBytes = System.Text.Encoding.Unicode.GetBytes(value);
+            Array.Copy(stringBytes, bytes, Math.Min(stringBytes.Length, maxLength));
+            WriteBytes(addr, bytes);
         }
 
         public enum DebugOpts
@@ -310,7 +341,7 @@ namespace DS3Tool
         {PlayerStats.SOULS, 0x74 }
     };
 
- 
+
         //1.15 stuff by shilkey
         const int worldChrManOff = 0x4768E78;
         const int hitboxOff = 0x4766B80;
@@ -321,7 +352,11 @@ namespace DS3Tool
         const int spawnItem = 0x7bba70;
         const int enemyTargetDrawAOff = 0x41E6CA;
         const int GameFlagDataOff = 0x473BE28;
-    
+        const int globalSpeedOff = 0x999C28;
+        const int targetHookLoc = 0x85A74A;
+        const int codeCavePtrLoc = 0x1914670;
+        const int codeCaveCodeLoc = codeCavePtrLoc + 0x10;
+
 
 
         //offsets of main pointers/statics.
@@ -340,9 +375,9 @@ namespace DS3Tool
         //const int DrawNearOnly_ptrOff = 0x4766555; //not a pointer - static debug flag? (no refs to this addr) //not updated for 1.15.1
         //const int debug_flagsOff = 0x477FEA8; //also static? "all" debug flags, not specific to any character.
         const int GROUP_MASKOff = 0x456CBA8; //also static
-        //const int menuManOff = 0x4763258; //NS_SPRJ::MenuMan
-        //const int hitboxOff = 0x477DAC0; //no name. damage management?
-       
+                                             //const int menuManOff = 0x4763258; //NS_SPRJ::MenuMan
+                                             //const int hitboxOff = 0x477DAC0; //no name. damage management?
+
         const int newMenuSystemOff = 0x478DA50; //AppMenu::NewMenuSystem
         const int worldAIManOff = 0x4751550; //NS_SPRJ::SprjWorldAiManagerImp
 
@@ -368,7 +403,7 @@ namespace DS3Tool
         //others
         const int playerDebugFlagsOff = 0x1EEA; //expect this to change if any patches occur
 
-        const int globalSpeedOff = 0x9A3D48;
+        //const int globalSpeedOff = 0x9A3D48;
         public float getSetGameSpeed(float? val = null)
         {
             var ptr = ds3Base + globalSpeedOff;
@@ -382,36 +417,36 @@ namespace DS3Tool
 
         //DbgGetForceActIdx. patch changes it to use the addr from DbgSetLastActIdx
         const int enemyRepeatActionOff = 0x3E2590 + 4 + 3;
-/*  00000001403E2510 | 48:8B41 08               | mov rax, qword ptr ds:[rcx+8]                         |
-    00000001403E2514 | 0FBE80 81B60000          | movsx eax,byte ptr ds:[rax+B681]                      |
-    00000001403E251B | C3                       | ret                                                   |*/
-//note: taken from live process. code is obfuscated when analysing offline. //TODO: investigate this? unpacking with steamless doesn't help. just have to do live aob scans with ds3 i guess.
+        /*  00000001403E2510 | 48:8B41 08               | mov rax, qword ptr ds:[rcx+8]                         |
+            00000001403E2514 | 0FBE80 81B60000          | movsx eax,byte ptr ds:[rax+B681]                      |
+            00000001403E251B | C3                       | ret                                                   |*/
+        //note: taken from live process. code is obfuscated when analysing offline. //TODO: investigate this? unpacking with steamless doesn't help. just have to do live aob scans with ds3 i guess.
         const byte enemyRepeatActionPatchVal = 0x82;
         const byte enemyRepeatActionOrigVal = 0x81;
 
         //just search for string refs
-/*
-00000001426427D0 | 48:83EC 38                      | sub rsp,38                                                             |
-00000001426427D4 | 48:C74424 20 FEFFFFFF           | mov qword ptr ss:[rsp+20],FFFFFFFFFFFFFFFE                             |
-00000001426427DD | 48:8D05 9C3A1000                | lea rax, qword ptr ds:[142746280]                                       |
-00000001426427E4 | 48:8905 8539EE01                | mov qword ptr ds:[144526170],rax                                       |
-00000001426427EB | 48:8D05 2EFDD9FD                | lea rax, qword ptr ds:[<DbgSetLastActIdx>]                              | <---- here
-00000001426427F2 | 48:8905 7F39EE01                | mov qword ptr ds:[144526178],rax                                       |
-00000001426427F9 | 48:8B05 B06F0F02                | mov rax, qword ptr ds:[1447397B0]                                       |
-0000000142642800 | 48:85C0                         | test rax, rax                                                           |
-0000000142642803 | 75 05                           | jne<darksoulsiii_1.15.sub_14264280A>                                  |
-0000000142642805 | E8 8644DBFD                     | call<darksoulsiii_1.15.sub_1403F6C90>                                 |
-000000014264280A | 4C:8B10                         | mov r10, qword ptr ds:[rax]                                             |
-000000014264280D | 4C:8D0D 346A1000                | lea r9, qword ptr ds:[142749248]                                        | 0000000142749248:L"DbgSetLastActIdx"
-0000000142642814 | 4C:8D05 556A1000                | lea r8, qword ptr ds:[142749270]                                        | 0000000142749270:"DbgSetLastActIdx"
-000000014264281B | 48:8D15 4E39EE01                | lea rdx, qword ptr ds:[144526170]                                       |
-0000000142642822 | 48:8BC8                         | mov rcx, rax                                                            |
-0000000142642825 | 41:FF52 58                      | call qword ptr ds:[r10+58]                                             |
-0000000142642829 | 90                              | nop                                                                    |
-000000014264282A | 48:8D0D CF0D0B00                | lea rcx, qword ptr ds:[<sub_1426F3600>]                                 |
-0000000142642831 | 48:83C4 38                      | add rsp,38                                                             |
-0000000142642835 | E9 222198FF                     | jmp darksoulsiii_1.15.141FC495C                                        |
-*/
+        /*
+        00000001426427D0 | 48:83EC 38                      | sub rsp,38                                                             |
+        00000001426427D4 | 48:C74424 20 FEFFFFFF           | mov qword ptr ss:[rsp+20],FFFFFFFFFFFFFFFE                             |
+        00000001426427DD | 48:8D05 9C3A1000                | lea rax, qword ptr ds:[142746280]                                       |
+        00000001426427E4 | 48:8905 8539EE01                | mov qword ptr ds:[144526170],rax                                       |
+        00000001426427EB | 48:8D05 2EFDD9FD                | lea rax, qword ptr ds:[<DbgSetLastActIdx>]                              | <---- here
+        00000001426427F2 | 48:8905 7F39EE01                | mov qword ptr ds:[144526178],rax                                       |
+        00000001426427F9 | 48:8B05 B06F0F02                | mov rax, qword ptr ds:[1447397B0]                                       |
+        0000000142642800 | 48:85C0                         | test rax, rax                                                           |
+        0000000142642803 | 75 05                           | jne<darksoulsiii_1.15.sub_14264280A>                                  |
+        0000000142642805 | E8 8644DBFD                     | call<darksoulsiii_1.15.sub_1403F6C90>                                 |
+        000000014264280A | 4C:8B10                         | mov r10, qword ptr ds:[rax]                                             |
+        000000014264280D | 4C:8D0D 346A1000                | lea r9, qword ptr ds:[142749248]                                        | 0000000142749248:L"DbgSetLastActIdx"
+        0000000142642814 | 4C:8D05 556A1000                | lea r8, qword ptr ds:[142749270]                                        | 0000000142749270:"DbgSetLastActIdx"
+        000000014264281B | 48:8D15 4E39EE01                | lea rdx, qword ptr ds:[144526170]                                       |
+        0000000142642822 | 48:8BC8                         | mov rcx, rax                                                            |
+        0000000142642825 | 41:FF52 58                      | call qword ptr ds:[r10+58]                                             |
+        0000000142642829 | 90                              | nop                                                                    |
+        000000014264282A | 48:8D0D CF0D0B00                | lea rcx, qword ptr ds:[<sub_1426F3600>]                                 |
+        0000000142642831 | 48:83C4 38                      | add rsp,38                                                             |
+        0000000142642835 | E9 222198FF                     | jmp darksoulsiii_1.15.141FC495C                                        |
+        */
 
         const int usrInputMgrImplOff = 0x49644C8; //virtually static pointing to 14494e9f0. no AOB but the class instance is DLUID::DLUserInputManagerImpl<DLKR::DLMultiThreadingPolicy>.
         const int usrInputMgrImpSteamInputFlagOff = 0x24b;
@@ -426,10 +461,11 @@ namespace DS3Tool
         const int noLogoPatchLoc = 0xBF42BF;
         readonly byte[] noLogoPatchCode = new byte[] { 0x48, 0x31, 0xC0, 0x48, 0x89, 0x02, 0x49, 0x89, 0x04, 0x24, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 };
 
-        const int codeCavePtrLoc = 0x271AC00; //end-of-file zero block
-        const int targetHookLoc = 0x862CBA;
-        
-        const int codeCaveCodeLoc = codeCavePtrLoc + 0x10;
+
+        //const int codeCavePtrLoc = 0x271AC00; //end-of-file zero block
+        // const int targetHookLoc = 0x862CBA;
+
+        //const int codeCaveCodeLoc = codeCavePtrLoc + 0x10;
 
         static readonly byte[] targetHookOrigCode = new byte[] { 0x48, 0x8B, 0x80, 0x90, 0x1F, 0x00, 0x00, };
         /*
@@ -468,7 +504,10 @@ namespace DS3Tool
         }
 
         public bool installTargetHook()
+
+
         {
+
             //generate code first
             var targetHookReplacementCode = getTargetHookReplacementCode();
             var targetHookCaveCode = getTargetHookCaveCodeTemplate(); //still needs to have ptr addr added in
@@ -671,107 +710,107 @@ namespace DS3Tool
             {
                 case DebugOpts.COL_MESH_MAIN: return (ds3Base + meshesOff + 0, 1); //6c
                 case DebugOpts.COL_MESH_VISUAL: return (ds3Base + meshesOff + 1, 1); //6d
-                    //there's a character mesh at +3, but it requires 'all debug drawing' to also be on. (or switched on individually for a character)
+                                                                                     //there's a character mesh at +3, but it requires 'all debug drawing' to also be on. (or switched on individually for a character)
                 case DebugOpts.COL_MESH_HIGH_PERF: return (ds3Base + meshesOff + 5, 1); //71
                 case DebugOpts.COL_MESH_COLOURS: return (ds3Base + meshesOff + 8, 1); //74
                 case DebugOpts.CHARACTER_MESH: return (ds3Base + meshesOff + 3, 1); //6f
                 case DebugOpts.HITBOX_VIEW:
                 case DebugOpts.IMPACT_VIEW:
-                {
-                    var ptr = ReadUInt64(ds3Base + hitboxOff);
-                    if (ptr < SANE_MINIMUM) { return badVal; }
-                    ptr += 0x30;
-                    if (opt == DebugOpts.IMPACT_VIEW) { ptr += 1; }
-                    //Utils.debugWrite(ptr.ToString("X16"));
-                    return ((IntPtr)ptr, 1);
-                }
+                    {
+                        var ptr = ReadUInt64(ds3Base + hitboxOff);
+                        if (ptr < SANE_MINIMUM) { return badVal; }
+                        ptr += 0x30;
+                        if (opt == DebugOpts.IMPACT_VIEW) { ptr += 1; }
+                        //Utils.debugWrite(ptr.ToString("X16"));
+                        return ((IntPtr)ptr, 1);
+                    }
                 case DebugOpts.DISABLE_MAP: return (ds3Base + GROUP_MASKOff, 0);
                 case DebugOpts.DISABLE_CHARACTER: return (ds3Base + GROUP_MASKOff + 2, 0); //TODO - what was todo?
                 case DebugOpts.NO_DEATH:
-                {
-                    var ptr3 = getCharPtrModules();
-                    var ptr4 = ReadUInt64((IntPtr)(ptr3 + chrDataModuleOff));
-                    var ptr5 = (IntPtr)(ptr4 + 0x1C0); //character debug flags?
-                    return (ptr5, 0x12); //bitfield, bit 2
-                }
+                    {
+                        var ptr3 = getCharPtrModules();
+                        var ptr4 = ReadUInt64((IntPtr)(ptr3 + chrDataModuleOff));
+                        var ptr5 = (IntPtr)(ptr4 + 0x1C0); //character debug flags?
+                        return (ptr5, 0x12); //bitfield, bit 2
+                    }
                 case DebugOpts.ALL_CHR_NO_DEATH: return (ds3Base + debug_flagsOff + 0x8, 1);
                 case DebugOpts.INSTANT_QUITOUT:
-                {
+                    {
 
-                    var ptr = ReadUInt64(ds3Base + menuManOff);
-                    return ((IntPtr)(ptr + 0x250), 1); //likely other menu functions nearby
-                }
+                        var ptr = ReadUInt64(ds3Base + menuManOff);
+                        return ((IntPtr)(ptr + 0x250), 1); //likely other menu functions nearby
+                    }
                 case DebugOpts.ONE_HP:
                 case DebugOpts.MAX_HP:
-                {
-                    var ptr3 = getCharPtrModules();
-                    var ptr4 = ReadUInt64((IntPtr)(ptr3 + chrDataModuleOff));
-                    var ptr5 = (IntPtr)(ptr4 + 0xD8);
-                    if (opt == DebugOpts.MAX_HP) { return (ptr5, 0xfe); }
-                    return (ptr5, 0xff);
-                }
+                    {
+                        var ptr3 = getCharPtrModules();
+                        var ptr4 = ReadUInt64((IntPtr)(ptr3 + chrDataModuleOff));
+                        var ptr5 = (IntPtr)(ptr4 + 0xD8);
+                        if (opt == DebugOpts.MAX_HP) { return (ptr5, 0xfe); }
+                        return (ptr5, 0xff);
+                    }
                 case DebugOpts.ALL_CHRS_DBG_DRAW_FLAG:
-                {
-                    var ptr = ReadUInt64((IntPtr)(ds3Base + worldChrManDbgOff));
-                    return ((IntPtr)(ptr + 0x65), 1);
-                }
+                    {
+                        var ptr = ReadUInt64((IntPtr)(ds3Base + worldChrManDbgOff));
+                        return ((IntPtr)(ptr + 0x65), 1);
+                    }
                 case DebugOpts.DISABLE_AI: return (ds3Base + debug_flagsOff + 0xD, 1);
                 case DebugOpts.NO_STAM: return (ds3Base + debug_flagsOff + 0x2, 1);
                 case DebugOpts.NO_FP: return (ds3Base + debug_flagsOff + 0x3, 1);
                 case DebugOpts.NO_ARROW_CONSUM: return (ds3Base + debug_flagsOff + 0x4, 1);
                 case DebugOpts.ONE_SHOT: return (ds3Base + debug_flagsOff + 1, 1);
                 case DebugOpts.NO_GOODS_CONSUM:
-                {
-                    var ptr = getPlayerInsPtr();
-                    return ((IntPtr)(ptr + playerDebugFlagsOff), 0x13);
-                }
+                    {
+                        var ptr = getPlayerInsPtr();
+                        return ((IntPtr)(ptr + playerDebugFlagsOff), 0x13);
+                    }
                 case DebugOpts.DISABLE_STEAM_INPUT_ENUM:
-                {
-                    var ptr = ReadUInt64(ds3Base + usrInputMgrImplOff);
-                    return ((IntPtr)(ptr + usrInputMgrImpSteamInputFlagOff), 1);
-                }
+                    {
+                        var ptr = ReadUInt64(ds3Base + usrInputMgrImplOff);
+                        return ((IntPtr)(ptr + usrInputMgrImpSteamInputFlagOff), 1);
+                    }
                 case DebugOpts.EVENT_STOP:
-                {
-                    var ptr = ReadUInt64(ds3Base + BaseFOff);
-                    return ((IntPtr)(ptr + 0xE4), 1); //was D4, changed in 1.15.1
-                }
+                    {
+                        var ptr = ReadUInt64(ds3Base + BaseFOff);
+                        return ((IntPtr)(ptr + 0xE4), 1); //was D4, changed in 1.15.1
+                    }
                 case DebugOpts.EVENT_DRAW:
-                {
-                    var ptr = ReadUInt64(ds3Base + BaseFOff);
-                    return ((IntPtr)(ptr + 0xA8), 1);
-                }
+                    {
+                        var ptr = ReadUInt64(ds3Base + BaseFOff);
+                        return ((IntPtr)(ptr + 0xA8), 1);
+                    }
                 case DebugOpts.HIDDEN_DEBUG_MENU:
-                {
-                    var ptr = ReadUInt64(ds3Base + newMenuSystemOff);
-                    return ((IntPtr)(ptr + 0x3083), 1);
-                }
+                    {
+                        var ptr = ReadUInt64(ds3Base + newMenuSystemOff);
+                        return ((IntPtr)(ptr + 0x3083), 1);
+                    }
                 case DebugOpts.ALL_DEBUG_DRAWING:
-                {
-                    var ptr = ReadUInt64(ds3Base + worldChrManDbgOff);
-                    return ((IntPtr)(ptr + 0x65), 1);
-                }
+                    {
+                        var ptr = ReadUInt64(ds3Base + worldChrManDbgOff);
+                        return ((IntPtr)(ptr + 0x65), 1);
+                    }
                 case DebugOpts.ENEMY_TARGETING_A:
-                {
-                    return (ds3Base + enemyTargetDrawAOff, 1);
-                }
+                    {
+                        return (ds3Base + enemyTargetDrawAOff, 1);
+                    }
                 case DebugOpts.ENEMY_TARGETING_B:
-                {
-                    return (ds3Base + enemyTargetDrawBOff, 1);
-                }
+                    {
+                        return (ds3Base + enemyTargetDrawBOff, 1);
+                    }
                 case DebugOpts.FREE_CAMERA:
-                {
-                    var ptr = ReadUInt64(ds3Base + fieldAreaOff);
-                    var ptr2 = ReadUInt64((IntPtr)ptr + 0x18); //GameRend
-                    return ((IntPtr)(ptr2 + 0xE0), 1);
-                }
+                    {
+                        var ptr = ReadUInt64(ds3Base + fieldAreaOff);
+                        var ptr2 = ReadUInt64((IntPtr)ptr + 0x18); //GameRend
+                        return ((IntPtr)(ptr2 + 0xE0), 1);
+                    }
                 case DebugOpts.NO_GRAVITY:
-                {
-                    var ptr3 = getCharPtrModules();
-                    var ptr4 = ReadUInt64((IntPtr)(ptr3 + chrPhysModuleOff));
-                    return ((IntPtr)(ptr4 + 0x1DC), 1); //may be other gravity flags; ER has multiple
-                        //1DA may be equivalent? this is the one the debug menu sets. seems to unset itself sometimes.
-                    // gravity: bitflag!(0b1000000; world_chr_man, 0x80, 0x1a08), //alternative?
-                }
+                    {
+                        var ptr3 = getCharPtrModules();
+                        var ptr4 = ReadUInt64((IntPtr)(ptr3 + chrPhysModuleOff));
+                        return ((IntPtr)(ptr4 + 0x1DC), 1); //may be other gravity flags; ER has multiple
+                                                            //1DA may be equivalent? this is the one the debug menu sets. seems to unset itself sometimes.
+                                                            // gravity: bitflag!(0b1000000; world_chr_man, 0x80, 0x1a08), //alternative?
+                    }
             }
             return badVal;
         }
@@ -1012,7 +1051,20 @@ namespace DS3Tool
             return (double)BitConverter.ToInt32(fourBytes, 0);
         }
 
+        public string GetSetTargetEnemyID(string newValue = null)
+        {
+            var targetPtr = ReadInt64(ds3Base + CodeCavePtrLoc);
+            var modulesPtr = ReadInt64((IntPtr)targetPtr + 0x1F90);
+            var chrDataPtr = ReadInt64((IntPtr)modulesPtr + 0x18);
+            var enemyIdPtr = (IntPtr)(chrDataPtr + 0x130);
 
+            if (newValue != null)
+            {
+                WriteString(enemyIdPtr, newValue);
+            }
+
+            return ReadString(enemyIdPtr);
+        }
 
         public int GetSetPlayerStat(PlayerStats stat, int? newValue = null)
         {
@@ -1038,6 +1090,17 @@ namespace DS3Tool
                 int currentTotalSouls = ReadInt32(totalSoulsAddress);
                 WriteInt32(totalSoulsAddress, currentTotalSouls + newValue);
             }
+        }
+
+        public int GetSetNewGameLevel(int? newValue = null)
+        {
+            var ptr1 = ReadUInt64(ds3Base + gameDataManOff);
+            var finalAddress = (IntPtr)(ptr1 + 0x78);
+            if (newValue.HasValue)
+            {
+                WriteInt32(finalAddress, newValue.Value);
+            }
+            return ReadInt32(finalAddress);
         }
     }
 }
