@@ -23,6 +23,7 @@ namespace DS3Tool
     {
         DS3Process _process = null;
         private BonfireService _bonfireService;
+        private CinderPhaseManager _cinderManager;
 
         private bool disposedValue;
 
@@ -80,9 +81,10 @@ namespace DS3Tool
                 _timer.Interval = TimeSpan.FromSeconds(0.1);
                 _timer.Start();
                 UpdateStatButtons();
-                SetSelectedNewGameLevel();
-
+                
                 _bonfireService = new BonfireService(_process);
+                _cinderManager = new CinderPhaseManager(_process);
+                SetSelectedNewGameLevel();
             }
 
             
@@ -1101,6 +1103,24 @@ namespace DS3Tool
             _bonfireService.unlockAllBonfires();
         }
 
+        private void OnPhaseButtonClick(object sender, RoutedEventArgs e)
+        {
+            var button = (Button)sender;
+            if (int.TryParse(button.Tag?.ToString(), out int phaseIndex))
+            {
+                _cinderManager.SetPhase(phaseIndex, chkLockPhase.IsChecked ?? false);
+            }
+            else
+            {
+                Debug.WriteLine($"Failed to parse phase index from button tag: {button.Tag}");
+            }
+        }
+
+        private void OnLockPhaseChanged(object sender, RoutedEventArgs e)
+        {
+            _cinderManager.TogglePhaseLock(chkLockPhase.IsChecked ?? false);
+        }
+
         private void SetSelectedNewGameLevel(int? actualValue = null)
         {
             var currentValue = actualValue ?? _process.GetSetNewGameLevel();  // Only read if no value provided
@@ -1136,7 +1156,7 @@ namespace DS3Tool
                     ngLevel = -1;
 
                 var newValue = _process.GetSetNewGameLevel(ngLevel);
-        SetSelectedNewGameLevel(newValue); 
+                SetSelectedNewGameLevel(newValue); 
             }
         }
     }
