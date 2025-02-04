@@ -358,6 +358,8 @@ namespace DS3Tool
         const int enemyRepeatActionOff = 0x3E2510 + 4 + 3;
         const int fieldAreaOff = 0x4743A80;
         const int SprjDebugEvent = 0x473AD78; //BaseF
+        const int newMenuSystemOff = 0x4776B08;
+
 
 
         //offsets of main pointers/statics.
@@ -379,7 +381,7 @@ namespace DS3Tool
                                              //const int menuManOff = 0x4763258; //NS_SPRJ::MenuMan
                                              //const int hitboxOff = 0x477DAC0; //no name. damage management?
 
-        const int newMenuSystemOff = 0x478DA50; //AppMenu::NewMenuSystem
+        //const int newMenuSystemOff = 0x478DA50; //AppMenu::NewMenuSystem
         const int worldAIManOff = 0x4751550; //NS_SPRJ::SprjWorldAiManagerImp
 
         //targeting is static, but maybe ?$DLRuntimeClassImpl@VSprjTargetingSystem@NS_SPRJ@@$0A@@DLRF@@ + 54
