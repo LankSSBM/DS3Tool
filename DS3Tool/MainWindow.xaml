@@ -136,6 +136,17 @@
                 <Button Click="EditStat" Tag="FAITH" Margin="2">Faith: 0</Button>
                 <Button Click="EditStat" Tag="LUCK" Margin="2">Luck: 0</Button>
                 <Button Click="EditStat" Tag="SOULS" Margin="2">Souls: 0</Button>
+                <ComboBox Width="80" Height="30" Margin="5" Text="NG" IsEditable="True" SelectedIndex="-1"
+                          SelectionChanged="NgLevelComboBox_SelectionChanged" x:Name="NgLevelComboBox" >
+                    <ComboBoxItem Content="NG"/>
+                    <ComboBoxItem Content="NG+1"/>
+                    <ComboBoxItem Content="NG+2"/>
+                    <ComboBoxItem Content="NG+3"/>
+                    <ComboBoxItem Content="NG+4"/>
+                    <ComboBoxItem Content="NG+5"/>
+                    <ComboBoxItem Content="NG+6"/>
+                    <ComboBoxItem Content="NG+7"/>
+                </ComboBox>
             </UniformGrid>
         </GroupBox>
         <StackPanel Margin="5">
@@ -284,7 +295,17 @@
                 </ComboBox>
                 <Button Content="Unlock Selected Bonfire" Width="200" Height="30" Margin="5" Click="UnlockSelectedButton_Click"/>
                 <Button Content="Unlock All Bonfires" Width="200" Height="30" Margin="5" Click="UnlockAllButton_Click"/>
+                
             </StackPanel>
+            
         </Grid>
+        <StackPanel Margin="10">
+            <Button x:Name="btnSwordPhase" Content="Sword Phase" Tag="0" Height="30" Margin="0,5" Click="OnPhaseButtonClick"/>
+            <Button x:Name="btnLancePhase" Content="Lance Phase" Tag="1" Height="30" Margin="0,5" Click="OnPhaseButtonClick"/>
+            <Button x:Name="btnCurvedPhase" Content="Curved Phase" Tag="2" Height="30" Margin="0,5" Click="OnPhaseButtonClick"/>
+            <Button x:Name="btnStaffPhase" Content="Staff Phase" Tag="3" Height="30" Margin="0,5" Click="OnPhaseButtonClick"/>
+            <Button x:Name="btnGwynPhase" Content="Gwyn Phase" Tag="4" Height="30" Margin="0,5" Click="OnPhaseButtonClick"/>
+            <CheckBox x:Name="chkLockPhase" Content="Lock Phase" Margin="0,10" Checked="OnLockPhaseChanged" Unchecked="OnLockPhaseChanged"/>
+        </StackPanel>
     </StackPanel>
 </Window>

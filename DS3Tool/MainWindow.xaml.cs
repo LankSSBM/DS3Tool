@@ -25,6 +25,7 @@ namespace DS3Tool
         DS3Process _process = null;
         private BonfireService _bonfireService;
         private ItemSpawnService _itemSpawnService;
+        private CinderPhaseManager _cinderManager;
 
         private bool disposedValue;
 
@@ -83,9 +84,14 @@ namespace DS3Tool
                 _timer.Interval = TimeSpan.FromSeconds(0.1);
                 _timer.Start();
                 UpdateStatButtons();
+
                 _bonfireService = new BonfireService(_process);
+                _cinderManager = new CinderPhaseManager(_process);                
+                
                 _itemSpawnService = new ItemSpawnService(_process);
                 initItemAdjustments();
+
+                SetSelectedNewGameLevel();
                 loadItemTemplates();
             }
         }
@@ -96,9 +102,9 @@ namespace DS3Tool
             infusionTypeComboBox.ItemsSource = _itemSpawnService.INFUSION_TYPES.Keys;
             infusionTypeComboBox.SelectedIndex = 0;
 
-
             upgradeComboBox.ItemsSource = _itemSpawnService.UPGRADES.Keys;
             upgradeComboBox.SelectedIndex = 0;
+            }
         }
 
 
@@ -1172,6 +1178,63 @@ namespace DS3Tool
         private void UnlockAllButton_Click(object sender, RoutedEventArgs e)
         {
             _bonfireService.unlockAllBonfires();
+        }
+
+        private void OnPhaseButtonClick(object sender, RoutedEventArgs e)
+        {
+            var button = (Button)sender;
+            if (int.TryParse(button.Tag?.ToString(), out int phaseIndex))
+            {
+                _cinderManager.SetPhase(phaseIndex, chkLockPhase.IsChecked ?? false);
+            }
+            else
+            {
+                Debug.WriteLine($"Failed to parse phase index from button tag: {button.Tag}");
+            }
+        }
+
+        private void OnLockPhaseChanged(object sender, RoutedEventArgs e)
+        {
+            _cinderManager.TogglePhaseLock(chkLockPhase.IsChecked ?? false);
+        }
+
+        private void SetSelectedNewGameLevel(int? actualValue = null)
+        {
+            var currentValue = actualValue ?? _process.GetSetNewGameLevel();  // Only read if no value provided
+            string formattedNgLevel = currentValue == 0 ? "NG" : $"NG+{currentValue}";
+
+            if (NgLevelComboBox != null)
+            {
+                foreach (ComboBoxItem item in NgLevelComboBox.Items)
+                {
+                    if (item.Content.ToString() == formattedNgLevel)
+                    {
+                        NgLevelComboBox.SelectedItem = item;
+                        break;
+                    }
+                }
+            }
+        }
+
+
+        private void NgLevelComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (sender is ComboBox comboBox && comboBox.SelectedItem is ComboBoxItem selectedItem)
+            {
+                string selectedNgLevel = selectedItem.Content.ToString();
+
+                int ngLevel;
+
+                if (selectedNgLevel == "NG")
+                    ngLevel = 0;
+                else if (selectedNgLevel.StartsWith("NG+") && int.TryParse(selectedNgLevel.Substring(3), out int number))
+                    ngLevel = number;
+                else
+                    ngLevel = -1;
+
+                var newValue = _process.GetSetNewGameLevel(ngLevel);
+                SetSelectedNewGameLevel(newValue); 
+            }
         }
     }
 }
