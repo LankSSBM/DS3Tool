@@ -24,6 +24,7 @@ namespace DS3Tool
         DS3Process _process = null;
         private BonfireService _bonfireService;
         private CinderPhaseManager _cinderManager;
+        private NoClipService _noClipService;
 
         private bool disposedValue;
 
@@ -84,6 +85,7 @@ namespace DS3Tool
                 
                 _bonfireService = new BonfireService(_process);
                 _cinderManager = new CinderPhaseManager(_process);
+                _noClipService = new NoClipService(_process);
                 SetSelectedNewGameLevel();
             }
 
@@ -151,18 +153,6 @@ namespace DS3Tool
                     updateTargetInfo();
                 }
                 catch { }
-            }
-
-            updateMovement();
-        }
-
-        void updateMovement()
-        {
-            if (_noClipActive)
-            {
-                var noClipPos = _process.getSetFreeCamCoords();
-                noClipPos.Item2 += 0.5f; //player slightly above camera
-                _process.getSetPlayerLocalCoords((noClipPos.x, noClipPos.y, noClipPos.z, float.NaN));
             }
         }
 
@@ -306,8 +296,8 @@ namespace DS3Tool
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposedValue)
-            {
+            if(!disposedValue)
+    {
                 if (disposing)
                 {
                     if (_process != null)
@@ -319,6 +309,12 @@ namespace DS3Tool
                     {
                         _timer.Stop();
                         _timer = null;
+                    }
+
+                    if (_noClipService != null)
+                    {
+                        _noClipService.Dispose();
+                        _noClipService = null;
                     }
                 }
                 disposedValue = true;
@@ -643,18 +639,20 @@ namespace DS3Tool
 
         private void noClipOn(object sender, RoutedEventArgs e)
         {
-            _process.moveCamToPlayer();
+    
             _playerNoDeathStateWas = chkPlayerNoDeath.IsChecked ?? false;
             chkPlayerNoDeath.IsChecked = true;
             chkPlayerNoGrav.IsChecked = true;
-            Thread.Sleep(100); //ugh. makes player less likely to go into a falling animation right away. need a better fix.
+            Thread.Sleep(100);
             chkFreeCam.IsChecked = true;
             _noClipActive = true;
+            _noClipService.Toggle(true); 
         }
 
         private void noClipOff(object sender, RoutedEventArgs e)
         {
             _noClipActive = false;
+            _noClipService.Toggle(false); 
             chkFreeCam.IsChecked = false;
             chkPlayerNoGrav.IsChecked = false;
             chkPlayerNoDeath.IsChecked = _playerNoDeathStateWas;

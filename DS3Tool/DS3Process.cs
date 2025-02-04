@@ -300,6 +300,7 @@ namespace DS3Tool
             FREE_CAMERA,
             NO_GRAVITY,
             ONE_SHOT,
+            SILENT, HIDDEN
         }
 
         public enum TargetInfo
@@ -740,6 +741,8 @@ namespace DS3Tool
                         return (ptr5, 0x12); //bitfield, bit 2
                     }
                 case DebugOpts.ALL_CHR_NO_DEATH: return (ds3Base + DEBUG_FLAGS_OFFSET + 0x8, 1);
+                case DebugOpts.HIDDEN: return (ds3Base + DEBUG_FLAGS_OFFSET + 6, 1);
+                case DebugOpts.SILENT: return (ds3Base + DEBUG_FLAGS_OFFSET + 7, 1);
                 case DebugOpts.INSTANT_QUITOUT:
                     {
 
