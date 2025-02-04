@@ -198,12 +198,20 @@
                     Height="25"
                     Margin="0,5"
                     Click="SpawnButton_Click"/>
-                    <Button Content="Select template" Width="200" Height="30" Margin="5" Click="TemplateButton_Click"/>
-                </StackPanel>
-                
-            </GroupBox>
-        </StackPanel>
 
+                </StackPanel>
+            </GroupBox>
+
+        </StackPanel>
+        <Grid>
+
+            <ComboBox x:Name="TemplateComboBox" Width="200" Height="30" Margin="5" 
+                  DisplayMemberPath="Name" VerticalAlignment="Top" HorizontalAlignment="Left" />
+
+
+            <Button Content="Apply template" Width="80" Height="30" Margin="219,0,21,0" VerticalAlignment="Center"
+                Click="ApplyTemplateButton_Click"/>
+        </Grid>
         <Grid>
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                 <ComboBox x:Name="BonfireDropdown" Width="200" Height="30" Text="Bonfires" IsEditable="True" SelectedIndex="-1">
