@@ -773,7 +773,7 @@ namespace DS3Tool
                 case DebugOpts.EVENT_STOP:
                     {
                         var ptr = ReadUInt64(ds3Base + SprjDebugEvent);
-                        return ((IntPtr)(ptr + 0xE4), 1); //was D4, changed in 1.15.1
+                        return ((IntPtr)(ptr + 0xD4), 1); //was D4, changed in 1.15.1 to E4
                     }
                 case DebugOpts.EVENT_DRAW:
                     {
