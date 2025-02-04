@@ -349,7 +349,6 @@ namespace DS3Tool
         const int menuManOff = 0x474c2e8;
         const int debug_flagsOff = 0x4768f68;
         const int meshesOff = 0x4743A98;
-        const int spawnItem = 0x7bba70;
         const int enemyTargetDrawAOff = 0x41E6CA;
         const int GameFlagDataOff = 0x473BE28;
         const int globalSpeedOff = 0x999C28;
@@ -357,7 +356,8 @@ namespace DS3Tool
         const int codeCavePtrLoc = 0x1914670;
         const int codeCaveCodeLoc = codeCavePtrLoc + 0x10;
         const int enemyRepeatActionOff = 0x3E2510 + 4 + 3;
-
+        const int fieldAreaOff = 0x4743A80;
+        const int SprjDebugEvent = 0x473AD78; //BaseF
 
 
         //offsets of main pointers/statics.
@@ -366,7 +366,7 @@ namespace DS3Tool
         //const int worldChrManOff = 0x477FDB8; //NS_SPRJ::WorldChrManImp
 
         const int gameManOff = 0x475AC00; //NS_SPRJ::GameMan
-        const int fieldAreaOff = 0x475ABD0; //NS_SPRJ::FieldArea
+        //const int fieldAreaOff = 0x475ABD0; //NS_SPRJ::FieldArea
         const int BaseEOff = 0x4756E48; //NS_SPRJ::FrpgNetManImp
         const int BaseFOff = 0x4751EB8; //no name, seems lua related? //SprjDebugEvent ?
         const int worldChrManDbgOff = 0x477FED8; //NS_SPRJ::WorldChrManDbgImp. all debug drawing is under here. presumably others like 'all no death' and such
@@ -772,12 +772,12 @@ namespace DS3Tool
                     }
                 case DebugOpts.EVENT_STOP:
                     {
-                        var ptr = ReadUInt64(ds3Base + BaseFOff);
+                        var ptr = ReadUInt64(ds3Base + SprjDebugEvent);
                         return ((IntPtr)(ptr + 0xE4), 1); //was D4, changed in 1.15.1
                     }
                 case DebugOpts.EVENT_DRAW:
                     {
-                        var ptr = ReadUInt64(ds3Base + BaseFOff);
+                        var ptr = ReadUInt64(ds3Base + SprjDebugEvent);
                         return ((IntPtr)(ptr + 0xA8), 1);
                     }
                 case DebugOpts.HIDDEN_DEBUG_MENU:
