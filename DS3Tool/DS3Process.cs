@@ -362,6 +362,8 @@ namespace DS3Tool
         const int NEW_MENU_SYSTEMS_OFFSET = 0x4776B08;
         const int WORLD_CHR_MAN_DEBUG_OFFSET = 0x4768F98;
         const int GROUP_MASK_OFFSET = 0x4555CF0;
+        const int USER_INPUT_MGR_IMPL_OFFSET = 0x494E9D8;
+
 
         //offsets of main pointers/statics.
         //see aob scanner for aobs.
@@ -452,8 +454,8 @@ namespace DS3Tool
         0000000142642835 | E9 222198FF                     | jmp darksoulsiii_1.15.141FC495C                                        |
         */
 
-        const int usrInputMgrImplOff = 0x49644C8; //virtually static pointing to 14494e9f0. no AOB but the class instance is DLUID::DLUserInputManagerImpl<DLKR::DLMultiThreadingPolicy>.
-        const int usrInputMgrImpSteamInputFlagOff = 0x24b;
+        //const int usrInputMgrImplOff = 0x49644C8; //virtually static pointing to 14494e9f0. no AOB but the class instance is DLUID::DLUserInputManagerImpl<DLKR::DLMultiThreadingPolicy>.
+        //const int usrInputMgrImpSteamInputFlagOff = 0x24b;
 
         const int fontDrawFirstPatchLoc = 0x237C736;
 
@@ -770,8 +772,8 @@ namespace DS3Tool
                     }
                 case DebugOpts.DISABLE_STEAM_INPUT_ENUM:
                     {
-                        var ptr = ReadUInt64(ds3Base + usrInputMgrImplOff);
-                        return ((IntPtr)(ptr + usrInputMgrImpSteamInputFlagOff), 1);
+                        var ptr = ReadUInt64(ds3Base + USER_INPUT_MGR_IMPL_OFFSET);
+                        return ((IntPtr)(ptr + 0x24b), 1);
                     }
                 case DebugOpts.EVENT_STOP:
                     {
@@ -887,7 +889,7 @@ namespace DS3Tool
                 var newVal = oldVal | setMask;
                 WriteUInt8(tuple.Item1, (byte)newVal);
             }
- 
+
 
             else if (val == 0xff)
             {//special case, write 1 as 32 bit
