@@ -348,7 +348,7 @@ namespace DS3Tool
         const int gameDataManOff = 0x4740178;
         const int menuManOff = 0x474c2e8;
         const int debug_flagsOff = 0x4768f68;
-        const int meshesOff = 0x4743A98;
+        const int meshesOff = 0x4766C6C;
         const int enemyTargetDrawAOff = 0x41E6CA;
         const int GameFlagDataOff = 0x473BE28;
         const int globalSpeedOff = 0x999C28;
@@ -359,6 +359,9 @@ namespace DS3Tool
         const int fieldAreaOff = 0x4743A80;
         const int SprjDebugEvent = 0x473AD78; //BaseF
         const int newMenuSystemOff = 0x4776B08;
+        const int worldChrManDbgOff = 0x4768F98;
+        const int GROUP_MASK_OFF = 0x4555CF0;
+
 
 
 
@@ -371,7 +374,7 @@ namespace DS3Tool
         //const int fieldAreaOff = 0x475ABD0; //NS_SPRJ::FieldArea
         const int BaseEOff = 0x4756E48; //NS_SPRJ::FrpgNetManImp
         const int BaseFOff = 0x4751EB8; //no name, seems lua related? //SprjDebugEvent ?
-        const int worldChrManDbgOff = 0x477FED8; //NS_SPRJ::WorldChrManDbgImp. all debug drawing is under here. presumably others like 'all no death' and such
+        //const int worldChrManDbgOff = 0x477FED8; //NS_SPRJ::WorldChrManDbgImp. all debug drawing is under here. presumably others like 'all no death' and such
         const int ParamOff = 0x4798118; //NS_SPRJ::SoloParamRepositoryImp
         //const int GameFlagDataOff = 0x4752F68; //no name //SprjEventFlagMan ?
         const int LockBonus_ptrOff = 0x477DBE0; //NS_SPRJ::LockTgtManImp
@@ -727,8 +730,8 @@ namespace DS3Tool
                         //Utils.debugWrite(ptr.ToString("X16"));
                         return ((IntPtr)ptr, 1);
                     }
-                case DebugOpts.DISABLE_MAP: return (ds3Base + GROUP_MASKOff, 0);
-                case DebugOpts.DISABLE_CHARACTER: return (ds3Base + GROUP_MASKOff + 2, 0); //TODO - what was todo?
+                case DebugOpts.DISABLE_MAP: return (ds3Base + GROUP_MASK_OFF, 0);
+                case DebugOpts.DISABLE_CHARACTER: return (ds3Base + GROUP_MASK_OFF + 2, 0); //TODO - what was todo?
                 case DebugOpts.NO_DEATH:
                     {
                         var ptr3 = getCharPtrModules();
@@ -854,45 +857,65 @@ namespace DS3Tool
         }
 
         public void enableOpt(DebugOpts opt)
-        {
-            if (opt == DebugOpts.TARGET_HP)
-            {//special case
-                getSetTargetInfo(TargetInfo.HP, targetHpFreeze);
-                return;
-            }
-            if (opt == DebugOpts.SOUND_VIEW)
-            {//special case
-                setAllSoundDebug(true);
-                return;
-            }
+{
+    Utils.debugWrite($"[DEBUG] Enabling option: {opt}");
 
-            var tuple = lookupOpt(opt);
-            if (tuple.Item1 == IntPtr.Zero) { Utils.debugWrite("Can't enable " + opt); return; }
+    if (opt == DebugOpts.TARGET_HP)
+    {
+        Utils.debugWrite("[DEBUG] Special case: TARGET_HP");
+        getSetTargetInfo(TargetInfo.HP, targetHpFreeze);
+        return;
+    }
+    if (opt == DebugOpts.SOUND_VIEW)
+    {
+        Utils.debugWrite("[DEBUG] Special case: SOUND_VIEW");
+        setAllSoundDebug(true);
+        return;
+    }
 
-            if ((long)tuple.Item1 < SANE_MINIMUM || (long)tuple.Item1 > SANE_MAXIMUM) { return; }
+    var tuple = lookupOpt(opt);
+    if (tuple.Item1 == IntPtr.Zero)
+    {
+        Utils.debugWrite($"[DEBUG] Can't enable {opt}, address lookup failed.");
+        return;
+    }
 
-            var val = tuple.Item2;
-            if (val == 0 || val == 1)
-            {
-                WriteUInt8(tuple.Item1, val);
-            }
-            else if (val >= 0x10 && val <= 0x17)
-            {//bitfield (set to enable)
-                int setMask = 1 << (val - 0x10);
-                var oldVal = ReadUInt8(tuple.Item1);
-                var newVal = oldVal | setMask;
-                WriteUInt8(tuple.Item1, (byte)newVal);
-            }
-            else if (val == 0xff)
-            {//special case, write 1 as 32 bit
-                WriteUInt32(tuple.Item1, 1);
-            }
-            else if (val == 0xfe)
-            {//special case, read next 32 bit int and write
-                var nextVal = ReadUInt32(tuple.Item1 + 4); //max HP is after hp in the character struct (i think)
-                WriteUInt32(tuple.Item1, nextVal);
-            }
-        }
+    long addr = (long)tuple.Item1;
+    if (addr < SANE_MINIMUM || addr > SANE_MAXIMUM)
+    {
+        Utils.debugWrite($"[DEBUG] Address {addr:X} is out of sane range.");
+        return;
+    }
+
+    var val = tuple.Item2;
+    Utils.debugWrite($"[DEBUG] Address: {addr:X}, Value: {val}");
+
+    if (val == 0 || val == 1)
+    {
+        Utils.debugWrite($"[DEBUG] Writing UInt8: {val} to {addr:X}");
+        WriteUInt8(tuple.Item1, val);
+    }
+    else if (val >= 0x10 && val <= 0x17)
+    {
+        int setMask = 1 << (val - 0x10);
+        var oldVal = ReadUInt8(tuple.Item1);
+        var newVal = oldVal | setMask;
+        Utils.debugWrite($"[DEBUG] Bitfield case - Old: {oldVal}, Mask: {setMask}, New: {newVal}");
+        WriteUInt8(tuple.Item1, (byte)newVal);
+    }
+    else if (val == 0xff)
+    {
+        Utils.debugWrite($"[DEBUG] Special case 0xFF - Writing 1 (UInt32) to {addr:X}");
+        WriteUInt32(tuple.Item1, 1);
+    }
+    else if (val == 0xfe)
+    {
+        var nextVal = ReadUInt32(tuple.Item1 + 4);
+        Utils.debugWrite($"[DEBUG] Special case 0xFE - Writing {nextVal} (UInt32) to {addr:X}");
+        WriteUInt32(tuple.Item1, nextVal);
+    }
+}
+
         public void disableOpt(DebugOpts opt)
         {
             if (opt == DebugOpts.SOUND_VIEW)
