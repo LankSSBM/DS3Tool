@@ -356,6 +356,7 @@ namespace DS3Tool
         const int targetHookLoc = 0x85A74A;
         const int codeCavePtrLoc = 0x1914670;
         const int codeCaveCodeLoc = codeCavePtrLoc + 0x10;
+        const int enemyRepeatActionOff = 0x3E2510 + 4 + 3;
 
 
 
@@ -416,7 +417,7 @@ namespace DS3Tool
         }
 
         //DbgGetForceActIdx. patch changes it to use the addr from DbgSetLastActIdx
-        const int enemyRepeatActionOff = 0x3E2590 + 4 + 3;
+        //const int enemyRepeatActionOff = 0x3E2590 + 4 + 3;
         /*  00000001403E2510 | 48:8B41 08               | mov rax, qword ptr ds:[rcx+8]                         |
             00000001403E2514 | 0FBE80 81B60000          | movsx eax,byte ptr ds:[rax+B681]                      |
             00000001403E251B | C3                       | ret                                                   |*/
