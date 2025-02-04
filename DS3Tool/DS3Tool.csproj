@@ -62,6 +62,9 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="services\BonfireService.cs" />
+    <Compile Include="services\ItemSpawnService.cs" />
+    <Compile Include="templates\LoadoutPreset.cs" />
+    <Compile Include="templates\Templates.cs" />
     <Compile Include="services\CinderPhaseManager.cs" />
     <Compile Include="services\NoclipService.cs" />
     <Compile Include="Utils.cs" />

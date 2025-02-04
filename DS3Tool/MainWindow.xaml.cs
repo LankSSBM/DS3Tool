@@ -16,6 +16,7 @@ using System.Text;
 using static DS3Tool.DS3Process;
 using System.Collections.ObjectModel;
 using DS3Tool.services;
+using DS3Tool.templates;
 
 namespace DS3Tool
 {
@@ -23,6 +24,7 @@ namespace DS3Tool
     {
         DS3Process _process = null;
         private BonfireService _bonfireService;
+        private ItemSpawnService _itemSpawnService;
         private CinderPhaseManager _cinderManager;
         private NoClipService _noClipService;
 
@@ -38,8 +40,9 @@ namespace DS3Tool
         bool _noClipActive = false;
 
         public Dictionary<string, string> ItemDictionary { get; private set; }
+        public List<LoadoutTemplate> Templates { get; set; }
 
-   
+
 
         (float, float, float, float)? savedPos = null;
 
@@ -60,7 +63,7 @@ namespace DS3Tool
             Closing += MainWindow_Closing;
             Loaded += MainWindow_Loaded;
 
-            retry:
+        retry:
             try
             {
                 _process = new DS3Process();
@@ -82,44 +85,60 @@ namespace DS3Tool
                 _timer.Interval = TimeSpan.FromSeconds(0.1);
                 _timer.Start();
                 UpdateStatButtons();
-                
-                _bonfireService = new BonfireService(_process);
-                _cinderManager = new CinderPhaseManager(_process);
-                _noClipService = new NoClipService(_process);
-                SetSelectedNewGameLevel();
-            }
 
-            
+                _bonfireService = new BonfireService(_process);
+                _cinderManager = new CinderPhaseManager(_process);                
+                
+                _itemSpawnService = new ItemSpawnService(_process);
+                initItemAdjustments();
+
+                SetSelectedNewGameLevel();
+                loadItemTemplates();
+            }
         }
 
-        
+
+        private void initItemAdjustments()
+        {
+            infusionTypeComboBox.ItemsSource = _itemSpawnService.INFUSION_TYPES.Keys;
+            infusionTypeComboBox.SelectedIndex = 0;
+
+            upgradeComboBox.ItemsSource = _itemSpawnService.UPGRADES.Keys;
+            upgradeComboBox.SelectedIndex = 0;
+            }
+        }
+
+
+        private void loadItemTemplates()
+        {
+            Templates = new List<LoadoutTemplate>
+            {
+                LoadoutPreset.SL1NoUpgrades,
+                LoadoutPreset.SL1,
+                LoadoutPreset.MetaLeveled
+            };
+            TemplateComboBox.ItemsSource = Templates;
+            TemplateComboBox.SelectedIndex = 0;
+        }
 
         private void LoadItemsFromCsv(string filePath)
         {
             ItemDictionary = new Dictionary<string, string>();
-
-        
             string[] lines = File.ReadAllLines(filePath);
 
-        
             itemList.Items.Clear();
+            VirtualizingPanel.SetIsVirtualizing(itemList, true);
+            VirtualizingPanel.SetVirtualizationMode(itemList, VirtualizationMode.Recycling);
 
-         
             for (int i = 1; i < lines.Length; i++)
             {
-      
                 string[] columns = lines[i].Split(',');
-
-        
                 if (columns.Length >= 2)
                 {
-
                     string firstColumnValue = columns[0].Trim('"', ' ');
                     string secondColumnValue = columns[1].Trim('"', ' ');
 
-                   
                     itemList.Items.Add(firstColumnValue);
-
                     ItemDictionary[firstColumnValue] = secondColumnValue;
                 }
             }
@@ -136,7 +155,7 @@ namespace DS3Tool
 
         private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {//TODO: window state save?
-            
+
         }
 
         private void _timer_Tick(object sender, EventArgs e)
@@ -207,7 +226,7 @@ namespace DS3Tool
             }
         }
 
-       
+
 
         private void MainWindow_Closed(object sender, EventArgs e)
         {
@@ -1019,7 +1038,7 @@ namespace DS3Tool
             catch (Exception ex) { Utils.debugWrite(ex.ToString()); }
         }
 
-        
+
 
         private void EditStat(object sender, RoutedEventArgs e)
         {
@@ -1051,7 +1070,7 @@ namespace DS3Tool
                 {
                     var value = _process.GetSetPlayerStat(stat);
 
-                
+
                     if (stat != PlayerStats.SOULS)
                     {
                         if (value <= 0 || value >= 100)
@@ -1079,9 +1098,66 @@ namespace DS3Tool
         }
 
         private void SpawnButton_Click(object sender, RoutedEventArgs e)
-        {
 
+        {
+            const string MIN_WEAPON_ID = "000D9490";
+            const string MAX_WEAPON_ID = "015F1AD0";
+
+            if (itemList.SelectedItem == null)
+            {
+                MessageBox.Show("Please select an item to spawn.");
+                return;
+            }
+
+            string selectedItem = itemList.SelectedItem.ToString();
+            if (!ItemDictionary.TryGetValue(selectedItem, out string hexId))
+            {
+                MessageBox.Show("Item not found in dictionary.");
+                return;
+            }
+
+            uint formattedId = uint.Parse(hexId, System.Globalization.NumberStyles.HexNumber);
+            string selectedInfusion = infusionTypeComboBox.SelectedItem.ToString();
+            string selectedUpgrade = upgradeComboBox.SelectedItem.ToString();
+            uint quantity = (uint)quantitySlider.Value;
+
+            if (hexId.CompareTo(MIN_WEAPON_ID) < 0 || hexId.CompareTo(MAX_WEAPON_ID) > 0)
+            {
+                selectedInfusion = "Normal";
+                selectedUpgrade = "+0";
+            }
+
+            _itemSpawnService.SpawnItem(
+        baseItemId: formattedId,
+        infusionType: selectedInfusion,
+        upgradeLevel: selectedUpgrade,
+        quantity: quantity,
+        durability: 100
+    );
         }
+
+
+        private void ApplyTemplateButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (TemplateComboBox.SelectedItem is LoadoutTemplate selectedTemplate)
+            {
+                foreach (var item in selectedTemplate.Items)
+                {
+                    if (ItemDictionary.TryGetValue(item.ItemName, out string hexId))
+                    {
+                        uint formattedId = uint.Parse(hexId, System.Globalization.NumberStyles.HexNumber);
+                        _itemSpawnService.SpawnItem(
+                            baseItemId: formattedId,
+                            infusionType: item.Infusion,
+                            upgradeLevel: item.Upgrade,
+                            quantity: item.Quantity,
+                            durability: 100
+                        );
+                    }
+                }
+            }
+        }
+
 
         private void UnlockSelectedButton_Click(object sender, RoutedEventArgs e)
         {
