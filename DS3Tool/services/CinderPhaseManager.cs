@@ -39,25 +39,21 @@ internal class CinderPhaseManager : IDisposable
     {
         public string Name { get; }
         public int AnimationId { get; }
-        public int Offset { get; }
-        public int Act { get; }
-
-        public PhaseInfo(string name, int animationId, int offset, int act)
+        public PhaseInfo(string name, int animationId)
         {
             Name = name;
             AnimationId = animationId;
-            Offset = offset;
-            Act = act;
+          
         }
     }
 
     private readonly Dictionary<int, PhaseInfo> _phases = new Dictionary<int, PhaseInfo>
     {
-        { 0, new PhaseInfo("Sword", 20000, 0, 30) },
-        { 1, new PhaseInfo("Lance", 20001, 1000000, 31) },
-        { 2, new PhaseInfo("Curved", 20002, 2000000, 32) },
-        { 3, new PhaseInfo("Staff", 20004, 4000000, 33) },
-        { 4, new PhaseInfo("Gwyn", 20010, 5000000, 0) }
+        { 0, new PhaseInfo("Sword", 20000)},
+        { 1, new PhaseInfo("Lance", 20001)},
+        { 2, new PhaseInfo("Curved", 20002)},
+        { 3, new PhaseInfo("Staff", 20004)},
+        { 4, new PhaseInfo("Gwyn", 20010)}
     };
 
 
@@ -78,11 +74,9 @@ internal class CinderPhaseManager : IDisposable
         _currentPhase = phaseIndex;
         var phase = _phases[phaseIndex];
 
-    
         ForceAnimation(phase.AnimationId);
         ResetLuaNumbers();
 
- 
         if (lockPhase && !_isLocked)
         {
             StartPhaseLock();
@@ -92,7 +86,6 @@ internal class CinderPhaseManager : IDisposable
             StopPhaseLock();
         }
     }
-
     public void TogglePhaseLock(bool enableLock)
     {
         if (enableLock && !_isLocked)
