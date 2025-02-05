@@ -9,6 +9,8 @@ using System.Threading;
 using MiscUtils;
 using System.Xml.Linq;
 using System.Net.Sockets;
+using DS3Tool.services;
+using System.Net;
 
 namespace DS3Tool
 {
@@ -49,6 +51,19 @@ namespace DS3Tool
             var ret = WaitForSingleObject(thread, timeout);
             CloseHandle(thread); //return value unimportant
             return ret;
+        }
+
+        public void RunNoClipThread(IntPtr address, IntPtr regionOneOffset, IntPtr endThreadAddress)
+        {
+         
+                WriteInt32(endThreadAddress, 0);
+         
+                IntPtr thread = CreateRemoteThread(_targetProcessHandle, IntPtr.Zero, 0, address, IntPtr.Zero, 0, IntPtr.Zero);
+                if (thread == IntPtr.Zero)
+                    throw new Exception("Failed to create remote thread.");
+
+                CloseHandle(thread);
+        
         }
 
         Thread freezeThread = null;
@@ -162,6 +177,39 @@ namespace DS3Tool
             var array = new byte[1];
             var lpNumberOfBytesRead = 1;
             return ReadProcessMemory(_targetProcessHandle, addr, array, 1, ref lpNumberOfBytesRead) && lpNumberOfBytesRead == 1;
+        }
+
+        public void ReadTestFull(IntPtr addr)
+        {
+            Console.WriteLine($"Testing Address: 0x{addr.ToInt64():X}");
+
+            bool available = ReadTest(addr);
+            Console.WriteLine($"Availability: {available}");
+
+            if (!available)
+            {
+                Console.WriteLine("Memory is not readable at this address.");
+                return;
+            }
+
+            try
+            {
+                Console.WriteLine($"Int32: {ReadInt32(addr)}");
+                Console.WriteLine($"Int64: {ReadInt64(addr)}");
+                Console.WriteLine($"UInt8: {ReadUInt8(addr)}");
+                Console.WriteLine($"UInt32: {ReadUInt32(addr)}");
+                Console.WriteLine($"UInt64: {ReadUInt64(addr)}");
+                Console.WriteLine($"Float: {ReadFloat(addr)}");
+                Console.WriteLine($"Double: {ReadDouble(addr)}");
+                Console.WriteLine($"String: {ReadString(addr)}");
+
+                byte[] bytes = ReadBytes(addr, 16);
+                Console.WriteLine("Bytes: " + BitConverter.ToString(bytes));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error reading memory: " + ex.Message);
+            }
         }
 
         public int ReadInt32(IntPtr addr)
@@ -300,7 +348,7 @@ namespace DS3Tool
             FREE_CAMERA,
             NO_GRAVITY,
             ONE_SHOT,
-            SILENT, HIDDEN
+            SILENT, HIDDEN, COLLISION
         }
 
         public enum TargetInfo
@@ -408,7 +456,7 @@ namespace DS3Tool
         const int chrPhysModuleOff = 0x68;
 
         //others
-       // const int playerDebugFlagsOff = 0x1EEA; //expect this to change if any patches occur
+        // const int playerDebugFlagsOff = 0x1EEA; //expect this to change if any patches occur
 
         //const int globalSpeedOff = 0x9A3D48;
         public float getSetGameSpeed(float? val = null)
@@ -601,7 +649,7 @@ namespace DS3Tool
             return ptr2;
         }
 
-        ulong getCharPtrModules()
+        public ulong getCharPtrModules()
         {
             var ptr2 = getPlayerInsPtr();
             var ptr3 = ReadUInt64((IntPtr)(ptr2 + playerInsModulesOff));
@@ -665,6 +713,16 @@ namespace DS3Tool
             return (x, y, z);
         }
 
+
+
+        public void setNoClipSpeed(float speed)
+        {
+            var ptr = getCharPtrModules();
+            var ptr2 = ReadUInt64((IntPtr)(ptr + 0x28));
+            WriteFloat((IntPtr)ptr2 + 0xA58, speed);
+        }
+
+
         public void moveCamToPlayer()
         {
             var player = getSetPlayerLocalCoords();
@@ -717,7 +775,7 @@ namespace DS3Tool
             {
                 case DebugOpts.COL_MESH_MAIN: return (ds3Base + MESHES_OFFSET + 0, 1); //6c
                 case DebugOpts.COL_MESH_VISUAL: return (ds3Base + MESHES_OFFSET + 1, 1); //6d
-                                                                                     //there's a character mesh at +3, but it requires 'all debug drawing' to also be on. (or switched on individually for a character)
+                                                                                         //there's a character mesh at +3, but it requires 'all debug drawing' to also be on. (or switched on individually for a character)
                 case DebugOpts.COL_MESH_HIGH_PERF: return (ds3Base + MESHES_OFFSET + 5, 1); //71
                 case DebugOpts.COL_MESH_COLOURS: return (ds3Base + MESHES_OFFSET + 8, 1); //74
                 case DebugOpts.CHARACTER_MESH: return (ds3Base + MESHES_OFFSET + 3, 1); //6f
@@ -812,6 +870,13 @@ namespace DS3Tool
                         var ptr2 = ReadUInt64((IntPtr)ptr + 0x18); //GameRend
                         return ((IntPtr)(ptr2 + 0xE0), 1);
                     }
+                case DebugOpts.COLLISION:
+                    {
+                        var ptr = ReadUInt64(ds3Base + FIELD_AREA_OFFSET);
+                        var ptr2 = ReadUInt64((IntPtr)ptr + 0x60);
+                        return ((IntPtr)(ptr2 + 0x48), 0);
+                    }
+
                 case DebugOpts.NO_GRAVITY:
                     {
                         var ptr = getPlayerInsPtr();
@@ -820,8 +885,8 @@ namespace DS3Tool
                         //var ptr3 = getCharPtrModules();
                         //var ptr4 = ReadUInt64((IntPtr)(ptr3 + chrPhysModuleOff));
                         //return ((IntPtr)(ptr4 + 0x1DC), 1); //may be other gravity flags; ER has multiple
-                                                            //1DA may be equivalent? this is the one the debug menu sets. seems to unset itself sometimes.
-                                                           // gravity: bitflag!(0b1000000; world_chr_man, 0x80, 0x1a08), //alternative?
+                        //1DA may be equivalent? this is the one the debug menu sets. seems to unset itself sometimes.
+                        // gravity: bitflag!(0b1000000; world_chr_man, 0x80, 0x1a08), //alternative?
                     }
             }
             return badVal;
@@ -1120,3 +1185,6 @@ namespace DS3Tool
         }
     }
 }
+
+
+    

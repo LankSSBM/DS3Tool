@@ -14,7 +14,6 @@ using System.Diagnostics;
 using System.Windows.Media;
 using System.Text;
 using static DS3Tool.DS3Process;
-using System.Collections.ObjectModel;
 using DS3Tool.services;
 using DS3Tool.templates;
 
@@ -26,7 +25,8 @@ namespace DS3Tool
         private BonfireService _bonfireService;
         private ItemSpawnService _itemSpawnService;
         private CinderPhaseManager _cinderManager;
-        private NoClipService _noClipService;
+        private NoClipService noclipService;
+
 
         private bool disposedValue;
 
@@ -87,8 +87,10 @@ namespace DS3Tool
                 UpdateStatButtons();
 
                 _bonfireService = new BonfireService(_process);
-                _cinderManager = new CinderPhaseManager(_process);                
-                
+                _cinderManager = new CinderPhaseManager(_process);
+                noclipService = new NoClipService(_process);
+
+
                 _itemSpawnService = new ItemSpawnService(_process);
                 initItemAdjustments();
 
@@ -106,7 +108,7 @@ namespace DS3Tool
             upgradeComboBox.ItemsSource = _itemSpawnService.UPGRADES.Keys;
             upgradeComboBox.SelectedIndex = 0;
             }
-        }
+        
 
 
         private void loadItemTemplates()
@@ -319,6 +321,7 @@ namespace DS3Tool
     {
                 if (disposing)
                 {
+            
                     if (_process != null)
                     {
                         _process.Dispose();
@@ -330,11 +333,7 @@ namespace DS3Tool
                         _timer = null;
                     }
 
-                    if (_noClipService != null)
-                    {
-                        _noClipService.Dispose();
-                        _noClipService = null;
-                    }
+                    
                 }
                 disposedValue = true;
             }
@@ -658,24 +657,19 @@ namespace DS3Tool
 
         private void noClipOn(object sender, RoutedEventArgs e)
         {
-    
-            _playerNoDeathStateWas = chkPlayerNoDeath.IsChecked ?? false;
-            chkPlayerNoDeath.IsChecked = true;
-            chkPlayerNoGrav.IsChecked = true;
-            Thread.Sleep(100);
-            chkFreeCam.IsChecked = true;
-            _noClipActive = true;
-            _noClipService.Toggle(true); 
+            noclipService.EnableNoClip();
+            
+       
         }
 
         private void noClipOff(object sender, RoutedEventArgs e)
         {
-            _noClipActive = false;
-            _noClipService.Toggle(false); 
-            chkFreeCam.IsChecked = false;
-            chkPlayerNoGrav.IsChecked = false;
-            chkPlayerNoDeath.IsChecked = _playerNoDeathStateWas;
+
+            noclipService.disableNoClip();
+
         }
+
+       
 
         private void savePos(object sender, RoutedEventArgs e)
         {
@@ -760,8 +754,10 @@ namespace DS3Tool
             EVENT_VIEW, EVENT_STOP,
             FREE_CAMERA, FREE_CAMERA_CONTROL, NO_CLIP,
             DISABLE_STEAM_INPUT_ENUM,
-            GAME_SPEED_50PC, GAME_SPEED_75PC, GAME_SPEED_100PC, GAME_SPEED_150PC, GAME_SPEED_200PC, GAME_SPEED_300PC, GAME_SPEED_500PC, GAME_SPEED_1000PC
+            GAME_SPEED_50PC, GAME_SPEED_75PC, GAME_SPEED_100PC, GAME_SPEED_150PC, GAME_SPEED_200PC, GAME_SPEED_300PC, GAME_SPEED_500PC, GAME_SPEED_1000PC,
+     
         }
+
 
         const string hotkeyFileName = "ds3tool_hotkeys.txt";
 
@@ -1002,6 +998,8 @@ namespace DS3Tool
                 case HOTKEY_ACTIONS.GAME_SPEED_300PC: _process.getSetGameSpeed(3.0f); break;
                 case HOTKEY_ACTIONS.GAME_SPEED_500PC: _process.getSetGameSpeed(5.0f); break;
                 case HOTKEY_ACTIONS.GAME_SPEED_1000PC: _process.getSetGameSpeed(10.0f); break;
+           
+
                 default: Utils.debugWrite("Action not handled: " + act.ToString()); break;
             }
         }
@@ -1176,7 +1174,6 @@ namespace DS3Tool
         {
             _bonfireService.unlockAllBonfires();
         }
-
         private void OnPhaseButtonClick(object sender, RoutedEventArgs e)
         {
             var button = (Button)sender;
