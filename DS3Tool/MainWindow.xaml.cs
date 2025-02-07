@@ -37,6 +37,8 @@ namespace DS3Tool
         bool _freeCamFirstActivation = true;
         bool _playerNoDeathStateWas = false;
         bool _noClipActive = false;
+        bool panelsCollapsed = false;
+
 
         public Dictionary<string, string> ItemDictionary { get; private set; }
         public List<LoadoutTemplate> Templates { get; set; }
@@ -104,9 +106,7 @@ namespace DS3Tool
 
             upgradeComboBox.ItemsSource = _itemSpawnService.UPGRADES.Keys;
             upgradeComboBox.SelectedIndex = 0;
-            }
         }
-
 
         private void loadItemTemplates()
         {
@@ -1041,8 +1041,6 @@ namespace DS3Tool
             catch (Exception ex) { Utils.debugWrite(ex.ToString()); }
         }
 
-
-
         private void EditStat(object sender, RoutedEventArgs e)
         {
             if (sender is Button button && button.Tag is string statName)
@@ -1131,12 +1129,12 @@ namespace DS3Tool
             }
 
             _itemSpawnService.SpawnItem(
-        baseItemId: formattedId,
-        infusionType: selectedInfusion,
-        upgradeLevel: selectedUpgrade,
-        quantity: quantity,
-        durability: 100
-    );
+                baseItemId: formattedId,
+                infusionType: selectedInfusion,
+                upgradeLevel: selectedUpgrade,
+                quantity: quantity,
+                durability: 100
+            );
         }
 
 
@@ -1160,7 +1158,6 @@ namespace DS3Tool
                 }
             }
         }
-
 
         private void UnlockSelectedButton_Click(object sender, RoutedEventArgs e)
         {
@@ -1216,7 +1213,6 @@ namespace DS3Tool
             }
         }
 
-
         private void NgLevelComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (sender is ComboBox comboBox && comboBox.SelectedItem is ComboBoxItem selectedItem)
@@ -1234,6 +1230,42 @@ namespace DS3Tool
 
                 var newValue = _process.GetSetNewGameLevel(ngLevel);
                 SetSelectedNewGameLevel(newValue); 
+            }
+        }
+
+        private void dockPanel_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is DockPanel dockPanel && dockPanel.Tag is StackPanel stackPanel)
+            {
+                stackPanel.Visibility = stackPanel.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
+
+                var textBox = dockPanel.Children.OfType<TextBlock>().FirstOrDefault();
+                if (textBox != null)
+                {
+                    textBox.Text = stackPanel.Visibility == Visibility.Visible ?
+                                                            textBox.Text.Substring(0, textBox.Text.Length - 1) + "▼" :
+                                                            textBox.Text.Substring(0, textBox.Text.Length - 1) + "▲";
+                }
+            }
+        }
+        private void ToggleCollapse(object sender, RoutedEventArgs e)
+        {
+            var newVisibility = panelsCollapsed ? Visibility.Visible : Visibility.Collapsed;
+
+            foreach (UIElement element in mainPanel.Children)
+            {
+                if (element is StackPanel stackPanel && stackPanel.Name != null && stackPanel.Visibility != newVisibility)
+                {
+                    dockPanel_MouseLeftButtonDown(stackPanel, null);
+                    stackPanel.Visibility = newVisibility;
+                }
+            }
+
+            panelsCollapsed = !panelsCollapsed;
+
+            if (sender is Button button)
+            {
+                button.Content = newVisibility == Visibility.Visible ? "▼" : "▲";
             }
         }
     }
