@@ -18,20 +18,30 @@ namespace DS3Tool.services
 
         private DS3Process _ds3Process;
 
-
-
         private IntPtr REGION_ONE_OFFSET = (IntPtr)0x140000000 + 0x270BC20;
         private IntPtr REGION_TWO_OFFSET = (IntPtr)0x140000000 + 0x2718200;
         private IntPtr ORIGIN_COORD_BASE = (IntPtr)0x140000000 + 0x40A02F;
         private IntPtr ORIGIN_IN_AIR_TIMER = (IntPtr)0x140000000 + 0x9D181A;
         private IntPtr ORIGIN_CAM_H_ROTATE = (IntPtr)0x140000000 + 0x5166DC;
-        private IntPtr ORIGIN_KEYS = (IntPtr)0x140000000 + 0x188C6FD;
+        private IntPtr ORIGIN_MOVEMENT = (IntPtr)0x140000000 + 0x188C6FD;
         private IntPtr ORIGIN_COORDS_UPDATE = (IntPtr)0x140000000 + 0x9D2360;
-        private IntPtr END_THREAD;
-        private IntPtr FLY_MODE;
 
-        IntPtr KEY_LISTENER_CAVE_START;
 
+        private IntPtr PLAYER_COORD_CAVE_START;
+        private IntPtr IN_AIR_TIMER_CAVE_START;
+        private IntPtr CAM_H_ROTATE_CAVE_START;
+        private IntPtr MOVEMENT_CAVE_START;
+        private IntPtr COORDS_UPDATE_CAVE_START;
+        private IntPtr COORDS_UPDATE_Z_START;
+        private IntPtr COORDS_UPDATE_CAVE_EXIT;
+
+       private IntPtr PLAYER_COORD_BASE;
+       private IntPtr PLAYER_CAM_INFO;
+       private IntPtr PLAYER_MOVEMENT_INFO;
+       private IntPtr IX_OFFSET;
+       private IntPtr FLY_MODE;
+       private IntPtr Z_DIRECTION;
+      
 
         private class HookData
         {
@@ -71,39 +81,22 @@ namespace DS3Tool.services
         {
 
 
-            IntPtr PLAYER_COORD_BASE = REGION_ONE_OFFSET + 0x20;     
-            IntPtr PLAYER_CAM_INFO = REGION_ONE_OFFSET + 0x30;       
-            IntPtr PLAYER_MOVEMENT_INFO = REGION_ONE_OFFSET + 0x40;  
-            IntPtr IX_OFFSET = REGION_ONE_OFFSET + 0x50;            
+             PLAYER_COORD_BASE = REGION_ONE_OFFSET + 0x20;     
+             PLAYER_CAM_INFO = REGION_ONE_OFFSET + 0x30;       
+             PLAYER_MOVEMENT_INFO = REGION_ONE_OFFSET + 0x40;  
+             IX_OFFSET = REGION_ONE_OFFSET + 0x50;            
              FLY_MODE = REGION_ONE_OFFSET + 0x60;
-            IntPtr Z_DIRECTION = REGION_ONE_OFFSET + 0x70;
-            IntPtr TEMP_Z_DIRECTION = REGION_ONE_OFFSET + 0x80;
+             Z_DIRECTION = REGION_ONE_OFFSET + 0x70;
+   
 
+             PLAYER_COORD_CAVE_START = REGION_ONE_OFFSET + 0x140;
+             IN_AIR_TIMER_CAVE_START = REGION_ONE_OFFSET + 0x200;
+             CAM_H_ROTATE_CAVE_START = REGION_ONE_OFFSET + 0x280;
+             MOVEMENT_CAVE_START = REGION_ONE_OFFSET + 0x340;
+             COORDS_UPDATE_CAVE_START = REGION_TWO_OFFSET + 0x40;
+             COORDS_UPDATE_Z_START = REGION_TWO_OFFSET + 0x140;
+             COORDS_UPDATE_CAVE_EXIT = REGION_TWO_OFFSET + 0x200;
 
-            Console.WriteLine($"Testing Address - PLAYER_COORD_BASE: 0x{PLAYER_COORD_BASE.ToInt64():X}");
-            Console.WriteLine($"Testing Address - PLAYER_CAM_INFO: 0x{PLAYER_CAM_INFO.ToInt64():X}");
-            Console.WriteLine($"Testing Address - PLAYER_MOVEMENT_INFO: 0x{PLAYER_MOVEMENT_INFO.ToInt64():X}");
-            Console.WriteLine($"Testing Address - IX_OFFSET: 0x{IX_OFFSET.ToInt64():X}");
-            Console.WriteLine($"Testing Address - FLY_MODE: 0x{FLY_MODE.ToInt64():X}");
-            Console.WriteLine($"Testing Address - Z_DIRECTION: 0x{Z_DIRECTION.ToInt64():X}");
-            Console.WriteLine($"Testing Address - TEMP_Z_DIRECTION: 0x{TEMP_Z_DIRECTION.ToInt64():X}");
-            Console.WriteLine($"Testing Address - END_THREAD: 0x{END_THREAD.ToInt64():X}");
-
-
-            IntPtr PLAYER_COORD_CAVE_START = REGION_ONE_OFFSET + 0x140;
-            IntPtr IN_AIR_TIMER_CAVE_START = REGION_ONE_OFFSET + 0x200;
-            IntPtr CAM_H_ROTATE_CAVE_START = REGION_ONE_OFFSET + 0x280;
-            IntPtr MOVEMENT_CAVE_START = REGION_ONE_OFFSET + 0x340;
-            IntPtr COORDS_UPDATE_CAVE_START = REGION_TWO_OFFSET + 0x40;
-            IntPtr COORDS_UPDATE_Z_START = REGION_TWO_OFFSET + 0x140;
-            IntPtr COORDS_UPDATE_CAVE_EXIT = REGION_TWO_OFFSET + 0x200;
-
-
-            Console.WriteLine($"Testing Address - PLAYER_COORD_CAVE_START: 0x{PLAYER_COORD_CAVE_START.ToInt64():X}");
-            Console.WriteLine($"Testing Address - IN_AIR_TIMER_CAVE_START: 0x{IN_AIR_TIMER_CAVE_START.ToInt64():X}");
-            Console.WriteLine($"Testing Address - CAM_H_ROTATE_CAVE_START: 0x{CAM_H_ROTATE_CAVE_START.ToInt64():X}");
-            Console.WriteLine($"Testing Address - KEYS_CAVE_START: 0x{MOVEMENT_CAVE_START.ToInt64():X}");
-            Console.WriteLine($"Testing Address - COORDS_UPDATE_CAVE_START: 0x{COORDS_UPDATE_CAVE_START.ToInt64():X}");
 
             var playerCoordCave = new byte[] {
 
@@ -111,12 +104,10 @@ namespace DS3Tool.services
                 0x48, 0x89, 0x0D                        // mov [player coords],rcx
 };
 
-
             int playerCoordOffset = (int)(PLAYER_COORD_BASE.ToInt64() -
                 (PLAYER_COORD_CAVE_START.ToInt64() + playerCoordCave.Length + 4));
 
-
-            playerCoordCave = playerCoordCave
+         playerCoordCave = playerCoordCave
                 .Concat(BitConverter.GetBytes(playerCoordOffset))
                 .Concat(new byte[] {
                     0x48, 0x8B, 0x48, 0x18, // mov rcx,[rax+18]
@@ -131,14 +122,9 @@ namespace DS3Tool.services
             playerCoordCave = playerCoordCave
                 .Concat(BitConverter.GetBytes(playerCoordReturn))
                 .ToArray();
-
-
-            Console.WriteLine($"Cave bytes: {BitConverter.ToString(playerCoordCave)}");
             try
             {
                 _ds3Process.WriteBytes(PLAYER_COORD_CAVE_START, playerCoordCave);
-                Console.WriteLine("Player Cords written successfully");
-
 
                 hooks.Add(new HookData
                 {
@@ -183,20 +169,11 @@ namespace DS3Tool.services
             int originAirTimerReturn = (int)((ORIGIN_IN_AIR_TIMER.ToInt64() + 8)
                 - (IN_AIR_TIMER_CAVE_START.ToInt64() + inAirTimerCave.Length + 4));
 
-
-            Console.WriteLine($"Return Offset: 0x{originAirTimerReturn:X}");
-
             inAirTimerCave = inAirTimerCave.Concat(BitConverter.GetBytes(originAirTimerReturn)).ToArray();
 
-            Console.WriteLine($"Cave bytes: {BitConverter.ToString(inAirTimerCave)}");
             try
             {
                 _ds3Process.WriteBytes(IN_AIR_TIMER_CAVE_START, inAirTimerCave);
-
-                // Verify write
-                byte[] verification = _ds3Process.ReadBytes(IN_AIR_TIMER_CAVE_START, inAirTimerCave.Length);
-                Console.WriteLine("Cave written successfully");
-                Console.WriteLine($"Verification: {BitConverter.ToString(verification)}");
 
                 hooks.Add(new HookData
                 {
@@ -240,15 +217,16 @@ namespace DS3Tool.services
                              { 0x66, 0x0F, 0x7F, 0xAE, 0x40, 0x01, 0x00, 0x00 }
             });
 
+
+
             try
             {
                 _ds3Process.WriteBytes(CAM_H_ROTATE_CAVE_START, camHRotateCave);
-                Console.WriteLine("Cam H written successfully");
 
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error writing Cave 3: {ex.Message}");
+                Console.WriteLine($"Error writing coords update cave: {ex.Message}");
                 throw;
             }
 
@@ -275,14 +253,14 @@ namespace DS3Tool.services
            0xE9                                // jmp 
                 }).ToArray();
 
-            int keysReturnOffset = (int)((ORIGIN_KEYS.ToInt64() + 6) - (MOVEMENT_CAVE_START.ToInt64() + movementCave.Length + 4));
+            int keysReturnOffset = (int)((ORIGIN_MOVEMENT.ToInt64() + 6) - (MOVEMENT_CAVE_START.ToInt64() + movementCave.Length + 4));
 
             movementCave = movementCave.Concat(BitConverter.GetBytes(keysReturnOffset)).ToArray();
 
             hooks.Add(new HookData
             {
                 Name = "Keys",
-                OriginAddr = ORIGIN_KEYS,
+                OriginAddr = ORIGIN_MOVEMENT,
                 CaveAddr = MOVEMENT_CAVE_START,
                 OriginalBytes = new byte[]
                              {  0xF3, 0x41, 0x0F, 0x11, 0x0C, 0x80 }
@@ -292,7 +270,6 @@ namespace DS3Tool.services
             try
             {
                 _ds3Process.WriteBytes(MOVEMENT_CAVE_START, movementCave);
-                Console.WriteLine("Keys written successfully");
 
             }
             catch (Exception ex)
@@ -447,8 +424,6 @@ namespace DS3Tool.services
 
             coordsUpdateCave = coordsUpdateCave.Concat(BitConverter.GetBytes(zCaveOffset)).ToArray();
 
-            Console.WriteLine($"Cave bytes: {BitConverter.ToString(coordsUpdateCave)}");
-
             hooks.Add(new HookData
             {
                 Name = "CoordsUpdate",
@@ -540,32 +515,36 @@ namespace DS3Tool.services
             }      
         }
 
+
         private void InstallHooks()
 
         {
-
+            List<Action> rollbackHooks = new List<Action>();
             foreach (var hook in hooks)
+
             {
-                IntPtr target = hook.OriginAddr;  // Already an IntPtr
-                IntPtr source = hook.CaveAddr;  // Already an IntPtr
+                byte[] currentBytes = _ds3Process.ReadBytes(hook.OriginAddr, hook.OriginalBytes.Length);
 
-                _ds3Process.ReadTestFull(target);
+                if (currentBytes.Length > 0 && currentBytes[0] == 0xE9)
+                {
+                    Console.WriteLine($"INFO: Hook {hook.Name} is already installed. Skipping.");
+                    continue;
+                }
 
-                if (!VerifyHookLocation(target, hook.OriginalBytes))
+                if (!VerifyHookLocation(hook.OriginAddr, hook.OriginalBytes))
                 {
                     Console.WriteLine($"ERROR: Original bytes don't match for {hook.Name}!");
                     continue;
                 }
 
-             
                 byte[] jumpBytes = new byte[hook.OriginalBytes.Length];
                 jumpBytes[0] = 0xE9; 
 
             
-                long delta = source.ToInt64() - (target.ToInt64() + 5);
+                long delta = hook.CaveAddr.ToInt64() - (hook.OriginAddr.ToInt64() + 5);
                 if (delta > int.MaxValue || delta < int.MinValue)
                 {
-                    Console.WriteLine($"ERROR: Jump distance too far for {hook.Name}!");
+                    Console.WriteLine($"ERROR: Hook {hook.Name} skipped due to delta overflow.");
                     continue;
                 }
 
@@ -581,25 +560,26 @@ namespace DS3Tool.services
 
                 try
                 {
-                    _ds3Process.WriteBytes(target, jumpBytes);
-                    Console.WriteLine($"Successfully installed hook for {hook.Name}");
+                    _ds3Process.WriteBytes(hook.OriginAddr, jumpBytes);
+                    rollbackHooks.Add(() => _ds3Process.WriteBytes(hook.OriginAddr, hook.OriginalBytes));
                 }
                 catch (Exception ex)
                 {
+                    foreach (var a in rollbackHooks.AsEnumerable().Reverse())
+                    {
+                        a();
+                    }
                     Console.WriteLine($"Failed to install hook for {hook.Name}: {ex.Message}");
                 }
             }
 
         }
 
-
-
         private bool VerifyHookLocation(IntPtr location, byte[] expectedBytes)
         {
             var currentBytes = _ds3Process.ReadBytes(location, expectedBytes.Length);
             return currentBytes.SequenceEqual(expectedBytes);
         }
-
 
         public void disableNoClip() {
 
@@ -612,7 +592,9 @@ namespace DS3Tool.services
         }
 
         private void RestoreOriginalBytes()
+
         {
+            
             foreach (var hook in hooks)
             {
                 try
@@ -650,12 +632,11 @@ namespace DS3Tool.services
                 var regionTwoSize = 3000;
                 var zeroBytes = new byte[regionTwoSize];
                 _ds3Process.WriteBytes(REGION_TWO_OFFSET, zeroBytes);
-                Console.WriteLine("Region Two cleaned");
-
+      
                 var regionOneSize = 1024;
                 zeroBytes = new byte[regionOneSize];
                 _ds3Process.WriteBytes(REGION_ONE_OFFSET, zeroBytes);
-                Console.WriteLine("Region One cleaned");
+     
 
             }
             catch (Exception ex)

@@ -53,19 +53,6 @@ namespace DS3Tool
             return ret;
         }
 
-        public void RunNoClipThread(IntPtr address, IntPtr regionOneOffset, IntPtr endThreadAddress)
-        {
-         
-                WriteInt32(endThreadAddress, 0);
-         
-                IntPtr thread = CreateRemoteThread(_targetProcessHandle, IntPtr.Zero, 0, address, IntPtr.Zero, 0, IntPtr.Zero);
-                if (thread == IntPtr.Zero)
-                    throw new Exception("Failed to create remote thread.");
-
-                CloseHandle(thread);
-        
-        }
-
         Thread freezeThread = null;
         bool _running = true;
         public DS3Process()
