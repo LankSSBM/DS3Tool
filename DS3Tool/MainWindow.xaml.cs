@@ -26,6 +26,7 @@ namespace DS3Tool
         private BonfireService _bonfireService;
         private ItemSpawnService _itemSpawnService;
         private CinderPhaseManager _cinderManager;
+        private const string CINDER_ENEMY_ID = "c5280_0000";
 
         private bool disposedValue;
 
@@ -86,8 +87,8 @@ namespace DS3Tool
                 UpdateStatButtons();
 
                 _bonfireService = new BonfireService(_process);
-                _cinderManager = new CinderPhaseManager(_process);                
-                
+                _cinderManager = new CinderPhaseManager(_process);
+
                 _itemSpawnService = new ItemSpawnService(_process);
                 initItemAdjustments();
 
@@ -104,8 +105,8 @@ namespace DS3Tool
 
             upgradeComboBox.ItemsSource = _itemSpawnService.UPGRADES.Keys;
             upgradeComboBox.SelectedIndex = 0;
-            }
         }
+        
 
 
         private void loadItemTemplates()
@@ -193,6 +194,20 @@ namespace DS3Tool
             var poise = _process.getSetTargetInfo(DS3Process.TargetInfo.POISE);
             var poisemax = _process.getSetTargetInfo(DS3Process.TargetInfo.MAX_POISE);
             var poisetimer = _process.getSetTargetInfo(DS3Process.TargetInfo.POISE_TIMER);
+
+            string enemyId = _process.GetSetTargetEnemyID();
+
+            if (enemyId == CINDER_ENEMY_ID)
+            {
+                //Show cinder panel
+           
+            } else
+            {
+                //Hide cinder panel
+           
+            }
+                
+
             //Console.WriteLine($"{hp} {hpmax} {poise} {poisemax} {poisetimer}");
             if (double.IsNaN(hp)) { return; }
 
@@ -734,6 +749,7 @@ namespace DS3Tool
             [In] int id);
 
         const int WM_HOTKEY = 0x0312;
+ 
 
         [Flags]
         public enum Modifiers

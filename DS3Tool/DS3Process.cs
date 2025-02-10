@@ -324,7 +324,8 @@ namespace DS3Tool
             INTELLIGENCE,
             FAITH,
             LUCK,
-            SOULS
+            SOULS,
+     
         }
 
         private readonly Dictionary<PlayerStats, int> statOffsets = new Dictionary<PlayerStats, int>
@@ -338,6 +339,7 @@ namespace DS3Tool
         { PlayerStats.INTELLIGENCE, 0x58 },
         { PlayerStats.FAITH, 0x5C },
         { PlayerStats.LUCK, 0x60 },
+    
         {PlayerStats.SOULS, 0x74 }
     };
 
@@ -1095,14 +1097,26 @@ namespace DS3Tool
 
         private void UpdatePlayerStat(PlayerStats stat, IntPtr statAddress, ulong playerStatsPtr, int newValue)
         {
-            WriteInt32(statAddress, newValue);
 
             if (stat == PlayerStats.SOULS)
             {
                 var totalSoulsAddress = (IntPtr)(playerStatsPtr + 0x78);
                 int currentTotalSouls = ReadInt32(totalSoulsAddress);
                 WriteInt32(totalSoulsAddress, currentTotalSouls + newValue);
+                WriteInt32(statAddress, newValue);
+          
+            } else
+            {
+                int oldStat = ReadInt32(statAddress);
+                var soulLevelAddress = (IntPtr)(playerStatsPtr + 0x70);
+                int soulLevel = ReadInt32(soulLevelAddress);
+
+                soulLevel += newValue - oldStat;
+
+                WriteInt32(statAddress, newValue);
+                WriteInt32(soulLevelAddress, soulLevel);
             }
+
         }
 
         public int GetSetNewGameLevel(int? newValue = null)
