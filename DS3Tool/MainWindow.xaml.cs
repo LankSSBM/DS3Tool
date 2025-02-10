@@ -36,8 +36,7 @@ namespace DS3Tool
         bool _hooked = false;
 
         bool _freeCamFirstActivation = true;
-        bool _playerNoDeathStateWas = false;
-        bool _noClipActive = false;
+       
 
         public Dictionary<string, string> ItemDictionary { get; private set; }
         public List<LoadoutTemplate> Templates { get; set; }

@@ -416,7 +416,7 @@ namespace DS3Tool.services
                 .Concat(new byte[] {
                     0x44, 0x0F, 0x59, 0xB8, 0x80, 0x03, 0x00, 0x00,  // mulps xmm15,[rax+380] 
                    0x41, 0x0F, 0x58, 0xF7,                   // addps xmm6,xmm15
-                   0x0F, 0x84, //movement
+                  0xE9
                 }).
                 ToArray();
 
