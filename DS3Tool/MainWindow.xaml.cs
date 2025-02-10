@@ -86,8 +86,8 @@ namespace DS3Tool
                 UpdateStatButtons();
 
                 _bonfireService = new BonfireService(_process);
-                _cinderManager = new CinderPhaseManager(_process);                
-                
+                _cinderManager = new CinderPhaseManager(_process);
+
                 _itemSpawnService = new ItemSpawnService(_process);
                 initItemAdjustments();
 
@@ -104,8 +104,8 @@ namespace DS3Tool
 
             upgradeComboBox.ItemsSource = _itemSpawnService.UPGRADES.Keys;
             upgradeComboBox.SelectedIndex = 0;
-            }
         }
+        
 
 
         private void loadItemTemplates()
@@ -734,6 +734,7 @@ namespace DS3Tool
             [In] int id);
 
         const int WM_HOTKEY = 0x0312;
+ 
 
         [Flags]
         public enum Modifiers
