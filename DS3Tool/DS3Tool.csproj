@@ -66,6 +66,7 @@
     <Compile Include="StatsEditor.xaml.cs">
       <DependentUpon>StatsEditor.xaml</DependentUpon>
     </Compile>
+    <Compile Include="services\NoClipService.cs" />
     <Compile Include="templates\LoadoutPreset.cs" />
     <Compile Include="templates\Templates.cs" />
     <Compile Include="services\CinderPhaseManager.cs" />
