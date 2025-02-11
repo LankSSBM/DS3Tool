@@ -26,6 +26,7 @@
                     <!--TODO <CheckBox Checked="emberOn" Unchecked="emberOff" x:Name="chkEmber" Margin="10,0">Ember</CheckBox>-->
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,8,0">
+                    <Button FontSize="12" Click="OpenSpawnItem" Margin="1,0,5,0" x:Name="btnSpawItem">Spawn Items</Button>
                     <Button FontSize="12" Click="EditStats" Margin="1,0,5,0" x:Name="btnEditStats">Edit Stats</Button>
                     <Button FontSize="12" Click="EditSouls" Margin="1,0,5,0" x:Name="btnEditSouls">Edit Souls</Button>
                     <Button FontSize="12" Click="instantDeath" Margin="1,0,5,0" x:Name="btnDie">Die</Button>
@@ -103,9 +104,12 @@
                     <CheckBox Checked="steamInputEnumDisableOn" Unchecked="steamInputEnumDisableOff" x:Name="chkSteamInputEnum" >Stutter Fix</CheckBox>
                     <CheckBox Checked="hiddenDebugMenuOn" Unchecked="hiddenDebugMenuOff" x:Name="chkHiddenDebugMenu" Margin="5,0">Enable Debug Menu</CheckBox>
                 </StackPanel>
-                <StackPanel Orientation="Horizontal">
+                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
                     <CheckBox Checked="stayOnTop" Unchecked="dontStayOnTop" x:Name="chkStayOnTop">Stay on top</CheckBox>
-                    <Button Click="setGameSpeed" Margin="5,0" FontSize="11">Set Game Speed</Button>
+                    <Button Click="setGameSpeed" Margin="5,0">Set Game Speed</Button>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                    <Button FontSize="12" Click="EditNewGame" Margin="1,0,5,0" x:Name="btnEditNewGame">Edit NG Cycle</Button>
                 </StackPanel>
             </StackPanel>
             <Button Click="installTargetHook" x:Name="targetHookButton" Margin="0,5">Enable Target Options</Button>
@@ -161,21 +165,6 @@
             <Button Click="hotkeySetup" FontSize="11" HorizontalAlignment="Right" Margin="0,0" x:Name="btnHotkeys">Hotkey Setup</Button>
         </StackPanel>
         <Button Click="doQuitout" x:Name="quitoutButton" Height="30">Instant Quitout</Button>
-        <GroupBox Header="Stats" Margin="5">
-            <UniformGrid x:Name="StatGrid" Columns="3">
-                <ComboBox Width="80" Height="30" Margin="5" Text="NG" IsEditable="True" SelectedIndex="-1"
-                          SelectionChanged="NgLevelComboBox_SelectionChanged" x:Name="NgLevelComboBox" >
-                    <ComboBoxItem Content="NG"/>
-                    <ComboBoxItem Content="NG+1"/>
-                    <ComboBoxItem Content="NG+2"/>
-                    <ComboBoxItem Content="NG+3"/>
-                    <ComboBoxItem Content="NG+4"/>
-                    <ComboBoxItem Content="NG+5"/>
-                    <ComboBoxItem Content="NG+6"/>
-                    <ComboBoxItem Content="NG+7"/>
-                </ComboBox>
-            </UniformGrid>
-        </GroupBox>
         <StackPanel Margin="5">
             <GroupBox Header="Item Spawner">
                 <StackPanel Margin="2">

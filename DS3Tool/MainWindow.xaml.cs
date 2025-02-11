@@ -94,7 +94,6 @@ namespace DS3Tool
                 _itemSpawnService = new ItemSpawnService(_process);
                 initItemAdjustments();
 
-                SetSelectedNewGameLevel();
                 loadItemTemplates();
             }
         }
@@ -1050,6 +1049,13 @@ namespace DS3Tool
             catch (Exception ex) { Utils.debugWrite(ex.ToString()); }
         }
 
+        private void OpenSpawnItem(object sender, RoutedEventArgs e)
+        {
+            var itemSpawn = new ItemSpawn(_process, ItemDictionary);
+            itemSpawn.Owner = this;
+            itemSpawn.Show();
+        }
+
         private void EditStats(object sender, RoutedEventArgs e)
         {
             var stats = _process.GetSetPlayerStats().Where(item => item.Item1 != "SOULS").ToList();
@@ -1074,23 +1080,20 @@ namespace DS3Tool
             editor.Show();
         }
 
-        private void EditStat(object sender, RoutedEventArgs e)
+        private void EditNewGame(object sender, RoutedEventArgs e)
         {
-            if (sender is Button button && button.Tag is string statName)
+            var stats = new List<(string, int)>();
+
+            int ngLevel = _process.GetSetNewGameLevel();
+
+            stats.Add(("NG+ Cycle", ngLevel));
+
+            var editor = new StatsEditor(stats, (x) =>
             {
-                if (Enum.TryParse<PlayerStats>(statName, out var stat))
-                {
-                    var currentValue = _process.GetSetPlayerStat(stat);
-                    string input = Microsoft.VisualBasic.Interaction.InputBox(
-                        $"Enter new value for {Utils.CapitalizeFirst(statName)}:",
-                        "Edit Stat",
-                        currentValue.ToString());
-                    if (!string.IsNullOrEmpty(input) && int.TryParse(input, out int newValue))
-                    {
-                        _process.GetSetPlayerStat(stat, newValue);
-                    }
-                }
-            }
+                _process.GetSetNewGameLevel(x[0].Item2);
+            });
+            editor.Owner = this;
+            editor.Show();
         }
 
         private void SpawnButton_Click(object sender, RoutedEventArgs e)
@@ -1187,44 +1190,6 @@ namespace DS3Tool
         private void OnLockPhaseChanged(object sender, RoutedEventArgs e)
         {
             _cinderManager.TogglePhaseLock(chkLockPhase.IsChecked ?? false);
-        }
-
-        private void SetSelectedNewGameLevel(int? actualValue = null)
-        {
-            var currentValue = actualValue ?? _process.GetSetNewGameLevel();  // Only read if no value provided
-            string formattedNgLevel = currentValue == 0 ? "NG" : $"NG+{currentValue}";
-
-            if (NgLevelComboBox != null)
-            {
-                foreach (ComboBoxItem item in NgLevelComboBox.Items)
-                {
-                    if (item.Content.ToString() == formattedNgLevel)
-                    {
-                        NgLevelComboBox.SelectedItem = item;
-                        break;
-                    }
-                }
-            }
-        }
-
-        private void NgLevelComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (sender is ComboBox comboBox && comboBox.SelectedItem is ComboBoxItem selectedItem)
-            {
-                string selectedNgLevel = selectedItem.Content.ToString();
-
-                int ngLevel;
-
-                if (selectedNgLevel == "NG")
-                    ngLevel = 0;
-                else if (selectedNgLevel.StartsWith("NG+") && int.TryParse(selectedNgLevel.Substring(3), out int number))
-                    ngLevel = number;
-                else
-                    ngLevel = -1;
-
-                var newValue = _process.GetSetNewGameLevel(ngLevel);
-                SetSelectedNewGameLevel(newValue); 
-            }
         }
 
         private void dockPanel_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)

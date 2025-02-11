@@ -14,9 +14,6 @@ namespace DS3Tool
         public StatsEditor(List<(string, int)> stats, Action<List<(string, int)>> callback)
         {
             InitializeComponent();
-            /*if (stats != null && stats.Count != 0 && stats[0].Item1 == "SOULS") {
-                Dispatcher.Invoke(() => this.Width = 250);
-            }*/
             _stats = stats;
             _callback = callback;
             lblExample.Visibility = Visibility.Hidden;

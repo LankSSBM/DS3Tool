@@ -1218,7 +1218,7 @@ namespace DS3Tool
         {
             var ptr1 = ReadUInt64(ds3Base + GAME_DATA_MAN_OFFSET);
             var finalAddress = (IntPtr)(ptr1 + 0x78);
-            if (newValue.HasValue)
+            if (newValue.HasValue && newValue >= 0)
             {
                 WriteInt32(finalAddress, newValue.Value);
             }
