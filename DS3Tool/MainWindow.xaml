@@ -16,7 +16,7 @@
                 <StackPanel Orientation="Horizontal" Margin="0,0,8,0">
                     <CheckBox Checked="noDeathOn" Unchecked="noDeathOff" x:Name="chkPlayerNoDeath">No Death</CheckBox>
                     <CheckBox Checked="oneHPOn" Unchecked="oneHPOff" Margin="5,0" x:Name="chkOneHP">1 HP (rtsr)</CheckBox>
-                    <CheckBox Checked="maxHPOn" Unchecked="maxHPOff" Margin="10,0" x:Name="chkMaxHP">Max HP</CheckBox>
+                    <CheckBox Checked="maxHPOn" Unchecked="maxHPOff" Margin="5,0" x:Name="chkMaxHP">Max HP</CheckBox>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,8,0">
                     <CheckBox Checked="noStamOn" Unchecked="noStamOff" x:Name="chkInfStam">Inf Stam</CheckBox>
