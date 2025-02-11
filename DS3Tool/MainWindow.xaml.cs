@@ -1041,6 +1041,11 @@ namespace DS3Tool
             catch (Exception ex) { Utils.debugWrite(ex.ToString()); }
         }
 
+        private void EditStats(object sender, RoutedEventArgs e)
+        {
+            var stats = _process.GetSetPlayerStats();
+        }
+
         private void EditStat(object sender, RoutedEventArgs e)
         {
             if (sender is Button button && button.Tag is string statName)

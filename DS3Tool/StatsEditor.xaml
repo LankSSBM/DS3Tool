@@ -1,0 +1,32 @@
+﻿<Window x:Class="DS3Tool.StatsEditor"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:DS3Tool"
+        mc:Ignorable="d"
+        Title="Stats Editor" Width="150" SizeToContent="Height" WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
+    <Window.Resources>
+        <Style TargetType="TextBox">
+            <EventSetter Event="GotKeyboardFocus" Handler="TextBox_GotKeyboardFocus"/>
+        </Style>
+    </Window.Resources>
+    <StackPanel Orientation="Vertical" x:Name="mainPanel">
+        <StackPanel Orientation="Vertical" x:Name="statsPanel">
+            <Grid x:Name="statsGrid">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="3*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Label Grid.Row="0" Grid.Column="0" x:Name="lblExample">SomeStat</Label>
+                <Button Grid.Row="0" Grid.Column="1" Height="18" FontSize="10" Name="decreaseExample" KeyboardNavigation.IsTabStop="False">-</Button>
+                <TextBox Grid.Row="0" Grid.Column="2" VerticalAlignment="Center" x:Name="txtExample" TextAlignment="Center">99</TextBox>
+                <Button Grid.Row="0" Grid.Column="3" Height="18" FontSize="10" Name="increaseExample" KeyboardNavigation.IsTabStop="False">+</Button>
+            </Grid>
+        </StackPanel>
+        <Button Click="okClicked">OK</Button>
+    </StackPanel>
+
+</Window>

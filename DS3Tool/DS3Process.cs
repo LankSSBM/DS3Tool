@@ -19,6 +19,7 @@ namespace DS3Tool
         public IntPtr _targetProcessHandle = IntPtr.Zero;
         public IntPtr ds3Base = IntPtr.Zero;
         public const int CodeCavePtrLoc = 0x1914670;
+        public readonly string[] STAT_NAMES = new string[] { "Vigor", "Attunement", "Endurance", "Vitality", "Strength", "Dexterity", "Intelligence", "Faith", "Luck" };
 
         protected bool disposed = false;
 
@@ -328,18 +329,18 @@ namespace DS3Tool
         }
 
         private readonly Dictionary<PlayerStats, int> statOffsets = new Dictionary<PlayerStats, int>
-    {
-        { PlayerStats.VIGOR, 0x44 },
-        { PlayerStats.ATTUNEMENT, 0x48 },
-        { PlayerStats.ENDURANCE, 0x4C },
-        { PlayerStats.VITALITY, 0x6C },
-        { PlayerStats.STRENGTH, 0x50 },
-        { PlayerStats.DEXTERITY, 0x54 },
-        { PlayerStats.INTELLIGENCE, 0x58 },
-        { PlayerStats.FAITH, 0x5C },
-        { PlayerStats.LUCK, 0x60 },
-        {PlayerStats.SOULS, 0x74 }
-    };
+        {
+            { PlayerStats.VIGOR, 0x44 },
+            { PlayerStats.ATTUNEMENT, 0x48 },
+            { PlayerStats.ENDURANCE, 0x4C },
+            { PlayerStats.VITALITY, 0x6C },
+            { PlayerStats.STRENGTH, 0x50 },
+            { PlayerStats.DEXTERITY, 0x54 },
+            { PlayerStats.INTELLIGENCE, 0x58 },
+            { PlayerStats.FAITH, 0x5C },
+            { PlayerStats.LUCK, 0x60 },
+            {PlayerStats.SOULS, 0x74 }
+        };
 
 
         //1.15 stuff by shilkey
@@ -1091,6 +1092,31 @@ namespace DS3Tool
             }
 
             return ReadInt32(statAddress);
+        }
+
+        public List<(string, int)> GetSetPlayerStats(List<(string, int)> newStats = null)
+        {
+            var gameDataPtr = ReadUInt64(ds3Base + GAME_DATA_MAN_OFFSET);
+            var playerStatsPtr = ReadUInt64((IntPtr)(gameDataPtr + 0x10));
+
+            var ret = new List<(string, int)>();
+
+            int newLevel = -79; //+ 10 * 8 stats = SL1
+            int i = 0;
+            for (; i < Enum.GetNames(typeof(PlayerStats)).Length; i++)
+            {
+                int statOffset = (ulong)statOffsets[i] + i * 4;
+                int currentVal = ReadInt32(statAddress + statOffset);
+                if (newStats != null) { WriteInt32(ptr + statOffset, newStats[i].Item2); newLevel += newStats[i].Item2; }
+                ret.Add((STAT_NAMES[i], currentVal));
+            }
+            if (newStats != null)
+            {
+                WriteInt32(ptr + levelOffset, newLevel);
+            }
+
+            return ret;
+
         }
 
         private void UpdatePlayerStat(PlayerStats stat, IntPtr statAddress, ulong playerStatsPtr, int newValue)

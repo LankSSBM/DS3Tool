@@ -17,7 +17,6 @@
                     <CheckBox Checked="noDeathOn" Unchecked="noDeathOff" x:Name="chkPlayerNoDeath">No Death</CheckBox>
                     <CheckBox Checked="oneHPOn" Unchecked="oneHPOff" x:Name="chkOneHP">1 HP (rtsr)</CheckBox>
                     <CheckBox Checked="maxHPOn" Unchecked="maxHPOff" Margin="10,0" x:Name="chkMaxHP">Max HP</CheckBox>
-                    <Button FontSize="10" Click="instantDeath" x:Name="btnDie">Die</Button>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,8,0">
                     <CheckBox Checked="noStamOn" Unchecked="noStamOff" x:Name="chkInfStam">Inf Stam</CheckBox>
@@ -25,6 +24,10 @@
                     <CheckBox Checked="noGoodsOn" Unchecked="noGoodsOff" Margin="5,0" x:Name="chkInfConsum">Inf Consum.</CheckBox>
                     <CheckBox Checked="oneShotOn" Unchecked="oneShotOff" Margin="5,0" x:Name="chkOneShot">One shot</CheckBox>
                     <!--TODO <CheckBox Checked="emberOn" Unchecked="emberOff" x:Name="chkEmber" Margin="10,0">Ember</CheckBox>-->
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,8,0">
+                    <Button FontSize="12" Click="EditStats" Margin="1,0,5,0" x:Name="btnEditStats">Edit Stats</Button>
+                    <Button FontSize="12" Click="instantDeath" Margin="1,0,5,0" x:Name="btnDie">Die</Button>
                 </StackPanel>
             </StackPanel>
             <DockPanel Height="16" MouseLeftButtonDown="dockPanel_MouseLeftButtonDown" Tag="{Binding ElementName=EnemyPanel}">
