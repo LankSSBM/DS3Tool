@@ -1157,18 +1157,20 @@ namespace DS3Tool
 
             var ret = new List<(string, int)>();
 
-            int newLevel = -79; //+ 10 * 8 stats = SL1
-            int i = 0;
-            for (; i < Enum.GetNames(typeof(PlayerStats)).Length; i++)
+            foreach(PlayerStats stat in Enum.GetValues(typeof(PlayerStats)))
             {
-                int statOffset = (ulong)statOffsets[i] + i * 4;
-                int currentVal = ReadInt32(statAddress + statOffset);
-                if (newStats != null) { WriteInt32(ptr + statOffset, newStats[i].Item2); newLevel += newStats[i].Item2; }
-                ret.Add((STAT_NAMES[i], currentVal));
+                ret.Add((stat.ToString(), GetSetPlayerStat(stat)));
             }
+
             if (newStats != null)
             {
-                WriteInt32(ptr + levelOffset, newLevel);
+                foreach((string, int)updatedStat in newStats)
+                {
+                    if (Enum.TryParse(updatedStat.Item1, out PlayerStats enumStatName))
+                    {
+                        GetSetPlayerStat(enumStatName, updatedStat.Item2);
+                    }
+                }
             }
 
             return ret;

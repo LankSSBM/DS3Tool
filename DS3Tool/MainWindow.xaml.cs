@@ -1054,6 +1054,12 @@ namespace DS3Tool
         private void EditStats(object sender, RoutedEventArgs e)
         {
             var stats = _process.GetSetPlayerStats();
+            var editor = new StatsEditor(stats, (x) =>
+            {
+                _process.GetSetPlayerStats(x);
+            });
+            editor.Owner = this;
+            editor.Show();
         }
 
         private void EditStat(object sender, RoutedEventArgs e)
