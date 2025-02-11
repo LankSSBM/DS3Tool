@@ -15,7 +15,7 @@
             <StackPanel x:Name="PlayerPanel">
                 <StackPanel Orientation="Horizontal" Margin="0,0,8,0">
                     <CheckBox Checked="noDeathOn" Unchecked="noDeathOff" x:Name="chkPlayerNoDeath">No Death</CheckBox>
-                    <CheckBox Checked="oneHPOn" Unchecked="oneHPOff" x:Name="chkOneHP">1 HP (rtsr)</CheckBox>
+                    <CheckBox Checked="oneHPOn" Unchecked="oneHPOff" Margin="5,0" x:Name="chkOneHP">1 HP (rtsr)</CheckBox>
                     <CheckBox Checked="maxHPOn" Unchecked="maxHPOff" Margin="10,0" x:Name="chkMaxHP">Max HP</CheckBox>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,8,0">
@@ -27,6 +27,7 @@
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,8,0">
                     <Button FontSize="12" Click="EditStats" Margin="1,0,5,0" x:Name="btnEditStats">Edit Stats</Button>
+                    <Button FontSize="12" Click="EditSouls" Margin="1,0,5,0" x:Name="btnEditSouls">Edit Souls</Button>
                     <Button FontSize="12" Click="instantDeath" Margin="1,0,5,0" x:Name="btnDie">Die</Button>
                 </StackPanel>
             </StackPanel>
@@ -162,16 +163,6 @@
         <Button Click="doQuitout" x:Name="quitoutButton" Height="30">Instant Quitout</Button>
         <GroupBox Header="Stats" Margin="5">
             <UniformGrid x:Name="StatGrid" Columns="3">
-                <Button Click="EditStat" Tag="VIGOR" Margin="2">Vigor: 0</Button>
-                <Button Click="EditStat" Tag="ATTUNEMENT" Margin="2">Attunement: 0</Button>
-                <Button Click="EditStat" Tag="ENDURANCE" Margin="2">Endurance: 0</Button>
-                <Button Click="EditStat" Tag="VITALITY" Margin="2">Vitality: 0</Button>
-                <Button Click="EditStat" Tag="STRENGTH" Margin="2">Strength: 0</Button>
-                <Button Click="EditStat" Tag="DEXTERITY" Margin="2">Dexterity: 0</Button>
-                <Button Click="EditStat" Tag="INTELLIGENCE" Margin="2">Intelligence: 0</Button>
-                <Button Click="EditStat" Tag="FAITH" Margin="2">Faith: 0</Button>
-                <Button Click="EditStat" Tag="LUCK" Margin="2">Luck: 0</Button>
-                <Button Click="EditStat" Tag="SOULS" Margin="2">Souls: 0</Button>
                 <ComboBox Width="80" Height="30" Margin="5" Text="NG" IsEditable="True" SelectedIndex="-1"
                           SelectionChanged="NgLevelComboBox_SelectionChanged" x:Name="NgLevelComboBox" >
                     <ComboBoxItem Content="NG"/>

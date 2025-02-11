@@ -1168,7 +1168,20 @@ namespace DS3Tool
                 {
                     if (Enum.TryParse(updatedStat.Item1, out PlayerStats enumStatName))
                     {
-                        GetSetPlayerStat(enumStatName, updatedStat.Item2);
+                        if (updatedStat.Item1 != "SOULS")
+                        {
+                            if (updatedStat.Item2 > 0 && updatedStat.Item2 < 100)
+                            {
+                                GetSetPlayerStat(enumStatName, updatedStat.Item2);
+                            }
+                        }
+                        else
+                        {
+                            if (updatedStat.Item2 > 0)
+                            {
+                                GetSetPlayerStat(enumStatName, updatedStat.Item2);
+                            }
+                        }
                     }
                 }
             }

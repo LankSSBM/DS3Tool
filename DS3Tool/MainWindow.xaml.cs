@@ -6,10 +6,10 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Threading;
+using MiscUtils;
 using System.Runtime.InteropServices;
 using System.Windows.Interop;
 using System.IO;
-using MiscUtils;
 using System.Diagnostics;
 using System.Windows.Media;
 using System.Text;
@@ -86,7 +86,6 @@ namespace DS3Tool
                 _timer.Tick += _timer_Tick;
                 _timer.Interval = TimeSpan.FromSeconds(0.1);
                 _timer.Start();
-                UpdateStatButtons();
 
                 _bonfireService = new BonfireService(_process);
                 _cinderManager = new CinderPhaseManager(_process);
@@ -1053,7 +1052,20 @@ namespace DS3Tool
 
         private void EditStats(object sender, RoutedEventArgs e)
         {
-            var stats = _process.GetSetPlayerStats();
+            var stats = _process.GetSetPlayerStats().Where(item => item.Item1 != "SOULS").ToList();
+
+            var editor = new StatsEditor(stats, (x) =>
+            {
+                _process.GetSetPlayerStats(x);
+            });
+            editor.Owner = this;
+            editor.Show();
+        }
+
+        private void EditSouls(object sender, RoutedEventArgs e)
+        {
+            var stats = _process.GetSetPlayerStats().Where(item => item.Item1 == "SOULS").ToList();
+
             var editor = new StatsEditor(stats, (x) =>
             {
                 _process.GetSetPlayerStats(x);
@@ -1070,53 +1082,15 @@ namespace DS3Tool
                 {
                     var currentValue = _process.GetSetPlayerStat(stat);
                     string input = Microsoft.VisualBasic.Interaction.InputBox(
-                        $"Enter new value for {CapitalizeFirst(statName)}:",
+                        $"Enter new value for {Utils.CapitalizeFirst(statName)}:",
                         "Edit Stat",
                         currentValue.ToString());
                     if (!string.IsNullOrEmpty(input) && int.TryParse(input, out int newValue))
                     {
                         _process.GetSetPlayerStat(stat, newValue);
-                        UpdateStatButtons();
                     }
                 }
             }
-        }
-
-        private void UpdateStatButtons()
-        {
-            if (_process == null) return;
-            foreach (Button button in StatGrid.Children.OfType<Button>())
-            {
-                if (button.Tag is string statName &&
-                    Enum.TryParse<PlayerStats>(statName, out var stat))
-                {
-                    var value = _process.GetSetPlayerStat(stat);
-
-
-                    if (stat != PlayerStats.SOULS)
-                    {
-                        if (value <= 0 || value >= 100)
-                        {
-                            MessageBox.Show(
-                                $"Stat value for {CapitalizeFirst(stat.ToString())} must be between 1 and 99. Current value: {value}",
-                                "Invalid Stat Value",
-                                MessageBoxButton.OK,
-                                MessageBoxImage.Warning);
-                            return;
-                        }
-                    }
-
-                    button.Content = $"{CapitalizeFirst(stat.ToString())}: {value}";
-                }
-            }
-        }
-
-        private string CapitalizeFirst(string input)
-        {
-            if (string.IsNullOrEmpty(input))
-                return input;
-
-            return char.ToUpper(input[0]) + input.Substring(1).ToLower();
         }
 
         private void SpawnButton_Click(object sender, RoutedEventArgs e)

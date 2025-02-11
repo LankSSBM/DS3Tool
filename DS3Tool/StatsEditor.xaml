@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DS3Tool"
         mc:Ignorable="d"
-        Title="Stats Editor" Width="150" SizeToContent="Height" WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
+        Title="Stats Editor" Width="200" SizeToContent="Height" WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
     <Window.Resources>
         <Style TargetType="TextBox">
             <EventSetter Event="GotKeyboardFocus" Handler="TextBox_GotKeyboardFocus"/>
@@ -15,12 +15,12 @@
         <StackPanel Orientation="Vertical" x:Name="statsPanel">
             <Grid x:Name="statsGrid">
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="5*"/>
+                    <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="3*"/>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="2*"/>
-                    <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <Label Grid.Row="0" Grid.Column="0" x:Name="lblExample">SomeStat</Label>
+                <Label Grid.Row="0" Grid.Column="0" x:Name="lblExample" FontWeight="Bold" FontSize="14">SomeStat</Label>
                 <Button Grid.Row="0" Grid.Column="1" Height="18" FontSize="10" Name="decreaseExample" KeyboardNavigation.IsTabStop="False">-</Button>
                 <TextBox Grid.Row="0" Grid.Column="2" VerticalAlignment="Center" x:Name="txtExample" TextAlignment="Center">99</TextBox>
                 <Button Grid.Row="0" Grid.Column="3" Height="18" FontSize="10" Name="increaseExample" KeyboardNavigation.IsTabStop="False">+</Button>

@@ -1,16 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+using MiscUtils;
 
 namespace DS3Tool
 {
@@ -22,6 +14,9 @@ namespace DS3Tool
         public StatsEditor(List<(string, int)> stats, Action<List<(string, int)>> callback)
         {
             InitializeComponent();
+            /*if (stats != null && stats.Count != 0 && stats[0].Item1 == "SOULS") {
+                Dispatcher.Invoke(() => this.Width = 250);
+            }*/
             _stats = stats;
             _callback = callback;
             lblExample.Visibility = Visibility.Hidden;
@@ -30,7 +25,7 @@ namespace DS3Tool
             {
                 statsGrid.RowDefinitions.Add(new RowDefinition());
                 var lbl = new Label();
-                lbl.Content = stats[i].Item1;
+                lbl.Content = Utils.CapitalizeFirst(stats[i].Item1);
                 statsGrid.Children.Add(lbl);
                 Grid.SetRow(lbl, i);
                 Grid.SetColumn(lbl, 0);
