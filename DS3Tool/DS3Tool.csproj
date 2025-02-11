@@ -63,6 +63,7 @@
     </ApplicationDefinition>
     <Compile Include="services\BonfireService.cs" />
     <Compile Include="services\ItemSpawnService.cs" />
+    <Compile Include="services\NoClipService.cs" />
     <Compile Include="templates\LoadoutPreset.cs" />
     <Compile Include="templates\Templates.cs" />
     <Compile Include="services\CinderPhaseManager.cs" />
