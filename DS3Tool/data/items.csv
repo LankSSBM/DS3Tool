@@ -1,5 +1,4 @@
 Dark Hand,00A87500
-Fists,0001ADB0
 Standard Arrow,00061A80
 Fire Arrow,00061AE4
 Poison Arrow,00061B48
@@ -19,293 +18,292 @@ Wood Bolt,00062B4C
 Lightning Bolt,00062BB0
 Splintering Bolt,00062C14
 Exploding Bolt,00062C78
-Smoldering Straight Sword,000D9490
-Dagger,000F4240
-Bandit's Knife,000F6950
-Parrying Dagger,000F9060
-Rotten Ghru Dagger,000FDE80
-Harpe,00102CA0
-Scholar's Candlestick,001053B0
-Tailbone Short Sword,00107AC0
-Corvian Greatknife,0010A1D0
-Handmaid's Dagger,00111700
-Aquamarine Dagger,00116520
-Murky Hand Scythe,00118C30
-Shortsword,001E8480
-Long Sword,001EAB90
-Broadsword,001ED2A0
-Broken Straight Sword,001EF9B0
-Lothric Knight Sword,001F6EE0
-Sunlight Straight Sword,00203230
-Rotten Ghru Curved Sword,00205940
-Irithyll Straight Sword,0020A760
-Cleric's Candlestick,0020F580
-Morion Blade,002143A0
-Astora Straight Sword,002191C0
-Barbed Straight Sword,0021B8D0
-Executioner's Greatsword,0021DFE0
-Anri's Straight Sword,002206F0
-Onyx Blade,00222E00
-Ringed Knight Straight Sword,00225510
-Gael's Greatsword,00227C20
-Estoc,002DC6C0
-Mail Breaker,002DEDD0
-Rapier,002E14E0
-Ricard's Rapier,002E3BF0
-Crystal Sage's Rapier,002E6300
-Irithyll Rapier,002E8A10
-Shotel,003D3010
-Scimitar,003D7E30
-Falchion,003DA540
-Carthus Curved Sword,003DCC50
-Carthus Curved Greatsword,003DF360
-Pontiff Knight Curved Sword,003E1A70
-Storm Curved Sword,003E4180
-Painting Guardian's Curved Sword,003E6890
-Crescent Moon Sword,003E8FA0
-Carthus Shotel,003EB6B0
-Follower Sabre,003EDDC0
-Demon Scar,003F04D0
-Uchigatana,004C4B40
-Washing Pole,004C7250
-Chaos Blade,004C9960
-Black Blade,004CC070
-Bloodlust,004CE780
-Darkdrift,004D0E90
-Frayed Blade,004D35A0
-Bastard Sword,005B8D80
-Claymore,005BDBA0
-Zweihander,005C29C0
-Greatsword,005C50D0
-Astora Greatsword,005C9EF0
-Murakumo,005CC600
-Lothric Knight Greatsword,005D1420
-Black Knight Greatsword,005D8950
-Flamberge,005DB060
-Exile Greatsword,005DD770
-Greatsword of Judgment,005E2590
-Profaned Greatsword,005E4CA0
-Cathedral Knight Greatsword,005E73B0
-Farron Greatsword,005E9AC0
-Yhorm's Great Machete,005F0FF0
-Dark Sword,005F3700
-Black Knight Sword,005F5E10
-Lorian's Greatsword,005F8520
-Twin Princes' Greatsword,005FAC30
-Lothric's Holy Sword,005FD340
-Wolnir's Holy Sword,005FFA50
-Wolf Knight's Greatsword,00602160
-Hollowslayer Greatsword,00604870
-Moonlight Greatsword,00606F80
-Drakeblood Greatsword,00609690
-Firelink Greatsword,0060BDA0
-Fume Ultra Greatsword,0060E4B0
-Old Wolf Curved Sword,00610BC0
-Storm Ruler,006132D0
-Harald Curved Greatsword,006159E0
-Hand Axe,006ACFC0
-Battle Axe,006AF6D0
-Brigand Axe,006B1DE0
-Crescent Axe,006B6C00
-Greataxe,006B9310
-Butcher Knife,006BE130
-Dragonslayer's Axe,006C0840
-Thrall Axe,006C5660
-Dragonslayer Greataxe,006C7D70
-Demon's Greataxe,006CA480
-Eleonora,006CCB90
-Man Serpent Hatchet,006D19B0
-Dragon King Greataxe,006D40C0
-Millwood Battle Axe,006D67D0
-Earth Seeker,006D8EE0
-Club,007A1200
-Mace,007A3910
-Morning Star,007A6020
-Reinforced Club,007A8730
-Large Club,007AFC60
-Great Club,007B4A80
-Great Mace,007BBFB0
-Great Wooden Hammer,007C8300
-Gargoyle Flame Hammer,007CAA10
-Vordt's Great Hammer,007CD120
-Old King's Great Hammer,007CF830
-Heysel Pick,007D6D60
-Warpick,007DBB80
-Pickaxe,007DE290
-Dragon Tooth,007E09A0
-Smough's Great Hammer,007E30B0
-Blacksmith Hammer,007E57C0
-Morne's Great Hammer,007E7ED0
-Spiked Mace,007EA5E0
-Quakestone Hammer,007ECCF0
-Ledo's Great Hammer,007EF400
-Spear,00895440
-Winged Spear,00897B50
-Partizan,0089C970
-Greatlance,008A8CC0
-Lothric Knight Long Spear,008AB3D0
-Four-Pronged Plow,008ADAE0
-Gargoyle Flame Spear,008B01F0
-Rotten Ghru Spear,008B2900
-Tailbone Spear,008B5010
-Soldering Iron,008B7720
-Dragonslayer Swordspear,008BC540
-Arstor's Spear,008BEC50
-Saint Bident,008C1360
-Yorshka's Spear,008C3A70
-Pike,008C6180
-Dragonslayer Spear,008CAFA0
-Follower Javelin,008CD6B0
-Ringed Knight Spear,008CFDC0
-Lothric War Banner,008D24D0
-Crucifix of the Mad King,008D4BE0
-Great Scythe,00989680
-Lucerne,0098BD90
-Glaive,0098E4A0
-Halberd,00990BB0
-Black Knight Greataxe,009959D0
-Pontiff Knight Great Scythe,0099A7F0
-Great Corvian Scythe,0099CF00
-Winged Knight Halberd,0099F610
-Gundyr's Halberd,009A1D20
-Red Hilted Halberd,009AB960
-Black Knight Glaive,009AE070
-Immolation Tinder,009B0780
-Splitleaf Greatsword,009B2E90
-Friede's Great Scythe,009B55A0
-Claw,00A7D8C0
-Caestus,00A7FFD0
-Manikin Claws,00A826E0
-Demon's Fist,00A84DF0
-Crow Talons,00A89C10
-Whip,00B71B00
-Witch's Locks,00B7B740
-Notched Whip,00B7DE50
-Spotted Whip,00B80560
-Rose of Ariandel,00B82C70
-Talisman,00C72090
-Sorcerer's Staff,00C747A0
-Storyteller's Staff,00C76EB0
-Mendicant's Staff,00C795C0
-Man-grub's Staff,00C7E3E0
-Archdeacon's Great Staff,00C80AF0
-Golden Ritual Spear,00C83200
-Yorshka's Chime,00C88020
-Sage's Crystal Staff,00C8CE40
-Heretic's Staff,00C8F550
-Court Sorcerer's Staff,00C91C60
-Witchtree Branch,00C94370
-Izalith Staff,00C96A80
-Cleric's Sacred Chime,00C99190
-Priest's Chime,00C9B8A0
-Saint-tree Bellvine,00C9DFB0
-Caitha's Chime,00CA06C0
-Crystal Chime,00CA2DD0
-Sunlight Talisman,00CA54E0
-Canvas Talisman,00CA7BF0
-Sunless Talisman,00CAA300
-Saint's Talisman,00CACA10
-White Hair Talisman,00CAF120
-Pyromancy Flame,00CC77C0
-Pyromancer's Parting Flame,00CC9ED0
-Murky Longstaff,00CCC5E0
-Sacred Chime of Filianore,00CCECF0
-Preacher's Right Arm,00CD1400
-Dragonslayer Greatbow,00CF8500
-Short Bow,00D5C690
-Composite Bow,00D5EDA0
-Light Crossbow,00D63BC0
-Arbalest,00D662D0
-Longbow,00D689E0
-Dragonrider Bow,00D6B0F0
-Avelyn,00D6FF10
-Knight's Crossbow,00D72620
-Heavy Crossbow,00D74D30
-White Birch Bow,00D77440
-Darkmoon Longbow,00D79B50
-Onislayer Greatbow,00D7C260
-Black Bow of Pharis,00D7E970
-Sniper Crossbow,00D83790
-Millwood Greatbow,00D85EA0
-Repeating Crossbow,00D885B0
-Sellsword Twinblades,00F42400
-Warden Twinblades,00F47220
-Winged Knight Twinaxes,00F49930
-Dancer's Enchanted Swords,00F4C040
-Great Machete,00F4E750
-Brigand Twindaggers,00F50E60
-Gotthard Twinswords,00F53570
-Onikiri and Ubadachi,00F58390
-Drang Twinspears,00F5AAA0
-Giant Door Shield,00F5F8C0
-Drang Hammers,00F61FD0
-Valorheart,00F646E0
-Crow Quills,00F66DF0
-Ringed Knight Paired Greatswords,00F69500
-Buckler,01312D00
-Small Leather Shield,01315410
-Round Shield,0131A230
-Large Leather Shield,0131C940
-Hawkwood's Shield,01323E70
-Iron Round Shield,01326580
-Wooden Shield,0132DAB0
-Kite Shield,013301C0
-Ghru Rotshield,013328D0
-Havel's Greatshield,013376F0
-Target Shield,01339E00
-Elkhorn Round Shield,0133C510
-Warrior's Round Shield,0133EC20
-Caduceus Round Shield,01341330
-Red and White Round Shield,01343A40
-Plank Shield,01346150
-Leather Shield,01348860
-Crimson Parma,0134AF70
-Eastern Iron Shield,0134D680
-Llewellyn Shield,0134FD90
-Golden Falcon Shield,01354BB0
-Sacred Bloom Shield,013572C0
-Ancient Dragon Greatshield,013599D0
-Followers Shield,0135C0E0
-Dragonhead Shield,0135E7F0
-Lothric Knight Shield,01409650
-Knight Shield,01410B80
-Pontiff Knight Shield,014159A0
-Carthus Shield,014180B0
-Black Knight Shield,0141F5E0
-Silver Knight Shield,01424400
-Spiked Shield,01426B10
-Pierce Shield,01429220
-East-West Shield,0142B930
-Sunlight Shield,0142E040
-Crest Shield,01430750
-Dragon Crest Shield,01432E60
-Spider Shield,01435570
-Grass Crest Shield,01437C80
-Sunset Shield,0143A390
-Golden Wing Crest Shield,0143CAA0
-Blue Wooden Shield,0143F1B0
-Silver Eagle Kite Shield,014418C0
-Stone Parma,01443FD0
-Spirit Tree Crest Shield,014466E0
-Porcine Shield,01448DF0
-Shield of Want,0144B500
-Wargod Wooden Shield,0144DC10
-Ethereal Oak Shield,01450320
-Dragonhead Greatshield,01452A30
-Lothric Knight Greatshield,014FD890
-Cathedral Knight Greatshield,014FFFA0
-Dragonslayer Greatshield,01504DC0
-Moaning Shield,015074D0
-Yhorm's Greatshield,0150C2F0
-Black Iron Greatshield,0150EA00
-Wolf Knight's Greatshield,01511110
-Twin Dragon Greatshield,01513820
-Greatshield of Glory,01515F30
-Curse Ward Greatshield,01518640
-Bonewheel Shield,0151AD50
-Stone Greatshield,0151D460
-Torch,015EF3C0
-Follower Torch,015F1AD0
+Arbalest,00D662D0,Regular
+Astora Greatsword,005C9EF0,Regular
+Astora Straight Sword,002191C0,Regular
+Avelyn,00D6FF10,Regular
+Bandit's Knife,000F6950,Regular
+Barbed Straight Sword,0021B8D0,Regular
+Bastard Sword,005B8D80,Regular
+Battle Axe,006AF6D0,Regular
+Black Blade,004CC070,Regular
+Black Bow of Pharis,00D7E970,Regular
+Black Iron Greatshield,0150EA00,Regular
+Blacksmith Hammer,007E57C0,Regular
+Blue Wooden Shield,0143F1B0,Regular
+Bonewheel Shield,0151AD50,Regular
+Brigand Axe,006B1DE0,Regular
+Brigand Twindaggers,00F50E60,Regular
+Broadsword,001ED2A0,Regular
+Broken Straight Sword,001EF9B0,Regular
+Buckler,01312D00,Regular
+Butcher Knife,006BE130,Regular
+Caduceus Round Shield,01341330,Regular
+Caestus,00A7FFD0,Regular
+Canvas Talisman,00CA7BF0,Regular
+Carthus Curved Greatsword,003DF360,Regular
+Carthus Curved Sword,003DCC50,Regular
+Carthus Shield,014180B0,Regular
+Carthus Shotel,003EB6B0,Regular
+Cathedral Knight Greatshield,014FFFA0,Regular
+Cathedral Knight Greatsword,005E73B0,Regular
+Claw,00A7D8C0,Regular
+Claymore,005BDBA0,Regular
+Cleric's Candlestick,0020F580,Regular
+Cleric's Sacred Chime,00C99190,Regular
+Club,007A1200,Regular
+Composite Bow,00D5EDA0,Regular
+Corvian Greatknife,0010A1D0,Regular
+Court Sorcerer's Staff,00C91C60,Regular
+Crescent Axe,006B6C00,Regular
+Crimson Parma,0134AF70,Regular
+Crow Quills,00F66DF0,Regular
+Crow Talons,00A89C10,Regular
+Dagger,000F4240,Regular
+Dark Hand,00A87500,Regular
+Dark Sword,005F3700,Regular
+Dragonslayer's Axe,006C0840,Regular
+Drakeblood Greatsword,00609690,Regular
+Drang Hammers,00F61FD0,Regular
+Drang Twinspears,00F5AAA0,Regular
+Eastern Iron Shield,0134D680,Regular
+East-West Shield,0142B930,Regular
+Elkhorn Round Shield,0133C510,Regular
+Estoc,002DC6C0,Regular
+Executioner's Greatsword,0021DFE0,Regular
+Exile Greatsword,005DD770,Regular
+Falchion,003DA540,Regular
+Flamberge,005DB060,Regular
+Follower Javelin,008CD6B0,Regular
+Follower Sabre,003EDDC0,Regular
+Follower Shield,015F1AD0,Regular
+Follower Torch,0135C0E0,Regular
+Four-Pronged Plow,008ADAE0,Regular
+Gargoyle Flame Hammer,007CAA10,Regular
+Gargoyle Flame Spear,008B01F0,Regular
+Ghru Rotshield,013328D0,Regular
+Giant Door Shield,00F5F8C0,Regular
+Glaive,0098E4A0,Regular
+Golden Falcon Shield,01354BB0,Regular
+Gotthard Twinswords,00F53570,Regular
+Great Club,007B4A80,Regular
+Great Corvian Scythe,0099CF00,Regular
+Great Mace,007BBFB0,Regular
+Great Machete,00F4E750,Regular
+Great Scythe,00989680,Regular
+Great Wooden Hammer,007C8300,Regular
+Greataxe,006B9310,Regular
+Greatlance,008A8CC0,Regular
+Greatsword,005C50D0,Regular
+Halberd,00990BB0,Regular
+Hand Axe,006ACFC0,Regular
+Handmaid's Dagger,00111700,Regular
+Harald Curved Greatsword,006159E0,Regular
+Harpe,00102CA0,Regular
+Hawkwood's Shield,01323E70,Regular
+Heavy Crossbow,00D74D30,Regular
+Heretic's Staff,00C8F550,Regular
+Iron Round Shield,01326580,Regular
+Kite Shield,013301C0,Regular
+Knight Shield,01410B80,Regular
+Knight's Crossbow,00D72620,Regular
+Large Club,007AFC60,Regular
+Large Leather Shield,0131C940,Regular
+Leather Shield,01348860,Regular
+Light Crossbow,00D63BC0,Regular
+Llewellyn Shield,0134FD90,Regular
+Long Sword,001EAB90,Regular
+Longbow,00D689E0,Regular
+Lothric Knight Greatshield,014FD890,Regular
+Lothric Knight Greatsword,005D1420,Regular
+Lothric Knight Long Spear,008AB3D0,Regular
+Lothric Knight Shield,01409650,Regular
+Lothric Knight Sword,001F6EE0,Regular
+Lothric War Banner,008D24D0,Regular
+Lucerne,0098BD90,Regular
+Mace,007A3910,Regular
+Mail Breaker,002DEDD0,Regular
+Man Serpent Hatchet,006D19B0,Regular
+Manikin Claws,00A826E0,Regular
+Mendicant's Staff,00C795C0,Regular
+Millwood Battle Axe,006D67D0,Regular
+Morning Star,007A6020,Regular
+Murakumo,005CC600,Regular
+Murky Hand Scythe,00118C30,Regular
+Murky Longstaff,00CCC5E0,Regular
+Notched Whip,00B7DE50,Regular
+Onikiri and Ubadachi,00F58390,Regular
+Painting Guardian's Curved Sword,003E6890,Regular
+Parrying Dagger,000F9060,Regular
+Partizan,0089C970,Regular
+Pickaxe,007DE290,Regular
+Pierce Shield,01429220,Regular
+Pike,008C6180,Regular
+Plank Shield,01346150,Regular
+Porcine Shield,01448DF0,Regular
+Priest's Chime,00C9B8A0,Regular
+Pyromancer's Parting Flame,00CC9ED0,Regular
+Pyromancy Flame,00CC77C0,Regular
+Rapier,002E14E0,Regular
+Red and White Shield,01343A40,Regular
+Red Hilted Halberd,009AB960,Regular
+Reinforced Club,007A8730,Regular
+Ricard's Rapier,002E3BF0,Regular
+Rotten Ghru Curved Sword,00205940,Regular
+Rotten Ghru Dagger,000FDE80,Regular
+Rotten Ghru Spear,008B2900,Regular
+Round Shield,0131A230,Regular
+Saint Bident,008C1360,Regular
+Saint's Talisman,00CACA10,Regular
+Saint-tree Bellvine,00C9DFB0,Regular
+Scholar's Candlestick,001053B0,Regular
+Scimitar,003D7E30,Regular
+Sellsword Twinblades,00F42400,Regular
+Short Bow,00D5C690,Regular
+Shortsword,001E8480,Regular
+Shotel,003D3010,Regular
+Silver Eagle Kite Shield,014418C0,Regular
+Small Leather Shield,01315410,Regular
+Sniper Crossbow,00D83790,Regular
+Soldering Iron,008B7720,Regular
+Sorcerer's Staff,00C747A0,Regular
+Spear,00895440,Regular
+Spider Shield,01435570,Regular
+Spiked Mace,007EA5E0,Regular
+Spiked Shield,01426B10,Regular
+Splitleaf Greatsword,009B2E90,Regular
+Spotted Whip,00B80560,Regular
+Stone Greatshield,0151D460,Regular
+Stone Parma,01443FD0,Regular
+Storyteller's Staff,00C76EB0,Regular
+Sunlight Shield,0142E040,Regular
+Sunlight Talisman,00CA54E0,Regular
+Sunset Shield,0143A390,Regular
+Talisman,00C72090,Regular
+Target Shield,01339E00,Regular
+Thrall Axe,006C5660,Regular
+Torch,015EF3C0,Regular
+Twin Dragon Greatshield,01513820,Regular
+Uchigatana,004C4B40,Regular
+Warden Twinblades,00F47220,Regular
+Wargod Wooden Shield,0144DC10,Regular
+Warpick,007DBB80,Regular
+Warrior's Round Shield,0133EC20,Regular
+Washing Pole,004C7250,Regular
+Whip,00B71B00,Regular
+Winged Knight Halberd,0099F610,Regular
+Winged Knight Twinaxes,00F49930,Regular
+Winged Spear,00897B50,Regular
+Witchtree Branch,00C94370,Regular
+Wooden Shield,0132DAB0,Regular
+Yorshka's Chime,00C88020,Regular
+Zweihander,005C29C0,Regular
+Arstor's Spear,008BEC50,Titanite Scale
+Crescent Moon Sword,003E8FA0,Titanite Scale
+Crystal Sage's Rapier,002E6300,Titanite Scale
+Curse Ward Greatshield,01518640,Titanite Scale
+Dancer's Enchanted Swords,00F4C040,Titanite Scale
+Darkmoon Longbow,00D79B50,Titanite Scale
+Demon's Fist,003F04D0,Titanite Scale
+Demon's Greataxe,00A84DF0,Titanite Scale
+Demon's Scar,006CA480,Titanite Scale
+Dragon Tooth,007E09A0,Titanite Scale
+Dragonhead Greatshield,01452A30,Titanite Scale
+Dragonhead Shield,0135E7F0,Titanite Scale
+Dragonrider Bow,00D6B0F0,Titanite Scale
+Dragonslayer Greataxe,006C7D70,Titanite Scale
+Dragonslayer Greatshield,01504DC0,Titanite Scale
+Dragonslayer Swordspear,008BC540,Titanite Scale
+Earth Seeker,006D8EE0,Titanite Scale
+Eleonora,006CCB90,Titanite Scale
+Farron Greatsword,005E9AC0,Titanite Scale
+Firelink Greatsword,0060BDA0,Titanite Scale
+Frayed Blade,004D35A0,Titanite Scale
+Friede's Great Scythe,009B55A0,Titanite Scale
+Gael's Greatsword,00227C20,Titanite Scale
+Greatsword of Judgment,005E2590,Titanite Scale
+Gundyr's Halberd,009A1D20,Titanite Scale
+Hollowslayer Greatsword,00604870,Titanite Scale
+Lorian's Greatsword,005F8520,Titanite Scale
+Lothric's Holy Sword,005FD340,Titanite Scale
+Moonlight Greatsword,00606F80,Titanite Scale
+Old King's Great Hammer,007CF830,Titanite Scale
+Profaned Greatsword,005E4CA0,Titanite Scale
+Repeating Crossbow,00D885B0,Titanite Scale
+Rose of Ariandel,00B82C70,Titanite Scale
+Sage's Crystal Staff,00C8CE40,Titanite Scale
+Shield of Want,0144B500,Titanite Scale
+Storm Curved Sword,003E4180,Titanite Scale
+Storm Ruler,006132D0,Titanite Scale
+Tailbone Short Sword,00107AC0,Titanite Scale
+Tailbone Spear,008B5010,Titanite Scale
+Twin Princes' Greatsword,005FAC30,Titanite Scale
+Vordt's Great Hammer,007CD120,Titanite Scale
+Wolf Knight's Greatsword,00602160,Titanite Scale
+Wolnir's Holy Sword,005FFA50,Titanite Scale
+Yhorm's Great Machete,005F0FF0,Titanite Scale
+Yhorm's Greatshield,0150C2F0,Titanite Scale
+Ancient Dragon Greatshield,013599D0,Twinkling Titanite
+Anri's Straight Sword,002206F0,Twinkling Titanite
+Aquamarine Dagger,00116520,Twinkling Titanite
+Archdeacon's Great Staff,00C80AF0,Twinkling Titanite
+Black Knight Glaive,009AE070,Twinkling Titanite
+Black Knight Greataxe,009959D0,Twinkling Titanite
+Black Knight Greatsword,005D8950,Twinkling Titanite
+Black Knight Shield,0141F5E0,Twinkling Titanite
+Black Knight Sword,005F5E10,Twinkling Titanite
+Bloodlust,004CE780,Twinkling Titanite
+Caitha's Chime,00CA06C0,Twinkling Titanite
+Chaos Blade,004C9960,Twinkling Titanite
+Crest Shield,01430750,Twinkling Titanite
+Crucifix of the Mad King,008D4BE0,Twinkling Titanite
+Crystal Chime,00CA2DD0,Twinkling Titanite
+Darkdrift,004D0E90,Twinkling Titanite
+Dragon Crest Shield,01432E60,Twinkling Titanite
+Dragonslayer Greatbow,00CF8500,Twinkling Titanite
+Dragonslayer Spear,008CAFA0,Twinkling Titanite
+Ethereal Oak Shield,01450320,Twinkling Titanite
+Fume Ultra Greatsword,0060E4B0,Twinkling Titanite
+Golden Ritual Spear,00C83200,Twinkling Titanite
+Golden Wing Crest Shield,0143CAA0,Twinkling Titanite
+Grass Crest Shield,01437C80,Twinkling Titanite
+Greatshield of Glory,01515F30,Twinkling Titanite
+Havel's Greatshield,013376F0,Twinkling Titanite
+Heysel Pick,007D6D60,Twinkling Titanite
+Immolation Tinder,009B0780,Twinkling Titanite
+Irithyll Rapier,002E8A10,Twinkling Titanite
+Irithyll Straight Sword,0020A760,Twinkling Titanite
+Izalith Staff,00C96A80,Twinkling Titanite
+Ledo's Great Hammer,007EF400,Twinkling Titanite
+Man-grub's Staff,00C7E3E0,Twinkling Titanite
+Millwood Greatbow,00D85EA0,Twinkling Titanite
+Moaning Shield,015074D0,Twinkling Titanite
+Morion Blade,002143A0,Twinkling Titanite
+Morne's Great Hammer,007E7ED0,Twinkling Titanite
+Old Wolf Curved Sword,00610BC0,Twinkling Titanite
+Onislayer Greatbow,00D7C260,Twinkling Titanite
+Onyx Blade,00222E00,Twinkling Titanite
+Pontiff Knight Curved Sword,003E1A70,Twinkling Titanite
+Pontiff Knight Great Scythe,0099A7F0,Twinkling Titanite
+Pontiff Knight Shield,014159A0,Twinkling Titanite
+Preacher's Right Arm,00CD1400,Twinkling Titanite
+Quakestone Hammer,007ECCF0,Twinkling Titanite
+Ringed Knight Paired Greatswords,00F69500,Twinkling Titanite
+Ringed Knight Spear,008CFDC0,Twinkling Titanite
+Ringed Knight Straight Sword,00225510,Twinkling Titanite
+Sacred Bloom Shield,013572C0,Twinkling Titanite
+Sacred Chime of Filianore,00CCECF0,Twinkling Titanite
+Silver Knight Shield,01424400,Twinkling Titanite
+Smough's Great Hammer,007E30B0,Twinkling Titanite
+Spirit Tree Crest Shield,014466E0,Twinkling Titanite
+Sunless Talisman,00CAA300,Twinkling Titanite
+Sunlight Straight Sword,00203230,Twinkling Titanite
+Valorheart,00F646E0,Twinkling Titanite
+White Birch Bow,00D77440,Twinkling Titanite
+White Hair Talisman,00CAF120,Twinkling Titanite
+Witch's Locks,00B7B740,Twinkling Titanite
+Wolf Knight's Greatshield,01511110,Twinkling Titanite
+Yorshka's Spear,008C3A70,Twinkling Titanite
 Dragon Head,100F4240
 Dragon Body,100F4628
 Dragon Arms,100F4A10

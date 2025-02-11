@@ -7,33 +7,28 @@ using System.Threading;
 namespace DS3Tool.services
 {
 
-
-
     internal class NoClipService
 
     {
         [DllImport("kernel32.dll", SetLastError = true)]
         static extern bool FlushInstructionCache(IntPtr hProcess, IntPtr lpBaseAddress, UIntPtr dwSize);
 
-
         private DS3Process _ds3Process;
 
-        private IntPtr REGION_ONE_OFFSET = (IntPtr)0x140000000 + 0x270BC20;
-        private IntPtr REGION_TWO_OFFSET = (IntPtr)0x140000000 + 0x2718200;
+        private IntPtr CODE_CAVE_OFFSET = (IntPtr)0x140000000 + 0x2718200;
         private IntPtr ORIGIN_COORD_BASE = (IntPtr)0x140000000 + 0x40A02F;
         private IntPtr ORIGIN_IN_AIR_TIMER = (IntPtr)0x140000000 + 0x9D181A;
         private IntPtr ORIGIN_CAM_H_ROTATE = (IntPtr)0x140000000 + 0x5166DC;
         private IntPtr ORIGIN_MOVEMENT = (IntPtr)0x140000000 + 0x188C6FD;
         private IntPtr ORIGIN_COORDS_UPDATE = (IntPtr)0x140000000 + 0x9D2360;
 
-
-        private IntPtr PLAYER_COORD_CAVE_START;
-        private IntPtr IN_AIR_TIMER_CAVE_START;
-        private IntPtr CAM_H_ROTATE_CAVE_START;
-        private IntPtr MOVEMENT_CAVE_START;
-        private IntPtr COORDS_UPDATE_CAVE_START;
+        private IntPtr PLAYER_COORD_BLOCK_START;
+        private IntPtr IN_AIR_TIMER_BLOCK_START;
+        private IntPtr CAM_H_ROTATE_BLOCK_START;
+        private IntPtr MOVEMENT_BLOCK_START;
+        private IntPtr COORDS_UPDATE_BLOCK_START;
         private IntPtr COORDS_UPDATE_Z_START;
-        private IntPtr COORDS_UPDATE_CAVE_EXIT;
+        private IntPtr COORDS_UPDATE_BLOCK_EXIT;
 
        private IntPtr PLAYER_COORD_BASE;
        private IntPtr PLAYER_CAM_INFO;
@@ -42,7 +37,6 @@ namespace DS3Tool.services
        private IntPtr FLY_MODE;
        private IntPtr Z_DIRECTION;
       
-
         private class HookData
         {
             public string Name { get; set; }
@@ -80,24 +74,21 @@ namespace DS3Tool.services
         private void InitCodeCaves()
         {
 
+            PLAYER_COORD_BASE = CODE_CAVE_OFFSET + 0x500;      
+            PLAYER_CAM_INFO = CODE_CAVE_OFFSET + 0x508;        
+            PLAYER_MOVEMENT_INFO = CODE_CAVE_OFFSET + 0x510;   
+            IX_OFFSET = CODE_CAVE_OFFSET + 0x518;            
+            FLY_MODE = CODE_CAVE_OFFSET + 0x520;             
+            Z_DIRECTION = CODE_CAVE_OFFSET + 0x528;          
 
-             PLAYER_COORD_BASE = REGION_ONE_OFFSET + 0x20;     
-             PLAYER_CAM_INFO = REGION_ONE_OFFSET + 0x30;       
-             PLAYER_MOVEMENT_INFO = REGION_ONE_OFFSET + 0x40;  
-             IX_OFFSET = REGION_ONE_OFFSET + 0x50;            
-             FLY_MODE = REGION_ONE_OFFSET + 0x60;
-             Z_DIRECTION = REGION_ONE_OFFSET + 0x70;
-   
-
-             PLAYER_COORD_CAVE_START = REGION_ONE_OFFSET + 0x140;
-             IN_AIR_TIMER_CAVE_START = REGION_ONE_OFFSET + 0x200;
-             CAM_H_ROTATE_CAVE_START = REGION_ONE_OFFSET + 0x280;
-             MOVEMENT_CAVE_START = REGION_ONE_OFFSET + 0x340;
-             COORDS_UPDATE_CAVE_START = REGION_TWO_OFFSET + 0x40;
-             COORDS_UPDATE_Z_START = REGION_TWO_OFFSET + 0x140;
-             COORDS_UPDATE_CAVE_EXIT = REGION_TWO_OFFSET + 0x200;
-
-
+            PLAYER_COORD_BLOCK_START = CODE_CAVE_OFFSET + 0x540;
+            IN_AIR_TIMER_BLOCK_START = CODE_CAVE_OFFSET + 0x570;
+            CAM_H_ROTATE_BLOCK_START = CODE_CAVE_OFFSET + 0x5B0;
+            MOVEMENT_BLOCK_START = CODE_CAVE_OFFSET + 0x5E0;
+            COORDS_UPDATE_BLOCK_START = CODE_CAVE_OFFSET + 0x620;
+            COORDS_UPDATE_Z_START = CODE_CAVE_OFFSET + 0x6F0;
+            COORDS_UPDATE_BLOCK_EXIT = CODE_CAVE_OFFSET + 0x740;
+          
             var playerCoordCave = new byte[] {
 
                 0x48, 0x8B, 0x48, 0x18,                 // mov rcx,[rax+18]
@@ -105,7 +96,7 @@ namespace DS3Tool.services
 };
 
             int playerCoordOffset = (int)(PLAYER_COORD_BASE.ToInt64() -
-                (PLAYER_COORD_CAVE_START.ToInt64() + playerCoordCave.Length + 4));
+                (PLAYER_COORD_BLOCK_START.ToInt64() + playerCoordCave.Length + 4));
 
          playerCoordCave = playerCoordCave
                 .Concat(BitConverter.GetBytes(playerCoordOffset))
@@ -118,19 +109,19 @@ namespace DS3Tool.services
 
 
             int playerCoordReturn = (int)(ORIGIN_COORD_BASE.ToInt64() + 7 -
-                (PLAYER_COORD_CAVE_START.ToInt64() + playerCoordCave.Length + 4));
+                (PLAYER_COORD_BLOCK_START.ToInt64() + playerCoordCave.Length + 4));
             playerCoordCave = playerCoordCave
                 .Concat(BitConverter.GetBytes(playerCoordReturn))
                 .ToArray();
             try
             {
-                _ds3Process.WriteBytes(PLAYER_COORD_CAVE_START, playerCoordCave);
+                _ds3Process.WriteBytes(PLAYER_COORD_BLOCK_START, playerCoordCave);
 
                 hooks.Add(new HookData
                 {
                     Name = "PlayerCoordBase",
                     OriginAddr = ORIGIN_COORD_BASE,
-                    CaveAddr = PLAYER_COORD_CAVE_START,
+                    CaveAddr = PLAYER_COORD_BLOCK_START,
                     OriginalBytes = new byte[] { 0x48, 0x8B, 0x48, 0x18, 0x8D, 0x46, 0x9C }
                 });
             }
@@ -140,7 +131,6 @@ namespace DS3Tool.services
                 throw;
             }
 
-
             var inAirTimerCave = new byte[] {
 
                  0x50,                         // push rax
@@ -148,7 +138,7 @@ namespace DS3Tool.services
         };
 
             playerCoordOffset = (int)(PLAYER_COORD_BASE.ToInt64() -
-                (IN_AIR_TIMER_CAVE_START.ToInt64() + inAirTimerCave.Length + 4));
+                (IN_AIR_TIMER_BLOCK_START.ToInt64() + inAirTimerCave.Length + 4));
 
 
             inAirTimerCave = inAirTimerCave.Concat(BitConverter.GetBytes(playerCoordOffset))
@@ -167,19 +157,19 @@ namespace DS3Tool.services
 
 
             int originAirTimerReturn = (int)((ORIGIN_IN_AIR_TIMER.ToInt64() + 8)
-                - (IN_AIR_TIMER_CAVE_START.ToInt64() + inAirTimerCave.Length + 4));
+                - (IN_AIR_TIMER_BLOCK_START.ToInt64() + inAirTimerCave.Length + 4));
 
             inAirTimerCave = inAirTimerCave.Concat(BitConverter.GetBytes(originAirTimerReturn)).ToArray();
 
             try
             {
-                _ds3Process.WriteBytes(IN_AIR_TIMER_CAVE_START, inAirTimerCave);
+                _ds3Process.WriteBytes(IN_AIR_TIMER_BLOCK_START, inAirTimerCave);
 
                 hooks.Add(new HookData
                 {
                     Name = "InAirTimer",
                     OriginAddr = ORIGIN_IN_AIR_TIMER,
-                    CaveAddr = IN_AIR_TIMER_CAVE_START,
+                    CaveAddr = IN_AIR_TIMER_BLOCK_START,
                     OriginalBytes = new byte[] { 0xF3, 0x0F, 0x11, 0x81, 0xB0, 0x01, 0x00, 0x00 }
                 });
             }
@@ -194,7 +184,7 @@ namespace DS3Tool.services
                  0x48, 0x89, 0x35                        // mov [cam info],rsi
             };
 
-            int camInfoOffset = (int)(PLAYER_CAM_INFO.ToInt64() - (CAM_H_ROTATE_CAVE_START.ToInt64() + camHRotateCave.Length + 4));
+            int camInfoOffset = (int)(PLAYER_CAM_INFO.ToInt64() - (CAM_H_ROTATE_BLOCK_START.ToInt64() + camHRotateCave.Length + 4));
 
             camHRotateCave = camHRotateCave.Concat(BitConverter.GetBytes(camInfoOffset))
                  .Concat(new byte[] {
@@ -204,7 +194,7 @@ namespace DS3Tool.services
                  }).ToArray();
 
             int originCamInfoReturn = (int)(ORIGIN_CAM_H_ROTATE.ToInt64() + 8
-                - (CAM_H_ROTATE_CAVE_START.ToInt64() + camHRotateCave.Length + 4));
+                - (CAM_H_ROTATE_BLOCK_START.ToInt64() + camHRotateCave.Length + 4));
 
             camHRotateCave = camHRotateCave.Concat(BitConverter.GetBytes(originCamInfoReturn)).ToArray();
 
@@ -212,7 +202,7 @@ namespace DS3Tool.services
             {
                 Name = "CamHRotate",
                 OriginAddr = ORIGIN_CAM_H_ROTATE,
-                CaveAddr = CAM_H_ROTATE_CAVE_START,
+                CaveAddr = CAM_H_ROTATE_BLOCK_START,
                 OriginalBytes = new byte[]
                              { 0x66, 0x0F, 0x7F, 0xAE, 0x40, 0x01, 0x00, 0x00 }
             });
@@ -221,7 +211,7 @@ namespace DS3Tool.services
 
             try
             {
-                _ds3Process.WriteBytes(CAM_H_ROTATE_CAVE_START, camHRotateCave);
+                _ds3Process.WriteBytes(CAM_H_ROTATE_BLOCK_START, camHRotateCave);
 
             }
             catch (Exception ex)
@@ -234,7 +224,7 @@ namespace DS3Tool.services
                  0x4C, 0x89, 0x05                        // mov [Movement info],r8
                 };
 
-            int movementInfoOffset = (int)(PLAYER_MOVEMENT_INFO.ToInt64() - (MOVEMENT_CAVE_START.ToInt64() + movementCave.Length + 4));
+            int movementInfoOffset = (int)(PLAYER_MOVEMENT_INFO.ToInt64() - (MOVEMENT_BLOCK_START.ToInt64() + movementCave.Length + 4));
 
             movementCave = movementCave.Concat(BitConverter.GetBytes(movementInfoOffset))
                  .Concat(new byte[] {
@@ -245,7 +235,7 @@ namespace DS3Tool.services
                      0x48, 0x89, 0x05                    // mov [ix offset],rax
                  }).ToArray();
 
-            int iXOffset = (int)(IX_OFFSET.ToInt64() - (MOVEMENT_CAVE_START.ToInt64() + movementCave.Length + 4));
+            int iXOffset = (int)(IX_OFFSET.ToInt64() - (MOVEMENT_BLOCK_START.ToInt64() + movementCave.Length + 4));
 
             movementCave = movementCave.Concat(BitConverter.GetBytes(iXOffset))
                 .Concat(new byte[] {
@@ -253,7 +243,7 @@ namespace DS3Tool.services
            0xE9                                // jmp 
                 }).ToArray();
 
-            int keysReturnOffset = (int)((ORIGIN_MOVEMENT.ToInt64() + 6) - (MOVEMENT_CAVE_START.ToInt64() + movementCave.Length + 4));
+            int keysReturnOffset = (int)((ORIGIN_MOVEMENT.ToInt64() + 6) - (MOVEMENT_BLOCK_START.ToInt64() + movementCave.Length + 4));
 
             movementCave = movementCave.Concat(BitConverter.GetBytes(keysReturnOffset)).ToArray();
 
@@ -261,7 +251,7 @@ namespace DS3Tool.services
             {
                 Name = "Keys",
                 OriginAddr = ORIGIN_MOVEMENT,
-                CaveAddr = MOVEMENT_CAVE_START,
+                CaveAddr = MOVEMENT_BLOCK_START,
                 OriginalBytes = new byte[]
                              {  0xF3, 0x41, 0x0F, 0x11, 0x0C, 0x80 }
             });
@@ -269,7 +259,7 @@ namespace DS3Tool.services
 
             try
             {
-                _ds3Process.WriteBytes(MOVEMENT_CAVE_START, movementCave);
+                _ds3Process.WriteBytes(MOVEMENT_BLOCK_START, movementCave);
 
             }
             catch (Exception ex)
@@ -283,7 +273,7 @@ namespace DS3Tool.services
                  0x80, 0x3D        // compare fly mode
                 };
 
-            int flyModeOffset = (int)(FLY_MODE.ToInt64() - (COORDS_UPDATE_CAVE_START.ToInt64() + coordsUpdateCave.Length + 4 + 1));
+            int flyModeOffset = (int)(FLY_MODE.ToInt64() - (COORDS_UPDATE_BLOCK_START.ToInt64() + coordsUpdateCave.Length + 4 + 1));
 
             coordsUpdateCave = coordsUpdateCave.Concat(BitConverter.GetBytes(flyModeOffset))
                 .Concat(new byte[] {
@@ -292,8 +282,8 @@ namespace DS3Tool.services
                      0xE9                                // return
                 }).ToArray();
 
-            int caveExitOffset = (int)(COORDS_UPDATE_CAVE_EXIT.ToInt64() -
-                        (COORDS_UPDATE_CAVE_START.ToInt64() + coordsUpdateCave.Length + 4));
+            int caveExitOffset = (int)(COORDS_UPDATE_BLOCK_EXIT.ToInt64() -
+                        (COORDS_UPDATE_BLOCK_START.ToInt64() + coordsUpdateCave.Length + 4));
 
             coordsUpdateCave = coordsUpdateCave.Concat(BitConverter.GetBytes(caveExitOffset))
                 .Concat(new byte[] {
@@ -302,7 +292,7 @@ namespace DS3Tool.services
                 .ToArray();
 
             playerCoordOffset = (int)(PLAYER_COORD_BASE.ToInt64() -
-                 (COORDS_UPDATE_CAVE_START.ToInt64() + coordsUpdateCave.Length + 4));
+                 (COORDS_UPDATE_BLOCK_START.ToInt64() + coordsUpdateCave.Length + 4));
 
             coordsUpdateCave = coordsUpdateCave.Concat(BitConverter.GetBytes(playerCoordOffset))
                  .Concat(new byte[] {
@@ -311,8 +301,8 @@ namespace DS3Tool.services
                  })
                  .ToArray();
 
-            caveExitOffset = (int)(COORDS_UPDATE_CAVE_EXIT.ToInt64() -
-                        (COORDS_UPDATE_CAVE_START.ToInt64() + coordsUpdateCave.Length + 4));
+            caveExitOffset = (int)(COORDS_UPDATE_BLOCK_EXIT.ToInt64() -
+                        (COORDS_UPDATE_BLOCK_START.ToInt64() + coordsUpdateCave.Length + 4));
 
             coordsUpdateCave = coordsUpdateCave.Concat(BitConverter.GetBytes(caveExitOffset))
                  .Concat(new byte[] {
@@ -322,8 +312,8 @@ namespace DS3Tool.services
                  })
                  .ToArray();
 
-            caveExitOffset = (int)(COORDS_UPDATE_CAVE_EXIT.ToInt64() -
-                        (COORDS_UPDATE_CAVE_START.ToInt64() + coordsUpdateCave.Length + 4));
+            caveExitOffset = (int)(COORDS_UPDATE_BLOCK_EXIT.ToInt64() -
+                        (COORDS_UPDATE_BLOCK_START.ToInt64() + coordsUpdateCave.Length + 4));
 
             coordsUpdateCave = coordsUpdateCave.Concat(BitConverter.GetBytes(caveExitOffset))
                  .Concat(new byte[] 
@@ -335,7 +325,7 @@ namespace DS3Tool.services
                 .ToArray();
 
             movementInfoOffset = (int)(PLAYER_MOVEMENT_INFO.ToInt64() -
-                 (COORDS_UPDATE_CAVE_START.ToInt64() + coordsUpdateCave.Length + 4));
+                 (COORDS_UPDATE_BLOCK_START.ToInt64() + coordsUpdateCave.Length + 4));
 
             coordsUpdateCave = coordsUpdateCave.Concat(BitConverter.GetBytes(movementInfoOffset))
                 .Concat(new byte[] {
@@ -343,7 +333,7 @@ namespace DS3Tool.services
                     0x0F, 0x84                          // jz z movement
                 }).ToArray();
 
-            int zCaveOffset = (int)(COORDS_UPDATE_Z_START.ToInt64() - (COORDS_UPDATE_CAVE_START.ToInt64() + coordsUpdateCave.Length + 4));
+            int zCaveOffset = (int)(COORDS_UPDATE_Z_START.ToInt64() - (COORDS_UPDATE_BLOCK_START.ToInt64() + coordsUpdateCave.Length + 4));
 
             coordsUpdateCave = coordsUpdateCave.Concat(BitConverter.GetBytes(zCaveOffset))
                 .Concat(new byte[] {
@@ -352,7 +342,7 @@ namespace DS3Tool.services
                 .ToArray();
 
             iXOffset = (int)(IX_OFFSET.ToInt64() -
-    (COORDS_UPDATE_CAVE_START.ToInt64() + coordsUpdateCave.Length + 4));
+    (COORDS_UPDATE_BLOCK_START.ToInt64() + coordsUpdateCave.Length + 4));
 
             coordsUpdateCave = coordsUpdateCave.Concat(BitConverter.GetBytes(iXOffset))
                 .Concat(new byte[] {
@@ -361,7 +351,7 @@ namespace DS3Tool.services
                 })
                 .ToArray();
 
-            zCaveOffset = (int)(COORDS_UPDATE_Z_START.ToInt64() - (COORDS_UPDATE_CAVE_START.ToInt64() + coordsUpdateCave.Length + 4));
+            zCaveOffset = (int)(COORDS_UPDATE_Z_START.ToInt64() - (COORDS_UPDATE_BLOCK_START.ToInt64() + coordsUpdateCave.Length + 4));
 
             coordsUpdateCave = coordsUpdateCave.Concat(BitConverter.GetBytes(zCaveOffset))
                 .Concat(new byte[] {
@@ -377,7 +367,7 @@ namespace DS3Tool.services
                 .ToArray();
 
             camInfoOffset = (int)(PLAYER_CAM_INFO.ToInt64() -
-            (COORDS_UPDATE_CAVE_START.ToInt64() + coordsUpdateCave.Length + 4));
+            (COORDS_UPDATE_BLOCK_START.ToInt64() + coordsUpdateCave.Length + 4));
 
             coordsUpdateCave = coordsUpdateCave.Concat(BitConverter.GetBytes(camInfoOffset))
                 .Concat(new byte[] {
@@ -386,7 +376,7 @@ namespace DS3Tool.services
                 })
                 .ToArray();
 
-            zCaveOffset = (int)(COORDS_UPDATE_Z_START.ToInt64() - (COORDS_UPDATE_CAVE_START.ToInt64() + coordsUpdateCave.Length + 4));
+            zCaveOffset = (int)(COORDS_UPDATE_Z_START.ToInt64() - (COORDS_UPDATE_BLOCK_START.ToInt64() + coordsUpdateCave.Length + 4));
 
             coordsUpdateCave = coordsUpdateCave.Concat(BitConverter.GetBytes(zCaveOffset))
                 .Concat(new byte[] {
@@ -403,7 +393,7 @@ namespace DS3Tool.services
                 }).ToArray();
 
             camInfoOffset = (int)(PLAYER_CAM_INFO.ToInt64() -
-           (COORDS_UPDATE_CAVE_START.ToInt64() + coordsUpdateCave.Length + 4));
+           (COORDS_UPDATE_BLOCK_START.ToInt64() + coordsUpdateCave.Length + 4));
             coordsUpdateCave = coordsUpdateCave.Concat(BitConverter.GetBytes(camInfoOffset))
                .Concat(new byte[] {
                    0x48, 0x85, 0xC0,                   // test rax,rax
@@ -411,24 +401,20 @@ namespace DS3Tool.services
                    })
                 .ToArray();
 
-            zCaveOffset = (int)(COORDS_UPDATE_Z_START.ToInt64() - (COORDS_UPDATE_CAVE_START.ToInt64() + coordsUpdateCave.Length + 4));
+            zCaveOffset = (int)(COORDS_UPDATE_Z_START.ToInt64() - (COORDS_UPDATE_BLOCK_START.ToInt64() + coordsUpdateCave.Length + 4));
             coordsUpdateCave = coordsUpdateCave.Concat(BitConverter.GetBytes(zCaveOffset))
                 .Concat(new byte[] {
                     0x44, 0x0F, 0x59, 0xB8, 0x80, 0x03, 0x00, 0x00,  // mulps xmm15,[rax+380] 
                    0x41, 0x0F, 0x58, 0xF7,                   // addps xmm6,xmm15
-                  0xE9
+        
                 }).
                 ToArray();
-
-            zCaveOffset = (int)(COORDS_UPDATE_Z_START.ToInt64() - (COORDS_UPDATE_CAVE_START.ToInt64() + coordsUpdateCave.Length + 4));
-
-            coordsUpdateCave = coordsUpdateCave.Concat(BitConverter.GetBytes(zCaveOffset)).ToArray();
 
             hooks.Add(new HookData
             {
                 Name = "CoordsUpdate",
                 OriginAddr = ORIGIN_COORDS_UPDATE,
-                CaveAddr = COORDS_UPDATE_CAVE_START,
+                CaveAddr = COORDS_UPDATE_BLOCK_START,
                 OriginalBytes = new byte[]
                              { 0x66, 0x0F, 0x7F, 0xB3, 0x80, 0x00, 0x00, 0x00 }
             });
@@ -436,7 +422,7 @@ namespace DS3Tool.services
 
             try
             {
-                _ds3Process.WriteBytes(COORDS_UPDATE_CAVE_START, coordsUpdateCave);
+                _ds3Process.WriteBytes(COORDS_UPDATE_BLOCK_START, coordsUpdateCave);
 
             }
             catch (Exception ex)
@@ -469,14 +455,8 @@ namespace DS3Tool.services
                         
              0x45, 0x0F, 0x57, 0xF6,
 0x45, 0x0F, 0x57, 0xFF,
-                    0xE9,                               // return
+           
                 }).ToArray();
-
-            caveExitOffset = (int)(COORDS_UPDATE_CAVE_EXIT.ToInt64() -
-                        (COORDS_UPDATE_Z_START.ToInt64() + zDirectCave.Length + 4));
-
-            zDirectCave = zDirectCave.Concat(BitConverter.GetBytes(caveExitOffset)).ToArray();
-
             try
             {
                 _ds3Process.WriteBytes(COORDS_UPDATE_Z_START, zDirectCave);
@@ -497,7 +477,7 @@ namespace DS3Tool.services
 
 
             caveExitOffset = (int)(ORIGIN_COORDS_UPDATE.ToInt64() + 8 -
-                        (COORDS_UPDATE_CAVE_EXIT.ToInt64() + updateCoordsCaveExit.Length + 4));
+                        (COORDS_UPDATE_BLOCK_EXIT.ToInt64() + updateCoordsCaveExit.Length + 4));
 
             updateCoordsCaveExit = updateCoordsCaveExit.Concat(BitConverter.GetBytes(caveExitOffset))
                 .ToArray();
@@ -505,7 +485,7 @@ namespace DS3Tool.services
 
             try
             {
-                _ds3Process.WriteBytes(COORDS_UPDATE_CAVE_EXIT, updateCoordsCaveExit);
+                _ds3Process.WriteBytes(COORDS_UPDATE_BLOCK_EXIT, updateCoordsCaveExit);
 
             }
             catch (Exception ex)
@@ -594,7 +574,6 @@ namespace DS3Tool.services
         private void RestoreOriginalBytes()
 
         {
-            
             foreach (var hook in hooks)
             {
                 try
@@ -629,14 +608,8 @@ namespace DS3Tool.services
             try
             {
 
-                var regionTwoSize = 3000;
-                var zeroBytes = new byte[regionTwoSize];
-                _ds3Process.WriteBytes(REGION_TWO_OFFSET, zeroBytes);
-      
-                var regionOneSize = 1024;
-                zeroBytes = new byte[regionOneSize];
-                _ds3Process.WriteBytes(REGION_ONE_OFFSET, zeroBytes);
-     
+                var zeroBytes = new byte[3000];
+                _ds3Process.WriteBytes(CODE_CAVE_OFFSET, zeroBytes);
 
             }
             catch (Exception ex)
