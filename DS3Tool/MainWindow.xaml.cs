@@ -38,7 +38,7 @@ namespace DS3Tool
         bool _freeCamFirstActivation = true;
        
 
-        public Dictionary<string, string> ItemDictionary { get; private set; }
+        public Dictionary<string, Item> ItemDictionary { get; private set; }
         public List<LoadoutTemplate> Templates { get; set; }
 
 
@@ -120,9 +120,23 @@ namespace DS3Tool
             TemplateComboBox.SelectedIndex = 0;
         }
 
+        public class Item
+        {
+            public string Name { get; set; }
+            public string Address { get; set; }
+            public string Type { get; set; }
+
+            public Item(string name, string address, string type = null)
+            {
+                Name = name;
+                Address = address;
+                Type = type;
+            }
+        }
+
         private void LoadItemsFromCsv(string filePath)
         {
-            ItemDictionary = new Dictionary<string, string>();
+            ItemDictionary = new Dictionary<string, Item>();
             string[] lines = File.ReadAllLines(filePath);
 
             itemList.Items.Clear();
@@ -134,11 +148,14 @@ namespace DS3Tool
                 string[] columns = lines[i].Split(',');
                 if (columns.Length >= 2)
                 {
-                    string firstColumnValue = columns[0].Trim('"', ' ');
-                    string secondColumnValue = columns[1].Trim('"', ' ');
+                    string name = columns[0].Trim('"', ' ');
+                    string address = columns[1].Trim('"', ' ');
 
-                    itemList.Items.Add(firstColumnValue);
-                    ItemDictionary[firstColumnValue] = secondColumnValue;
+                    string type = columns.Length > 2 ? columns[2].Trim('"', ' ') : null;
+
+                    var item = new Item(name, address, type);
+                    itemList.Items.Add(item.Name);
+                    ItemDictionary[name] = item;
                 }
             }
         }
@@ -1120,22 +1137,40 @@ namespace DS3Tool
             }
 
             string selectedItem = itemList.SelectedItem.ToString();
-            if (!ItemDictionary.TryGetValue(selectedItem, out string hexId))
+            if (!ItemDictionary.TryGetValue(selectedItem, out Item item))
             {
                 MessageBox.Show("Item not found in dictionary.");
                 return;
             }
 
-            uint formattedId = uint.Parse(hexId, System.Globalization.NumberStyles.HexNumber);
+            uint formattedId = uint.Parse(item.Address, System.Globalization.NumberStyles.HexNumber);
             string selectedInfusion = infusionTypeComboBox.SelectedItem.ToString();
             string selectedUpgrade = upgradeComboBox.SelectedItem.ToString();
             uint quantity = (uint)quantitySlider.Value;
 
-            if (hexId.CompareTo(MIN_WEAPON_ID) < 0 || hexId.CompareTo(MAX_WEAPON_ID) > 0)
+            if (item.Address.CompareTo(MIN_WEAPON_ID) < 0 || item.Address.CompareTo(MAX_WEAPON_ID) > 0)
             {
                 selectedInfusion = "Normal";
                 selectedUpgrade = "+0";
             }
+            else if (item.Address.Equals("00A87500"))
+            {
+                selectedInfusion = "Normal";
+                selectedUpgrade = "+0";
+            }
+
+            bool isSpecialWeapon = item.Type.Equals("Titanite Scale") || item.Type.Equals("Twinkling Titanite");
+
+            if (isSpecialWeapon && int.Parse(selectedUpgrade.TrimStart('+')) > 5)
+            {
+                selectedUpgrade = "+5";
+            }
+          
+            if (isSpecialWeapon)
+            {
+                selectedInfusion = "Normal";
+            }
+   
 
             _itemSpawnService.SpawnItem(
         baseItemId: formattedId,
@@ -1153,9 +1188,10 @@ namespace DS3Tool
             {
                 foreach (var item in selectedTemplate.Items)
                 {
-                    if (ItemDictionary.TryGetValue(item.ItemName, out string hexId))
+                    if (ItemDictionary.TryGetValue(item.ItemName, out Item itemToSpawn))
                     {
-                        uint formattedId = uint.Parse(hexId, System.Globalization.NumberStyles.HexNumber);
+
+                        uint formattedId = uint.Parse(itemToSpawn.Address, System.Globalization.NumberStyles.HexNumber);
                         _itemSpawnService.SpawnItem(
                             baseItemId: formattedId,
                             infusionType: item.Infusion,
