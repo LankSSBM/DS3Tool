@@ -1148,6 +1148,11 @@ namespace DS3Tool
                 selectedUpgrade = "+0";
             }
 
+            if (string.IsNullOrEmpty(item.Type))
+            {
+                item.Type = "Default";
+            }
+
             bool isSpecialWeapon = item.Type.Equals("Titanite Scale") || item.Type.Equals("Twinkling Titanite");
 
             if (isSpecialWeapon && int.Parse(selectedUpgrade.TrimStart('+')) > 5)
