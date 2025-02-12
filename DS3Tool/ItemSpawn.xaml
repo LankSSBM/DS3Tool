@@ -17,27 +17,31 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="10px"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             <Label Grid.Row="0" Grid.Column="0">Item Name (or partial name)</Label>
             <Label Grid.Row="0" Grid.Column="1">Level</Label>
             <Label Grid.Row="0" Grid.Column="2">Infusion</Label>
             <Label Grid.Row="0" Grid.Column="3">Quantity</Label>
-            <ComboBox x:Name="itemList" Grid.Row="1" Grid.Column="0"
-                     MaxDropDownHeight="200"
-                     IsTextSearchEnabled="True"
-                     IsEditable="True"
-                     StaysOpenOnEdit="True">
+            <ComboBox x:Name="itemList" Grid.Row="1" Grid.Column="0" MaxDropDownHeight="200"
+                     IsTextSearchEnabled="True" IsEditable="True" StaysOpenOnEdit="True">
                 <ComboBox.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <VirtualizingStackPanel />
-                    </ItemsPanelTemplate>
+                    <ItemsPanelTemplate><VirtualizingStackPanel /></ItemsPanelTemplate>
                 </ComboBox.ItemsPanel>
             </ComboBox>
-            <!--<Button Grid.Row="1" Grid.Column="1" Click="showList">?</Button>-->
             <ComboBox Grid.Row="1" Grid.Column="1" x:Name="upgradeComboBox"/>
             <ComboBox Grid.Row="1" Grid.Column="2" x:Name="infusionTypeComboBox"/>
             <TextBox Grid.Row="1" Grid.Column="3" x:Name="txtQuantity">1</TextBox>
+            <Button Grid.Row="2" Grid.ColumnSpan="4" Click="spawnItem" x:Name="btnSpawn">Spawn</Button>
+            
+            <!-- GAP -->
+
+            <Label Grid.Row="4" Grid.Column="0">Mass Item Spawn (Choose Template)</Label>
+            <ComboBox Grid.Row="5" x:Name="TemplateComboBox" DisplayMemberPath="Name" />
+            <Button Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="3" Content="Spawn Template Items" Click="ApplyTemplateButton_Click" />
         </Grid>
-        <Button Click="spawnItem" x:Name="btnSpawn">Spawn</Button>
     </StackPanel>
 </Window>

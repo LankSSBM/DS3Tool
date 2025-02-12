@@ -165,69 +165,6 @@
             <Button Click="hotkeySetup" FontSize="11" HorizontalAlignment="Right" Margin="0,0" x:Name="btnHotkeys">Hotkey Setup</Button>
         </StackPanel>
         <Button Click="doQuitout" x:Name="quitoutButton" Height="30">Instant Quitout</Button>
-        <StackPanel Margin="5">
-            <GroupBox Header="Item Spawner">
-                <StackPanel Margin="2">
-                    <ComboBox x:Name="infusionTypeComboBox" 
-                    Margin="0,5"
-                    Width="200"
-                    Height="25"/>
-                    <ComboBox x:Name="upgradeComboBox"
-                    Margin="0,5"
-                    Width="200"
-                    Height="25"/>
-                    <ComboBox x:Name="itemList" 
-                     Width="200" 
-                     Height="25"
-                     Margin="0,5"
-                     MaxDropDownHeight="200"
-                     IsTextSearchEnabled="True"
-                     IsEditable="True"
-                     StaysOpenOnEdit="True">
-                        <ComboBox.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <VirtualizingStackPanel />
-                            </ItemsPanelTemplate>
-                        </ComboBox.ItemsPanel>
-                    </ComboBox>
-                    <StackPanel Orientation="Horizontal" 
-                    Margin="0,5" 
-                    Width="200">
-                        <TextBlock Text="Quantity: " 
-                       VerticalAlignment="Center"/>
-                        <Slider x:Name="quantitySlider"
-                    Minimum="1"
-                    Maximum="99"
-                    Value="1"
-                    Width="130"
-                    VerticalAlignment="Center"
-                    IsSnapToTickEnabled="True"
-                    TickFrequency="1"/>
-                        <TextBlock Text="{Binding ElementName=quantitySlider, Path=Value, StringFormat={}{0:0}}"
-                       Margin="5,0,0,0"
-                       Width="30"
-                       VerticalAlignment="Center"/>
-                    </StackPanel>
-                    <Button x:Name="spawnButton"
-                    Content="Spawn Item"
-                    Width="200"
-                    Height="25"
-                    Margin="0,5"
-                    Click="SpawnButton_Click"/>
-
-                </StackPanel>
-            </GroupBox>
-
-        </StackPanel>
-        <Grid>
-
-            <ComboBox x:Name="TemplateComboBox" Width="200" Height="30" Margin="5" 
-                  DisplayMemberPath="Name" VerticalAlignment="Top" HorizontalAlignment="Left" />
-
-
-            <Button Content="Apply template" Width="80" Height="30" Margin="219,0,21,0" VerticalAlignment="Center"
-                Click="ApplyTemplateButton_Click"/>
-        </Grid>
         <Grid>
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                 <ComboBox x:Name="BonfireDropdown" Width="200" Height="30" Text="Bonfires" IsEditable="True" SelectedIndex="-1">

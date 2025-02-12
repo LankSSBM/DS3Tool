@@ -1,7 +1,6 @@
 ﻿using DS3Tool.services;
+using DS3Tool.templates;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using static DS3Tool.MainWindow;
@@ -16,6 +15,7 @@ namespace DS3Tool
         DS3Process _process;
         ItemSpawnService _itemSpawnService;
         Dictionary<string, Item> _itemDict;
+        List<LoadoutTemplate> Templates;
 
         public ItemSpawn(DS3Process process, Dictionary<string, Item> itemDict)
         {
@@ -39,6 +39,16 @@ namespace DS3Tool
             itemList.Items.Clear();
             VirtualizingPanel.SetIsVirtualizing(itemList, true);
             VirtualizingPanel.SetVirtualizationMode(itemList, VirtualizationMode.Recycling);
+
+            Templates = new List<LoadoutTemplate>
+            {
+                LoadoutPreset.MetaLeveled,
+                LoadoutPreset.SL1NoUpgrades,
+                LoadoutPreset.SL1
+            };
+            TemplateComboBox.ItemsSource = Templates;
+            TemplateComboBox.SelectedIndex = 0;
+
 
             foreach (KeyValuePair<string, Item> item in _itemDict)
             {
@@ -104,6 +114,28 @@ namespace DS3Tool
                 quantity: quantity,
                 durability: 100
             );
+        }
+
+        private void ApplyTemplateButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (TemplateComboBox.SelectedItem is LoadoutTemplate selectedTemplate)
+            {
+                foreach (var item in selectedTemplate.Items)
+                {
+                    if (_itemDict.TryGetValue(item.ItemName, out Item itemToSpawn))
+                    {
+
+                        uint formattedId = uint.Parse(itemToSpawn.Address, System.Globalization.NumberStyles.HexNumber);
+                        _itemSpawnService.SpawnItem(
+                            baseItemId: formattedId,
+                            infusionType: item.Infusion,
+                            upgradeLevel: item.Upgrade,
+                            quantity: item.Quantity,
+                            durability: 100
+                        );
+                    }
+                }
+            }
         }
     }
 }

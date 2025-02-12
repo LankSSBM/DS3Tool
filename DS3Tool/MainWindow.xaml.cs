@@ -42,7 +42,7 @@ namespace DS3Tool
 
 
         public Dictionary<string, Item> ItemDictionary { get; private set; }
-        public List<LoadoutTemplate> Templates { get; set; }
+        //public List<LoadoutTemplate> Templates { get; set; }
 
 
 
@@ -92,33 +92,33 @@ namespace DS3Tool
                 noclipService = new NoClipService(_process);
 
                 _itemSpawnService = new ItemSpawnService(_process);
-                initItemAdjustments();
+                //initItemAdjustments();
 
                 loadItemTemplates();
             }
         }
 
 
-        private void initItemAdjustments()
-        {
-            infusionTypeComboBox.ItemsSource = _itemSpawnService.INFUSION_TYPES.Keys;
-            infusionTypeComboBox.SelectedIndex = 0;
+        //private void initItemAdjustments()
+        //{
+        //    infusionTypeComboBox.ItemsSource = _itemSpawnService.INFUSION_TYPES.Keys;
+        //    infusionTypeComboBox.SelectedIndex = 0;
 
-            upgradeComboBox.ItemsSource = _itemSpawnService.UPGRADES.Keys;
-            upgradeComboBox.SelectedIndex = 0;
+        //    upgradeComboBox.ItemsSource = _itemSpawnService.UPGRADES.Keys;
+        //    upgradeComboBox.SelectedIndex = 0;
 
-        }
+        //}
 
         private void loadItemTemplates()
         {
-            Templates = new List<LoadoutTemplate>
-            {
-                LoadoutPreset.SL1NoUpgrades,
-                LoadoutPreset.SL1,
-                LoadoutPreset.MetaLeveled
-            };
-            TemplateComboBox.ItemsSource = Templates;
-            TemplateComboBox.SelectedIndex = 0;
+            //Templates = new List<LoadoutTemplate>
+            //{
+            //    LoadoutPreset.SL1NoUpgrades,
+            //    LoadoutPreset.SL1,
+            //    LoadoutPreset.MetaLeveled
+            //};
+            //TemplateComboBox.ItemsSource = Templates;
+            //TemplateComboBox.SelectedIndex = 0;
         }
 
         public class Item
@@ -140,10 +140,6 @@ namespace DS3Tool
             ItemDictionary = new Dictionary<string, Item>();
             string[] lines = File.ReadAllLines(filePath);
 
-            itemList.Items.Clear();
-            VirtualizingPanel.SetIsVirtualizing(itemList, true);
-            VirtualizingPanel.SetVirtualizationMode(itemList, VirtualizationMode.Recycling);
-
             for (int i = 1; i < lines.Length; i++)
             {
                 string[] columns = lines[i].Split(',');
@@ -155,7 +151,6 @@ namespace DS3Tool
                     string type = columns.Length > 2 ? columns[2].Trim('"', ' ') : null;
 
                     var item = new Item(name, address, type);
-                    itemList.Items.Add(item.Name);
                     ItemDictionary[name] = item;
                 }
             }
@@ -1111,91 +1106,6 @@ namespace DS3Tool
             });
             editor.Owner = this;
             editor.Show();
-        }
-
-        private void SpawnButton_Click(object sender, RoutedEventArgs e)
-
-        {
-            const string MIN_WEAPON_ID = "000D9490";
-            const string MAX_WEAPON_ID = "015F1AD0";
-
-            if (itemList.SelectedItem == null)
-            {
-                MessageBox.Show("Please select an item to spawn.");
-                return;
-            }
-
-            string selectedItem = itemList.SelectedItem.ToString();
-            if (!ItemDictionary.TryGetValue(selectedItem, out Item item))
-            {
-                MessageBox.Show("Item not found in dictionary.");
-                return;
-            }
-
-            uint formattedId = uint.Parse(item.Address, System.Globalization.NumberStyles.HexNumber);
-            string selectedInfusion = infusionTypeComboBox.SelectedItem.ToString();
-            string selectedUpgrade = upgradeComboBox.SelectedItem.ToString();
-            uint quantity = (uint)quantitySlider.Value;
-
-            if (item.Address.CompareTo(MIN_WEAPON_ID) < 0 || item.Address.CompareTo(MAX_WEAPON_ID) > 0)
-            {
-                selectedInfusion = "Normal";
-                selectedUpgrade = "+0";
-            }
-            else if (item.Address.Equals("00A87500"))
-            {
-                selectedInfusion = "Normal";
-                selectedUpgrade = "+0";
-            }
-
-            if (string.IsNullOrEmpty(item.Type))
-            {
-                item.Type = "Default";
-            }
-
-            bool isSpecialWeapon = item.Type.Equals("Titanite Scale") || item.Type.Equals("Twinkling Titanite");
-
-            if (isSpecialWeapon && int.Parse(selectedUpgrade.TrimStart('+')) > 5)
-            {
-                selectedUpgrade = "+5";
-            }
-          
-            if (isSpecialWeapon)
-            {
-                selectedInfusion = "Normal";
-            }
-   
-
-            _itemSpawnService.SpawnItem(
-                baseItemId: formattedId,
-                infusionType: selectedInfusion,
-                upgradeLevel: selectedUpgrade,
-                quantity: quantity,
-                durability: 100
-            );
-        }
-
-
-        private void ApplyTemplateButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (TemplateComboBox.SelectedItem is LoadoutTemplate selectedTemplate)
-            {
-                foreach (var item in selectedTemplate.Items)
-                {
-                    if (ItemDictionary.TryGetValue(item.ItemName, out Item itemToSpawn))
-                    {
-
-                        uint formattedId = uint.Parse(itemToSpawn.Address, System.Globalization.NumberStyles.HexNumber);
-                        _itemSpawnService.SpawnItem(
-                            baseItemId: formattedId,
-                            infusionType: item.Infusion,
-                            upgradeLevel: item.Upgrade,
-                            quantity: item.Quantity,
-                            durability: 100
-                        );
-                    }
-                }
-            }
         }
 
         private void UnlockSelectedButton_Click(object sender, RoutedEventArgs e)
