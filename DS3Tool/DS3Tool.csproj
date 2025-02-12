@@ -61,6 +61,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="BonfireUnlock.xaml.cs">
+      <DependentUpon>BonfireUnlock.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ItemSpawn.xaml.cs">
       <DependentUpon>ItemSpawn.xaml</DependentUpon>
     </Compile>
@@ -74,6 +77,10 @@
     <Compile Include="templates\Templates.cs" />
     <Compile Include="services\CinderPhaseManager.cs" />
     <Compile Include="Utils.cs" />
+    <Page Include="BonfireUnlock.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="ItemSpawn.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -114,6 +121,7 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="data\bonfires.csv" />
     <None Include="data\infusions.csv" />
     <None Include="data\items.csv" />
     <None Include="Properties\Settings.settings">

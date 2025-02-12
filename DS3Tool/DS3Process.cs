@@ -21,7 +21,6 @@ namespace DS3Tool
         public IntPtr _targetProcessHandle = IntPtr.Zero;
         public IntPtr ds3Base = IntPtr.Zero;
         public const int CodeCavePtrLoc = 0x1914670;
-        public readonly string[] STAT_NAMES = new string[] { "Vigor", "Attunement", "Endurance", "Vitality", "Strength", "Dexterity", "Intelligence", "Faith", "Luck" };
 
         protected bool disposed = false;
 

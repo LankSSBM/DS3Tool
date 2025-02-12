@@ -42,9 +42,7 @@ namespace DS3Tool
 
 
         public Dictionary<string, Item> ItemDictionary { get; private set; }
-        //public List<LoadoutTemplate> Templates { get; set; }
-
-
+        public Dictionary<string, BonfireUnlock> BonfireDictionary { get; private set; }
 
         (float, float, float, float)? savedPos = null;
 
@@ -92,33 +90,8 @@ namespace DS3Tool
                 noclipService = new NoClipService(_process);
 
                 _itemSpawnService = new ItemSpawnService(_process);
-                //initItemAdjustments();
 
-                loadItemTemplates();
             }
-        }
-
-
-        //private void initItemAdjustments()
-        //{
-        //    infusionTypeComboBox.ItemsSource = _itemSpawnService.INFUSION_TYPES.Keys;
-        //    infusionTypeComboBox.SelectedIndex = 0;
-
-        //    upgradeComboBox.ItemsSource = _itemSpawnService.UPGRADES.Keys;
-        //    upgradeComboBox.SelectedIndex = 0;
-
-        //}
-
-        private void loadItemTemplates()
-        {
-            //Templates = new List<LoadoutTemplate>
-            //{
-            //    LoadoutPreset.SL1NoUpgrades,
-            //    LoadoutPreset.SL1,
-            //    LoadoutPreset.MetaLeveled
-            //};
-            //TemplateComboBox.ItemsSource = Templates;
-            //TemplateComboBox.SelectedIndex = 0;
         }
 
         public class Item
@@ -174,7 +147,7 @@ namespace DS3Tool
         {
             var good = _process?.weGood ?? false;
             mainPanel.IsEnabled = good;
-            Title = good ? _normalTitle : "F?";
+            Title = good ? _normalTitle : "BlameLank";
 
             if (!good) { return; }
             if (_hooked)
@@ -1108,23 +1081,6 @@ namespace DS3Tool
             editor.Show();
         }
 
-        private void UnlockSelectedButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (BonfireDropdown.SelectedItem is ComboBoxItem selectedItem)
-            {
-                string selectedBonfire = selectedItem.Content.ToString();
-                _bonfireService.unlockBonfire(selectedBonfire);
-            }
-            else
-            {
-                MessageBox.Show("Please select a bonfire location.");
-            }
-        }
-
-        private void UnlockAllButton_Click(object sender, RoutedEventArgs e)
-        {
-            _bonfireService.unlockAllBonfires();
-        }
         private void OnPhaseButtonClick(object sender, RoutedEventArgs e)
         {
             var button = (Button)sender;
@@ -1177,6 +1133,13 @@ namespace DS3Tool
             {
                 button.Content = newVisibility == Visibility.Visible ? "▼" : "▲";
             }
+        }
+
+        private void UnlockBonfire(object sender, RoutedEventArgs e)
+        {
+            var unlockBonFire = new BonfireUnlock(_process);
+            unlockBonFire.Owner = this;
+            unlockBonFire.Show();
         }
     }
 }
