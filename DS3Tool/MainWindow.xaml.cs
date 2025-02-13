@@ -105,17 +105,20 @@ namespace DS3Tool
             }
         }
 
-        public class BonfireLocation
+        public struct BonfireLocation
         {
             public int Offset { get; }
             public int StartBit { get; }
+            public int Id { get; }
 
-            public BonfireLocation(int offset, int startBit)
+            public BonfireLocation(int offset, int startBit, int Id)
             {
                 Offset = offset;
                 StartBit = startBit;
+                this.Id = Id;
             }
         }
+
 
         private void LoadItemsFromCsv(string filePath)
         {
@@ -141,22 +144,25 @@ namespace DS3Tool
         private void LoadBonfiresFromCsv(string filePath)
         {
             BonfireDictionary = new Dictionary<string, BonfireLocation>();
-            string[] lines = File.ReadAllLines(filePath);
+
+            string projectDirectory = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).Parent.Parent.FullName;
+            string path = Path.Combine(projectDirectory, "data", "bonfires.csv");
+            string[] lines = File.ReadAllLines(path);
 
             for (int i = 1; i < lines.Length; i++)
             {
                 string[] columns = lines[i].Split(',');
-                if (columns.Length >= 2)
+                if (columns.Length >= 4)
                 {
                     string name = columns[0].Trim('"', ' ');
-
-                    int startBit;
                     int offset = Convert.ToInt32(columns[1].Trim('"', ' '), 16);
-                    int.TryParse(columns[2].Trim('"', ' '), out startBit);
-                    string type = columns.Length > 2 ? columns[2].Trim('"', ' ') : null;
 
-                    var location = new BonfireLocation(offset, startBit);
-                    BonfireDictionary[name] = location;
+                    int startBit = int.Parse(columns[2].Trim('"', ' '));
+                    int id = int.Parse(columns[3].Trim('"', ' '));
+
+                    BonfireLocation bonfireLocation = new BonfireLocation(offset, startBit, id);
+
+                    BonfireDictionary[name] = bonfireLocation;
                 }
             }
         }
