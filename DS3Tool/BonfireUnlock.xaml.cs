@@ -34,13 +34,14 @@ namespace DS3Tool
             BonfireDropdown.SelectedIndex = 0;
         }
 
-        private void UnlockSelectedButton_Click(object sender, RoutedEventArgs e)
+        private void WarpToSelectedButton_Click(object sender, RoutedEventArgs e)
         {
+
             string selectedBonfire = BonfireDropdown.SelectedItem != null ? BonfireDropdown.SelectedItem.ToString() : null;
             if (!string.IsNullOrEmpty(selectedBonfire))
             {
-                _bonfireService.unlockBonfire(selectedBonfire);
-                MessageBox.Show("Bonfire Unlocked.");
+                _bonfireService.warpToBonfire(selectedBonfire);
+                
             }
             else
             {
