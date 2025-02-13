@@ -121,9 +121,9 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <None Include="data\bonfires.csv" />
-    <None Include="data\infusions.csv" />
-    <None Include="data\items.csv" />
+    <EmbeddedResource Include="data\bonfires.csv" />
+    <EmbeddedResource Include="data\infusions.csv" />
+    <EmbeddedResource Include="data\items.csv" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

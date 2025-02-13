@@ -16,6 +16,8 @@ using System.Text;
 using static DS3Tool.DS3Process;
 using DS3Tool.services;
 using DS3Tool.templates;
+using System.Xml.Linq;
+using System.Runtime.InteropServices.ComTypes;
 
 namespace DS3Tool
 {
@@ -48,10 +50,10 @@ namespace DS3Tool
         {
             InitializeComponent();
 
-            string projectDirectory = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).Parent.Parent.FullName;
+            string projectDirectory = AppDomain.CurrentDomain.BaseDirectory;
             //string path = Path.Combine(projectDirectory, "data", "items.csv");
-            LoadItemsFromCsv(Path.Combine(projectDirectory, "data", "items.csv"));
-            LoadBonfiresFromCsv(Path.Combine(projectDirectory, "data", "bonfires.csv"));
+            LoadItemsFromCsv("items.csv");
+            LoadBonfiresFromCsv("bonfires.csv");
 
 
             var assInfo = Assembly.GetEntryAssembly().GetName();
@@ -120,49 +122,60 @@ namespace DS3Tool
         }
 
 
-        private void LoadItemsFromCsv(string filePath)
+        private void LoadItemsFromCsv(string fileName)
         {
             ItemDictionary = new Dictionary<string, Item>();
-            string[] lines = File.ReadAllLines(filePath);
 
-            for (int i = 0; i < lines.Length; i++)
+            var assembly = Assembly.GetExecutingAssembly();
+            string resourceName = assembly.GetManifestResourceNames().Single(str => str.EndsWith(fileName));
+
+            using (Stream stream = assembly.GetManifestResourceStream(resourceName))
+            using (StreamReader reader = new StreamReader(stream))
             {
-                string[] columns = lines[i].Split(',');
-                if (columns.Length >= 2)
+                string line = "";
+                while ((line = reader.ReadLine()) != null)
                 {
-                    string name = columns[0].Trim('"', ' ');
-                    string address = columns[1].Trim('"', ' ');
+                    string[] columns = line.Split(',');
+                    if (columns.Length >= 2)
+                    {
+                        string name = columns[0].Trim('"', ' ');
+                        string address = columns[1].Trim('"', ' ');
 
-                    string type = columns.Length > 2 ? columns[2].Trim('"', ' ') : null;
+                        string type = columns.Length > 2 ? columns[2].Trim('"', ' ') : null;
 
-                    var item = new Item(name, address, type);
-                    ItemDictionary[name] = item;
+                        var item = new Item(name, address, type);
+                        ItemDictionary[name] = item;
+                    }
                 }
             }
         }
 
-        private void LoadBonfiresFromCsv(string filePath)
+        private void LoadBonfiresFromCsv(string fileName)
         {
             BonfireDictionary = new Dictionary<string, BonfireLocation>();
 
-            string projectDirectory = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).Parent.Parent.FullName;
-            string path = Path.Combine(projectDirectory, "data", "bonfires.csv");
-            string[] lines = File.ReadAllLines(path);
+            var assembly = Assembly.GetExecutingAssembly();
+            string resourceName = assembly.GetManifestResourceNames().Single(str => str.EndsWith(fileName));
 
-            for (int i = 0; i < lines.Length; i++)
+            using (Stream stream = assembly.GetManifestResourceStream(resourceName))
+            using (StreamReader reader = new StreamReader(stream))
             {
-                string[] columns = lines[i].Split(',');
-                if (columns.Length >= 4)
+                string line = "";
+                while ((line = reader.ReadLine()) != null)
                 {
-                    string name = columns[0].Trim('"', ' ');
-                    int offset = Convert.ToInt32(columns[1].Trim('"', ' '), 16);
+                    string[] columns = line.Split(',');
+                    if (columns.Length >= 4)
+                    {
+                        string name = columns[0].Trim('"', ' ');
+                        int offset = Convert.ToInt32(columns[1].Trim('"', ' '), 16);
 
-                    int startBit = int.Parse(columns[2].Trim('"', ' '));
-                    int id = int.Parse(columns[3].Trim('"', ' '));
+                        int startBit = int.Parse(columns[2].Trim('"', ' '));
+                        int id = int.Parse(columns[3].Trim('"', ' '));
 
-                    BonfireLocation bonfireLocation = new BonfireLocation(offset, startBit, id);
+                        BonfireLocation bonfireLocation = new BonfireLocation(offset, startBit, id);
 
-                    BonfireDictionary[name] = bonfireLocation;
+                        BonfireDictionary[name] = bonfireLocation;
+                    }
                 }
             }
         }
