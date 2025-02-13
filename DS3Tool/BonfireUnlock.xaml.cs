@@ -2,6 +2,7 @@
 using DS3Tool.templates;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using static DS3Tool.MainWindow;
@@ -27,7 +28,7 @@ namespace DS3Tool
         private void populate()
         {
             BonfireDropdown.Items.Clear();
-            BonfireDropdown.ItemsSource = _bonfireService._bonfireDict.Keys;
+            BonfireDropdown.ItemsSource = _bonfireService._bonfireDict.Keys.Skip(1);
             BonfireDropdown.SelectedIndex = 0;
         }
 
@@ -38,7 +39,7 @@ namespace DS3Tool
             if (!string.IsNullOrEmpty(selectedBonfire))
             {
                 _bonfireService.warpToBonfire(selectedBonfire);
-                
+                this.Close();
             }
             else
             {
@@ -49,7 +50,11 @@ namespace DS3Tool
         private void UnlockAllButton_Click(object sender, RoutedEventArgs e)
         {
             _bonfireService.unlockAllBonfires();
-            MessageBox.Show("All Bonfires Unlocked.");
+            
+            if (MessageBox.Show("All Bonfires Unlocked.") == MessageBoxResult.OK)
+            {
+                this.Close(); 
+            }
         }
     }
 }

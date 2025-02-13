@@ -125,7 +125,7 @@ namespace DS3Tool
             ItemDictionary = new Dictionary<string, Item>();
             string[] lines = File.ReadAllLines(filePath);
 
-            for (int i = 1; i < lines.Length; i++)
+            for (int i = 0; i < lines.Length; i++)
             {
                 string[] columns = lines[i].Split(',');
                 if (columns.Length >= 2)
@@ -149,7 +149,7 @@ namespace DS3Tool
             string path = Path.Combine(projectDirectory, "data", "bonfires.csv");
             string[] lines = File.ReadAllLines(path);
 
-            for (int i = 1; i < lines.Length; i++)
+            for (int i = 0; i < lines.Length; i++)
             {
                 string[] columns = lines[i].Split(',');
                 if (columns.Length >= 4)
