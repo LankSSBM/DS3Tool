@@ -499,6 +499,10 @@ namespace DS3Tool
 
         private void chkEnableTarget_Unchecked(object sender, RoutedEventArgs e)
         {
+            _process.cleanUpTargetHook();
+            _hooked = false;
+            targetPanel.Opacity = 1;
+            targetPanel.IsEnabled = true;
             targetPanel.Visibility = Visibility.Collapsed;
         }
 
