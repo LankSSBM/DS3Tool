@@ -548,8 +548,6 @@ namespace DS3Tool
         }
 
         public bool installTargetHook()
-
-
         {
 
             //generate code first
@@ -588,6 +586,14 @@ namespace DS3Tool
             WriteBytes(ds3Base + TARGET_HOOK_LOCATION, targetHookReplacementCode);
             return true;
         }
+
+        public void cleanUpTargetHook()
+        {
+            WriteBytes(ds3Base + TARGET_HOOK_LOCATION, targetHookOrigCode);
+            WriteBytes(ds3Base + CODE_CAVE_PTR_LOCATION, new byte[8]);
+            WriteBytes(ds3Base + CODE_CAVE_CODE_LOCATION, new byte[22]);
+        }
+
 
 
         public void setEnemyRepeatActionPatch(bool on)
