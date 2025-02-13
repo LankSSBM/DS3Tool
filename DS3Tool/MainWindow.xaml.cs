@@ -202,16 +202,24 @@ namespace DS3Tool
 
             string enemyId = _process.GetSetTargetEnemyID();
 
+            StackPanel cinderPanel = (StackPanel)FindName("MasterCinderPanel");
+
             if (enemyId == CINDER_ENEMY_ID)
             {
-                //Show cinder panel
-           
-            } else
-            {
-                //Hide cinder panel
-           
+                if (cinderPanel != null)
+                {
+                    cinderPanel.Visibility = Visibility.Visible;
+                }
+
             }
-                
+            else
+            {
+                if (cinderPanel != null)
+                {
+                    cinderPanel.Visibility = Visibility.Collapsed;
+                }
+            }
+
 
             //Console.WriteLine($"{hp} {hpmax} {poise} {poisemax} {poisetimer}");
             if (double.IsNaN(hp)) { return; }
@@ -470,9 +478,8 @@ namespace DS3Tool
             _process.offAndUnFreeze(DS3Process.DebugOpts.DISABLE_STEAM_INPUT_ENUM);
         }
 
-        private void installTargetHook(object sender, RoutedEventArgs e)
+        private void chkEnableTarget_Checked(object sender, RoutedEventArgs e)
         {
-            (sender as Button).IsEnabled = false;
             if (!_process.installTargetHook())
             {
                 MessageBox.Show("Could not install hook. This could be because a Cheat Engine table has already installed its own hook. Restart the game and try again.", "Sadge", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -481,6 +488,12 @@ namespace DS3Tool
             _hooked = true;
             targetPanel.Opacity = 1;
             targetPanel.IsEnabled = true;
+            targetPanel.Visibility = Visibility.Visible;
+        }
+
+        private void chkEnableTarget_Unchecked(object sender, RoutedEventArgs e)
+        {
+            targetPanel.Visibility = Visibility.Collapsed;
         }
 
         private void stayOnTop(object sender, RoutedEventArgs e)
@@ -508,16 +521,16 @@ namespace DS3Tool
         }
         void setCompact()
         {
-            chkStayOnTop.IsChecked = true;
-            if (targetHookButton.IsEnabled) { installTargetHook(targetHookButton, null); }
+            //chkStayOnTop.IsChecked = true;
+            //if (targetHookButton.IsEnabled) { installTargetHook(targetHookButton, null); }
 
-            mainPanel.Visibility = Visibility.Collapsed;
+            //mainPanel.Visibility = Visibility.Collapsed;
 
-            freezeHPPanel.Visibility = Visibility.Collapsed;
-            quitoutButton.Visibility = Visibility.Collapsed;
-            //updatePanel.Visibility = Visibility.Collapsed;
+            //freezeHPPanel.Visibility = Visibility.Collapsed;
+            //quitoutButton.Visibility = Visibility.Collapsed;
+            ////updatePanel.Visibility = Visibility.Collapsed;
 
-            isCompact = true;
+            //isCompact = true;
         }
 
         void setFull()
@@ -1113,24 +1126,6 @@ namespace DS3Tool
             editor.Show();
         }
 
-        private void OnPhaseButtonClick(object sender, RoutedEventArgs e)
-        {
-            var button = (Button)sender;
-            if (int.TryParse(button.Tag?.ToString(), out int phaseIndex))
-            {
-                _cinderManager.SetPhase(phaseIndex, chkLockPhase.IsChecked ?? false);
-            }
-            else
-            {
-                Debug.WriteLine($"Failed to parse phase index from button tag: {button.Tag}");
-            }
-        }
-
-        private void OnLockPhaseChanged(object sender, RoutedEventArgs e)
-        {
-            _cinderManager.TogglePhaseLock(chkLockPhase.IsChecked ?? false);
-        }
-
         private void dockPanel_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             if (sender is DockPanel dockPanel && dockPanel.Tag is StackPanel stackPanel)
@@ -1172,6 +1167,37 @@ namespace DS3Tool
             var unlockBonFire = new BonfireUnlock(_process, BonfireDictionary);
             unlockBonFire.Owner = this;
             unlockBonFire.Show();
+        }
+
+        private void RadioButton_Checked(object sender, RoutedEventArgs e)
+        {
+            var button = (RadioButton)sender;
+            if (int.TryParse(button.Tag?.ToString(), out int phaseIndex))
+            {
+                _cinderManager.SetPhase(phaseIndex, chkLockPhase.IsChecked ?? false);
+            }
+            else
+            {
+                Debug.WriteLine($"Failed to parse phase index from button tag: {button.Tag}");
+            }
+        }
+
+        private void OnPhaseButtonClick(object sender, RoutedEventArgs e)
+        {
+            var button = (Button)sender;
+            if (int.TryParse(button.Tag?.ToString(), out int phaseIndex))
+            {
+                _cinderManager.SetPhase(phaseIndex, chkLockPhase.IsChecked ?? false);
+            }
+            else
+            {
+                Debug.WriteLine($"Failed to parse phase index from button tag: {button.Tag}");
+            }
+        }
+
+        private void OnLockPhaseChanged(object sender, RoutedEventArgs e)
+        {
+            _cinderManager.TogglePhaseLock(chkLockPhase.IsChecked ?? false);
         }
     }
 }
