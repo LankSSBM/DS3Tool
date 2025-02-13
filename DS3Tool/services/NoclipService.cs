@@ -79,16 +79,16 @@ namespace DS3Tool.services
             PLAYER_MOVEMENT_INFO = CODE_CAVE_OFFSET + 0x510;   
             IX_OFFSET = CODE_CAVE_OFFSET + 0x518;            
             FLY_MODE = CODE_CAVE_OFFSET + 0x520;             
-            Z_DIRECTION = CODE_CAVE_OFFSET + 0x528;          
+            Z_DIRECTION = CODE_CAVE_OFFSET + 0x528;
 
             PLAYER_COORD_BLOCK_START = CODE_CAVE_OFFSET + 0x540;
-            IN_AIR_TIMER_BLOCK_START = CODE_CAVE_OFFSET + 0x570;
-            CAM_H_ROTATE_BLOCK_START = CODE_CAVE_OFFSET + 0x5B0;
-            MOVEMENT_BLOCK_START = CODE_CAVE_OFFSET + 0x5E0;
-            COORDS_UPDATE_BLOCK_START = CODE_CAVE_OFFSET + 0x620;
-            COORDS_UPDATE_Z_START = CODE_CAVE_OFFSET + 0x6F0;
-            COORDS_UPDATE_BLOCK_EXIT = CODE_CAVE_OFFSET + 0x740;
-          
+            IN_AIR_TIMER_BLOCK_START = CODE_CAVE_OFFSET + 0x600; 
+            CAM_H_ROTATE_BLOCK_START = CODE_CAVE_OFFSET + 0x6C0; 
+            MOVEMENT_BLOCK_START = CODE_CAVE_OFFSET + 0x780;     
+            COORDS_UPDATE_BLOCK_START = CODE_CAVE_OFFSET + 0x840;
+            COORDS_UPDATE_Z_START = CODE_CAVE_OFFSET + 0x913;
+            COORDS_UPDATE_BLOCK_EXIT = CODE_CAVE_OFFSET + 0x949;
+
             var playerCoordCave = new byte[] {
 
                 0x48, 0x8B, 0x48, 0x18,                 // mov rcx,[rax+18]
