@@ -6,10 +6,10 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Threading;
+using MiscUtils;
 using System.Runtime.InteropServices;
 using System.Windows.Interop;
 using System.IO;
-using MiscUtils;
 using System.Diagnostics;
 using System.Windows.Media;
 using System.Text;
@@ -22,8 +22,6 @@ namespace DS3Tool
     public partial class MainWindow : Window, IDisposable
     {
         DS3Process _process = null;
-        private BonfireService _bonfireService;
-        private ItemSpawnService _itemSpawnService;
         private CinderPhaseManager _cinderManager;
         private NoClipService noclipService;
         private const string CINDER_ENEMY_ID = "c5280_0000";
@@ -36,12 +34,13 @@ namespace DS3Tool
         bool _hooked = false;
 
         bool _freeCamFirstActivation = true;
-       
+        bool _playerNoDeathStateWas = false;
+        bool _noClipActive = false;
+        bool panelsCollapsed = false;
+
 
         public Dictionary<string, Item> ItemDictionary { get; private set; }
-        public List<LoadoutTemplate> Templates { get; set; }
-
-
+        public Dictionary<string, BonfireLocation> BonfireDictionary { get; private set; }
 
         (float, float, float, float)? savedPos = null;
 
@@ -50,8 +49,9 @@ namespace DS3Tool
             InitializeComponent();
 
             string projectDirectory = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).Parent.Parent.FullName;
-            string path = Path.Combine(projectDirectory, "data", "items.csv");
-            LoadItemsFromCsv(path);
+            //string path = Path.Combine(projectDirectory, "data", "items.csv");
+            LoadItemsFromCsv(Path.Combine(projectDirectory, "data", "items.csv"));
+            LoadBonfiresFromCsv(Path.Combine(projectDirectory, "data", "bonfires.csv"));
 
 
             var assInfo = Assembly.GetEntryAssembly().GetName();
@@ -83,41 +83,12 @@ namespace DS3Tool
                 _timer.Tick += _timer_Tick;
                 _timer.Interval = TimeSpan.FromSeconds(0.1);
                 _timer.Start();
-                UpdateStatButtons();
 
-                _bonfireService = new BonfireService(_process);
                 _cinderManager = new CinderPhaseManager(_process);
                 noclipService = new NoClipService(_process);
 
-                _itemSpawnService = new ItemSpawnService(_process);
-                initItemAdjustments();
 
-                SetSelectedNewGameLevel();
-                loadItemTemplates();
             }
-        }
-
-
-        private void initItemAdjustments()
-        {
-            infusionTypeComboBox.ItemsSource = _itemSpawnService.INFUSION_TYPES.Keys;
-            infusionTypeComboBox.SelectedIndex = 0;
-
-            upgradeComboBox.ItemsSource = _itemSpawnService.UPGRADES.Keys;
-            upgradeComboBox.SelectedIndex = 0;
-
-        }
-
-        private void loadItemTemplates()
-        {
-            Templates = new List<LoadoutTemplate>
-            {
-                LoadoutPreset.SL1NoUpgrades,
-                LoadoutPreset.SL1,
-                LoadoutPreset.MetaLeveled
-            };
-            TemplateComboBox.ItemsSource = Templates;
-            TemplateComboBox.SelectedIndex = 0;
         }
 
         public class Item
@@ -134,16 +105,27 @@ namespace DS3Tool
             }
         }
 
+        public struct BonfireLocation
+        {
+            public int Offset { get; }
+            public int StartBit { get; }
+            public int Id { get; }
+
+            public BonfireLocation(int offset, int startBit, int Id)
+            {
+                Offset = offset;
+                StartBit = startBit;
+                this.Id = Id;
+            }
+        }
+
+
         private void LoadItemsFromCsv(string filePath)
         {
             ItemDictionary = new Dictionary<string, Item>();
             string[] lines = File.ReadAllLines(filePath);
 
-            itemList.Items.Clear();
-            VirtualizingPanel.SetIsVirtualizing(itemList, true);
-            VirtualizingPanel.SetVirtualizationMode(itemList, VirtualizationMode.Recycling);
-
-            for (int i = 1; i < lines.Length; i++)
+            for (int i = 0; i < lines.Length; i++)
             {
                 string[] columns = lines[i].Split(',');
                 if (columns.Length >= 2)
@@ -154,8 +136,33 @@ namespace DS3Tool
                     string type = columns.Length > 2 ? columns[2].Trim('"', ' ') : null;
 
                     var item = new Item(name, address, type);
-                    itemList.Items.Add(item.Name);
                     ItemDictionary[name] = item;
+                }
+            }
+        }
+
+        private void LoadBonfiresFromCsv(string filePath)
+        {
+            BonfireDictionary = new Dictionary<string, BonfireLocation>();
+
+            string projectDirectory = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).Parent.Parent.FullName;
+            string path = Path.Combine(projectDirectory, "data", "bonfires.csv");
+            string[] lines = File.ReadAllLines(path);
+
+            for (int i = 0; i < lines.Length; i++)
+            {
+                string[] columns = lines[i].Split(',');
+                if (columns.Length >= 4)
+                {
+                    string name = columns[0].Trim('"', ' ');
+                    int offset = Convert.ToInt32(columns[1].Trim('"', ' '), 16);
+
+                    int startBit = int.Parse(columns[2].Trim('"', ' '));
+                    int id = int.Parse(columns[3].Trim('"', ' '));
+
+                    BonfireLocation bonfireLocation = new BonfireLocation(offset, startBit, id);
+
+                    BonfireDictionary[name] = bonfireLocation;
                 }
             }
         }
@@ -178,7 +185,7 @@ namespace DS3Tool
         {
             var good = _process?.weGood ?? false;
             mainPanel.IsEnabled = good;
-            Title = good ? _normalTitle : "F?";
+            Title = good ? _normalTitle : "BlameLank";
 
             if (!good) { return; }
             if (_hooked)
@@ -201,16 +208,24 @@ namespace DS3Tool
 
             string enemyId = _process.GetSetTargetEnemyID();
 
+            StackPanel cinderPanel = (StackPanel)FindName("MasterCinderPanel");
+
             if (enemyId == CINDER_ENEMY_ID)
             {
-                //Show cinder panel
-           
-            } else
-            {
-                //Hide cinder panel
-           
+                if (cinderPanel != null)
+                {
+                    cinderPanel.Visibility = Visibility.Visible;
+                }
+
             }
-                
+            else
+            {
+                if (cinderPanel != null)
+                {
+                    cinderPanel.Visibility = Visibility.Collapsed;
+                }
+            }
+
 
             //Console.WriteLine($"{hp} {hpmax} {poise} {poisemax} {poisetimer}");
             if (double.IsNaN(hp)) { return; }
@@ -469,9 +484,8 @@ namespace DS3Tool
             _process.offAndUnFreeze(DS3Process.DebugOpts.DISABLE_STEAM_INPUT_ENUM);
         }
 
-        private void installTargetHook(object sender, RoutedEventArgs e)
+        private void chkEnableTarget_Checked(object sender, RoutedEventArgs e)
         {
-            (sender as Button).IsEnabled = false;
             if (!_process.installTargetHook())
             {
                 MessageBox.Show("Could not install hook. This could be because a Cheat Engine table has already installed its own hook. Restart the game and try again.", "Sadge", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -480,6 +494,12 @@ namespace DS3Tool
             _hooked = true;
             targetPanel.Opacity = 1;
             targetPanel.IsEnabled = true;
+            targetPanel.Visibility = Visibility.Visible;
+        }
+
+        private void chkEnableTarget_Unchecked(object sender, RoutedEventArgs e)
+        {
+            targetPanel.Visibility = Visibility.Collapsed;
         }
 
         private void stayOnTop(object sender, RoutedEventArgs e)
@@ -507,16 +527,16 @@ namespace DS3Tool
         }
         void setCompact()
         {
-            chkStayOnTop.IsChecked = true;
-            if (targetHookButton.IsEnabled) { installTargetHook(targetHookButton, null); }
+            //chkStayOnTop.IsChecked = true;
+            //if (targetHookButton.IsEnabled) { installTargetHook(targetHookButton, null); }
 
-            mainPanel.Visibility = Visibility.Collapsed;
+            //mainPanel.Visibility = Visibility.Collapsed;
 
-            freezeHPPanel.Visibility = Visibility.Collapsed;
-            quitoutButton.Visibility = Visibility.Collapsed;
-            //updatePanel.Visibility = Visibility.Collapsed;
+            //freezeHPPanel.Visibility = Visibility.Collapsed;
+            //quitoutButton.Visibility = Visibility.Collapsed;
+            ////updatePanel.Visibility = Visibility.Collapsed;
 
-            isCompact = true;
+            //isCompact = true;
         }
 
         void setFull()
@@ -1065,163 +1085,109 @@ namespace DS3Tool
             catch (Exception ex) { Utils.debugWrite(ex.ToString()); }
         }
 
-
-
-        private void EditStat(object sender, RoutedEventArgs e)
+        private void OpenSpawnItem(object sender, RoutedEventArgs e)
         {
-            if (sender is Button button && button.Tag is string statName)
+            var itemSpawn = new ItemSpawn(_process, ItemDictionary);
+            itemSpawn.Owner = this;
+            itemSpawn.Show();
+        }
+
+        private void EditStats(object sender, RoutedEventArgs e)
+        {
+            var stats = _process.GetSetPlayerStats().Where(item => item.Item1 != "SOULS").ToList();
+
+            var editor = new StatsEditor(stats, (x) =>
             {
-                if (Enum.TryParse<PlayerStats>(statName, out var stat))
+                _process.GetSetPlayerStats(x);
+            });
+            editor.Owner = this;
+            editor.Show();
+        }
+
+        private void EditSouls(object sender, RoutedEventArgs e)
+        {
+            var stats = _process.GetSetPlayerStats().Where(item => item.Item1 == "SOULS").ToList();
+
+            var editor = new StatsEditor(stats, (x) =>
+            {
+                _process.GetSetPlayerStats(x);
+            });
+            editor.Owner = this;
+            editor.Show();
+        }
+
+        private void EditNewGame(object sender, RoutedEventArgs e)
+        {
+            var stats = new List<(string, int)>();
+
+            int ngLevel = _process.GetSetNewGameLevel();
+
+            stats.Add(("NG+ Cycle", ngLevel));
+
+            var editor = new StatsEditor(stats, (x) =>
+            {
+                _process.GetSetNewGameLevel(x[0].Item2);
+            });
+            editor.Owner = this;
+            editor.Show();
+        }
+
+        private void dockPanel_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is DockPanel dockPanel && dockPanel.Tag is StackPanel stackPanel)
+            {
+                stackPanel.Visibility = stackPanel.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
+
+                var textBox = dockPanel.Children.OfType<TextBlock>().FirstOrDefault();
+                if (textBox != null)
                 {
-                    var currentValue = _process.GetSetPlayerStat(stat);
-                    string input = Microsoft.VisualBasic.Interaction.InputBox(
-                        $"Enter new value for {CapitalizeFirst(statName)}:",
-                        "Edit Stat",
-                        currentValue.ToString());
-                    if (!string.IsNullOrEmpty(input) && int.TryParse(input, out int newValue))
-                    {
-                        _process.GetSetPlayerStat(stat, newValue);
-                        UpdateStatButtons();
-                    }
+                    textBox.Text = stackPanel.Visibility == Visibility.Visible ?
+                                                            textBox.Text.Substring(0, textBox.Text.Length - 1) + "▼" :
+                                                            textBox.Text.Substring(0, textBox.Text.Length - 1) + "▲";
                 }
             }
         }
-
-        private void UpdateStatButtons()
+        private void ToggleCollapse(object sender, RoutedEventArgs e)
         {
-            if (_process == null) return;
-            foreach (Button button in StatGrid.Children.OfType<Button>())
+            var newVisibility = panelsCollapsed ? Visibility.Visible : Visibility.Collapsed;
+
+            foreach (UIElement element in mainPanel.Children)
             {
-                if (button.Tag is string statName &&
-                    Enum.TryParse<PlayerStats>(statName, out var stat))
+                if (element is StackPanel stackPanel && stackPanel.Name != null && stackPanel.Visibility != newVisibility)
                 {
-                    var value = _process.GetSetPlayerStat(stat);
-
-
-                    if (stat != PlayerStats.SOULS)
-                    {
-                        if (value <= 0 || value >= 100)
-                        {
-                            MessageBox.Show(
-                                $"Stat value for {CapitalizeFirst(stat.ToString())} must be between 1 and 99. Current value: {value}",
-                                "Invalid Stat Value",
-                                MessageBoxButton.OK,
-                                MessageBoxImage.Warning);
-                            return;
-                        }
-                    }
-
-                    button.Content = $"{CapitalizeFirst(stat.ToString())}: {value}";
+                    dockPanel_MouseLeftButtonDown(stackPanel, null);
+                    stackPanel.Visibility = newVisibility;
                 }
             }
-        }
 
-        private string CapitalizeFirst(string input)
-        {
-            if (string.IsNullOrEmpty(input))
-                return input;
+            panelsCollapsed = !panelsCollapsed;
 
-            return char.ToUpper(input[0]) + input.Substring(1).ToLower();
-        }
-
-        private void SpawnButton_Click(object sender, RoutedEventArgs e)
-
-        {
-            const string MIN_WEAPON_ID = "000D9490";
-            const string MAX_WEAPON_ID = "015F1AD0";
-
-            if (itemList.SelectedItem == null)
+            if (sender is Button button)
             {
-                MessageBox.Show("Please select an item to spawn.");
-                return;
-            }
-
-            string selectedItem = itemList.SelectedItem.ToString();
-            if (!ItemDictionary.TryGetValue(selectedItem, out Item item))
-            {
-                MessageBox.Show("Item not found in dictionary.");
-                return;
-            }
-
-            uint formattedId = uint.Parse(item.Address, System.Globalization.NumberStyles.HexNumber);
-            string selectedInfusion = infusionTypeComboBox.SelectedItem.ToString();
-            string selectedUpgrade = upgradeComboBox.SelectedItem.ToString();
-            uint quantity = (uint)quantitySlider.Value;
-
-            if (item.Address.CompareTo(MIN_WEAPON_ID) < 0 || item.Address.CompareTo(MAX_WEAPON_ID) > 0)
-            {
-                selectedInfusion = "Normal";
-                selectedUpgrade = "+0";
-            }
-            else if (item.Address.Equals("00A87500"))
-            {
-                selectedInfusion = "Normal";
-                selectedUpgrade = "+0";
-            }
-
-            bool isSpecialWeapon = item.Type.Equals("Titanite Scale") || item.Type.Equals("Twinkling Titanite");
-
-            if (isSpecialWeapon && int.Parse(selectedUpgrade.TrimStart('+')) > 5)
-            {
-                selectedUpgrade = "+5";
-            }
-          
-            if (isSpecialWeapon)
-            {
-                selectedInfusion = "Normal";
-            }
-   
-
-            _itemSpawnService.SpawnItem(
-        baseItemId: formattedId,
-        infusionType: selectedInfusion,
-        upgradeLevel: selectedUpgrade,
-        quantity: quantity,
-        durability: 100
-    );
-        }
-
-
-        private void ApplyTemplateButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (TemplateComboBox.SelectedItem is LoadoutTemplate selectedTemplate)
-            {
-                foreach (var item in selectedTemplate.Items)
-                {
-                    if (ItemDictionary.TryGetValue(item.ItemName, out Item itemToSpawn))
-                    {
-
-                        uint formattedId = uint.Parse(itemToSpawn.Address, System.Globalization.NumberStyles.HexNumber);
-                        _itemSpawnService.SpawnItem(
-                            baseItemId: formattedId,
-                            infusionType: item.Infusion,
-                            upgradeLevel: item.Upgrade,
-                            quantity: item.Quantity,
-                            durability: 100
-                        );
-                    }
-                }
+                button.Content = newVisibility == Visibility.Visible ? "▼" : "▲";
             }
         }
 
-
-        private void UnlockSelectedButton_Click(object sender, RoutedEventArgs e)
+        private void UnlockBonfire(object sender, RoutedEventArgs e)
         {
-            if (BonfireDropdown.SelectedItem is ComboBoxItem selectedItem)
+            var unlockBonFire = new BonfireUnlock(_process, BonfireDictionary);
+            unlockBonFire.Owner = this;
+            unlockBonFire.Show();
+        }
+
+        private void RadioButton_Checked(object sender, RoutedEventArgs e)
+        {
+            var button = (RadioButton)sender;
+            if (int.TryParse(button.Tag?.ToString(), out int phaseIndex))
             {
-                string selectedBonfire = selectedItem.Content.ToString();
-                _bonfireService.unlockBonfire(selectedBonfire);
+                _cinderManager.SetPhase(phaseIndex, chkLockPhase.IsChecked ?? false);
             }
             else
             {
-                MessageBox.Show("Please select a bonfire location.");
+                Debug.WriteLine($"Failed to parse phase index from button tag: {button.Tag}");
             }
         }
 
-        private void UnlockAllButton_Click(object sender, RoutedEventArgs e)
-        {
-            _bonfireService.unlockAllBonfires();
-        }
         private void OnPhaseButtonClick(object sender, RoutedEventArgs e)
         {
             var button = (Button)sender;
@@ -1238,45 +1204,6 @@ namespace DS3Tool
         private void OnLockPhaseChanged(object sender, RoutedEventArgs e)
         {
             _cinderManager.TogglePhaseLock(chkLockPhase.IsChecked ?? false);
-        }
-
-        private void SetSelectedNewGameLevel(int? actualValue = null)
-        {
-            var currentValue = actualValue ?? _process.GetSetNewGameLevel();  // Only read if no value provided
-            string formattedNgLevel = currentValue == 0 ? "NG" : $"NG+{currentValue}";
-
-            if (NgLevelComboBox != null)
-            {
-                foreach (ComboBoxItem item in NgLevelComboBox.Items)
-                {
-                    if (item.Content.ToString() == formattedNgLevel)
-                    {
-                        NgLevelComboBox.SelectedItem = item;
-                        break;
-                    }
-                }
-            }
-        }
-
-
-        private void NgLevelComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (sender is ComboBox comboBox && comboBox.SelectedItem is ComboBoxItem selectedItem)
-            {
-                string selectedNgLevel = selectedItem.Content.ToString();
-
-                int ngLevel;
-
-                if (selectedNgLevel == "NG")
-                    ngLevel = 0;
-                else if (selectedNgLevel.StartsWith("NG+") && int.TryParse(selectedNgLevel.Substring(3), out int number))
-                    ngLevel = number;
-                else
-                    ngLevel = -1;
-
-                var newValue = _process.GetSetNewGameLevel(ngLevel);
-                SetSelectedNewGameLevel(newValue); 
-            }
         }
     }
 }

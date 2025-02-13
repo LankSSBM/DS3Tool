@@ -8,306 +8,189 @@
         Title="DS3Tool VERSION" Width="320" SizeToContent="Height" ResizeMode="NoResize">
     <StackPanel Name="topPanel">
         <StackPanel Name="mainPanel">
-            <StackPanel Orientation="Horizontal">
-                <CheckBox Checked="colMeshAOn" Unchecked="colMeshAOff" x:Name="chkColMeshA">Collision mesh A</CheckBox>
-                <CheckBox Checked="colMeshBOn" Unchecked="colMeshBOff" Margin="10,0" x:Name="chkColMeshB">Mesh B</CheckBox>
-                <Button FontSize="8" Click="changeMeshColours">Change Colours</Button>
+            <DockPanel Height="16" MouseLeftButtonDown="dockPanel_MouseLeftButtonDown" Tag="{Binding ElementName=PlayerPanel}">
+                <TextBlock Text="Player ▼" Margin="2,0,2,0" FontWeight="Bold"/>
+                <Button Width="15" DockPanel.Dock="Right" HorizontalAlignment="Right" Content="▼" Click="ToggleCollapse"></Button>
+            </DockPanel>
+            <StackPanel x:Name="PlayerPanel">
+                <StackPanel Orientation="Horizontal" Margin="0,0,8,0">
+                    <CheckBox Checked="noDeathOn" Unchecked="noDeathOff" x:Name="chkPlayerNoDeath">No Death</CheckBox>
+                    <CheckBox Checked="oneHPOn" Unchecked="oneHPOff" Margin="5,0" x:Name="chkOneHP">1 HP (rtsr)</CheckBox>
+                    <CheckBox Checked="maxHPOn" Unchecked="maxHPOff" Margin="5,0" x:Name="chkMaxHP">Max HP</CheckBox>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,8,0">
+                    <CheckBox Checked="noStamOn" Unchecked="noStamOff" x:Name="chkInfStam">Inf Stam</CheckBox>
+                    <CheckBox Checked="noFPOn" Unchecked="noFPOff" Margin="5,0" x:Name="chkInfFP">Inf FP</CheckBox>
+                    <CheckBox Checked="noGoodsOn" Unchecked="noGoodsOff" Margin="5,0" x:Name="chkInfConsum">Inf Consum.</CheckBox>
+                    <CheckBox Checked="oneShotOn" Unchecked="oneShotOff" Margin="5,0" x:Name="chkOneShot">One shot</CheckBox>
+                    <!--TODO <CheckBox Checked="emberOn" Unchecked="emberOff" x:Name="chkEmber" Margin="10,0">Ember</CheckBox>-->
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,8,0">
+                    <Button FontSize="12" Click="OpenSpawnItem" Margin="1,0,5,0" x:Name="btnSpawItem">Spawn Items</Button>
+                    <Button FontSize="12" Click="EditStats" Margin="1,0,5,0" x:Name="btnEditStats">Edit Stats</Button>
+                    <Button FontSize="12" Click="EditSouls" Margin="1,0,5,0" x:Name="btnEditSouls">Edit Souls</Button>
+                    <Button FontSize="12" Click="instantDeath" Margin="1,0,5,0" x:Name="btnDie">Die</Button>
+                </StackPanel>
             </StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <CheckBox Checked="charMeshOn" Unchecked="charMeshOff" x:Name="chkCharMesh">Character mesh</CheckBox>
-                <CheckBox Checked="charModelHideOn" Unchecked="charModelHideOff" Margin="10,0" x:Name="chkHideModels">Hide models</CheckBox>
+            <DockPanel Height="16" MouseLeftButtonDown="dockPanel_MouseLeftButtonDown" Tag="{Binding ElementName=EnemyPanel}">
+                <TextBlock Text="Enemies ▼" Margin="2,0,2,0" FontWeight="Bold"/>
+                <Separator Margin="0,5,0,0"/>
+            </DockPanel>
+            <StackPanel x:Name="EnemyPanel">
+                <StackPanel Orientation="Horizontal">
+                    <CheckBox Checked="noDeathAllOn" Unchecked="noDeathAllOff" x:Name="chkAllNoDeath">No Death</CheckBox>
+                    <CheckBox Checked="noAIOn" Unchecked="noAIOff" x:Name="chkDisableAI" Margin="5,0">Disable AI</CheckBox>
+                    <CheckBox Checked="repeatActionOn" Unchecked="repeatActionOff" Margin="5,0" x:Name="chkRepeatAction">Repeat Last Action</CheckBox>
+                </StackPanel>
             </StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <CheckBox Checked="hitboxOn" Unchecked="hitboxOff" x:Name="chkHitboxA">Hitbox view</CheckBox>
-                <CheckBox Checked="impactOn" Unchecked="impactOff" Margin="10,0" x:Name="chkHitboxB">Impact view</CheckBox>
+            <DockPanel Height="16" MouseLeftButtonDown="dockPanel_MouseLeftButtonDown" Tag="{Binding ElementName=ViewsPanel}">
+                <TextBlock Text="Views ▼" Margin="2,0,2,0" FontWeight="Bold"/>
+                <Separator Margin="0,5,0,0"/>
+            </DockPanel>
+            <StackPanel x:Name="ViewsPanel">
+                <StackPanel Orientation="Horizontal">
+                    <CheckBox Checked="hitboxOn" Unchecked="hitboxOff" x:Name="chkHitboxA">Hitbox View</CheckBox>
+                    <CheckBox Checked="impactOn" Unchecked="impactOff" Margin="10,0" x:Name="chkHitboxB">Impact View</CheckBox>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <CheckBox Checked="eventDrawOn" Unchecked="eventDrawOff" x:Name="chkEventView">View Events</CheckBox>
+                    <CheckBox Checked="eventStopOn" Unchecked="eventStopOff" Margin="5,0" x:Name="chkEventStop">Disable Events</CheckBox>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <CheckBox Checked="enemyTargetingOn" Unchecked="enemyTargetingOff" x:Name="chkTargetingView">Enemy Targeting View</CheckBox>
+                    <CheckBox Checked="soundViewOn" Unchecked="soundViewOff" x:Name="chkSoundView" Margin="5,0">Sound View</CheckBox>
+                </StackPanel>
             </StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <CheckBox Checked="noDeathOn" Unchecked="noDeathOff" x:Name="chkPlayerNoDeath">No death (player)</CheckBox>
-                <CheckBox Checked="noDeathAllOn" Unchecked="noDeathAllOff" x:Name="chkAllNoDeath" Margin="5,0">No death (all enemies/npcs)</CheckBox>
+            <DockPanel Height="16" MouseLeftButtonDown="dockPanel_MouseLeftButtonDown" Tag="{Binding ElementName=MovementPanel}">
+                <TextBlock Text="Movement ▼" Margin="2,0,2,0" FontWeight="Bold"/>
+                <Separator Margin="0,5,0,0"/>
+            </DockPanel>
+            <StackPanel x:Name="MovementPanel">
+                <StackPanel Orientation="Horizontal">
+                    <CheckBox Checked="noGravOn" Unchecked="noGravOff" x:Name="chkPlayerNoGrav">No Gravity</CheckBox>
+                    <CheckBox Checked="freeCamOn" Unchecked="freeCamOff" x:Name="chkFreeCam" Margin="5,0">Free Camera</CheckBox>
+                    <!--<CheckBox Checked="noMapColOn" Unchecked="nomapColOff" Margin="5,0" x:Name="chkPlayerNoMapCol">No Map Collision</CheckBox>-->
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <CheckBox Checked="noClipOn" Unchecked="noClipOff" x:Name="chkNoClip">No Clip</CheckBox>
+                    <CheckBox Checked="restPlayerControlOn" Unchecked="restPlayerControlOff" x:Name="chkFreeCamControl" Margin="5,0">Restore Player Control</CheckBox>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Button Margin="2,0" Click="savePos">Save Position</Button>
+                    <Button Margin="2,0" Click="restorePos" x:Name="restorePosButton" IsEnabled="False">Restore Position</Button>
+                </StackPanel>
             </StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <CheckBox Checked="oneHPOn" Unchecked="oneHPOff" x:Name="chkOneHP">1 HP (rtsr)</CheckBox>
-                <CheckBox Checked="maxHPOn" Unchecked="maxHPOff" Margin="10,0" x:Name="chkMaxHP">Max HP</CheckBox>
-                <Button FontSize="10" Click="instantDeath" x:Name="btnDie">Die</Button>
-                <!--TODO <CheckBox Checked="emberOn" Unchecked="emberOff" x:Name="chkEmber" Margin="10,0">Ember</CheckBox>-->
+            <DockPanel Height="16" MouseLeftButtonDown="dockPanel_MouseLeftButtonDown" Tag="{Binding ElementName=MeshPanel}">
+                <TextBlock Text="Mesh Viewers ▼" Margin="2,0,2,0" FontWeight="Bold"/>
+                <Separator Margin="0,5,0,0"/>
+            </DockPanel>
+            <StackPanel x:Name="MeshPanel">
+                <StackPanel Orientation="Horizontal">
+                    <CheckBox Checked="charMeshOn" Unchecked="charMeshOff" x:Name="chkCharMesh">Character Mesh</CheckBox>
+                    <CheckBox Checked="charModelHideOn" Unchecked="charModelHideOff" Margin="10,0" x:Name="chkHideModels">Hide Models</CheckBox>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <CheckBox Checked="colMeshAOn" Unchecked="colMeshAOff" x:Name="chkColMeshA">Collision Mesh A</CheckBox>
+                    <CheckBox Checked="colMeshBOn" Unchecked="colMeshBOff" Margin="10,0" x:Name="chkColMeshB">Mesh B</CheckBox>
+                    <Button Click="changeMeshColours" FontSize="10">Change Colors</Button>
+                </StackPanel>
             </StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <CheckBox Checked="noAIOn" Unchecked="noAIOff" x:Name="chkDisableAI">Disable AI</CheckBox>
-                <CheckBox Checked="repeatActionOn" Unchecked="repeatActionOff" Margin="5,0" x:Name="chkRepeatAction">Repeat last action</CheckBox>
+            <DockPanel Height="16" MouseLeftButtonDown="dockPanel_MouseLeftButtonDown" Tag="{Binding ElementName=MiscPanel}">
+                <TextBlock Text="Misc ▼" Margin="2,0,2,0" FontWeight="Bold"/>
+                <Separator Margin="0,5,0,0"/>
+            </DockPanel>
+            <StackPanel x:Name="MiscPanel">
+                <StackPanel Orientation="Horizontal">
+                    <CheckBox Checked="steamInputEnumDisableOn" Unchecked="steamInputEnumDisableOff" x:Name="chkSteamInputEnum" >Stutter Fix</CheckBox>
+                    <CheckBox Checked="hiddenDebugMenuOn" Unchecked="hiddenDebugMenuOff" x:Name="chkHiddenDebugMenu" Margin="5,0">Enable Debug Menu</CheckBox>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                    <CheckBox Checked="stayOnTop" Unchecked="dontStayOnTop" x:Name="chkStayOnTop" Margin="0,2,0,0">Stay on top</CheckBox>
+                    <Button Click="hotkeySetup" HorizontalAlignment="Right" Margin="5,0,0,0" x:Name="btnHotkeys">Hotkey Setup</Button>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                    <Button Click="setGameSpeed" Margin="1,0,5,0">Set Game Speed</Button>
+                    <Button FontSize="12" Click="EditNewGame" Margin="1,0,5,0" x:Name="btnEditNewGame">Edit NG Cycle</Button>
+                    <Button FontSize="12" Click="UnlockBonfire" Margin="1,0,5,0" x:Name="btnBonfireUnlock">Bonfire Actions</Button>
+                </StackPanel>
             </StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <CheckBox Checked="noStamOn" Unchecked="noStamOff" x:Name="chkInfStam">Inf Stam</CheckBox>
-                <CheckBox Checked="noFPOn" Unchecked="noFPOff" Margin="5,0" x:Name="chkInfFP">Inf FP</CheckBox>
-                <CheckBox Checked="noGoodsOn" Unchecked="noGoodsOff" Margin="5,0" x:Name="chkInfConsum">Inf Consum.</CheckBox>
-                <CheckBox Checked="oneShotOn" Unchecked="oneShotOff" Margin="5,0" x:Name="chkOneShot">One shot</CheckBox>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <CheckBox Checked="noGravOn" Unchecked="noGravOff" x:Name="chkPlayerNoGrav">No Gravity</CheckBox>
-                <!--<CheckBox Checked="noMapColOn" Unchecked="nomapColOff" Margin="5,0" x:Name="chkPlayerNoMapCol">No Map Collision</CheckBox>-->
-            </StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <CheckBox Checked="eventDrawOn" Unchecked="eventDrawOff" x:Name="chkEventView">View events</CheckBox>
-                <CheckBox Checked="eventStopOn" Unchecked="eventStopOff" Margin="5,0" x:Name="chkEventStop">Disable events</CheckBox>
-                <Button Click="setGameSpeed" Margin="5,0" FontSize="10">Set Game Speed</Button>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <CheckBox Checked="hiddenDebugMenuOn" Unchecked="hiddenDebugMenuOff" x:Name="chkHiddenDebugMenu">Hidden debug menu (next to System)</CheckBox>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <CheckBox Checked="enemyTargetingOn" Unchecked="enemyTargetingOff" x:Name="chkTargetingView">Enemy targeting view</CheckBox>
-                <CheckBox Checked="soundViewOn" Unchecked="soundViewOff" x:Name="chkSoundView" Margin="5,0">Sound View</CheckBox>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <CheckBox Checked="freeCamOn" Unchecked="freeCamOff" x:Name="chkFreeCam">Free Camera</CheckBox>
-                <CheckBox Checked="restPlayerControlOn" Unchecked="restPlayerControlOff" x:Name="chkFreeCamControl" Margin="5,0">Restore Player Control</CheckBox>
-                <CheckBox Checked="noClipOn" Unchecked="noClipOff" x:Name="chkNoClip">Noclip</CheckBox>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <CheckBox Checked="steamInputEnumDisableOn" Unchecked="steamInputEnumDisableOff" x:Name="chkSteamInputEnum">Disable steam input enum (stutter fix)</CheckBox>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <TextBlock>Teleport:</TextBlock>
-                <Button Margin="2,0" Click="savePos">Save</Button>
-                <Button Margin="2,0" Click="restorePos" x:Name="restorePosButton" IsEnabled="False">Restore</Button>
-            </StackPanel>
-            <Button Click="installTargetHook" x:Name="targetHookButton">Enable Target Options</Button>
+            <CheckBox x:Name="chkEnableTarget" Margin="0,2,0,0" Checked="chkEnableTarget_Checked" Unchecked="chkEnableTarget_Unchecked">Enable Target Options</CheckBox>
+            <!--<Button Click="installTargetHook" x:Name="targetHookButton" Margin="0,5">Enable Target Options</Button>-->
         </StackPanel>
-        <StackPanel x:Name="targetPanel" IsEnabled="False" Opacity="0.5">
-            <DockPanel>
-                <TextBlock x:Name="hpText" Margin="5,2" DockPanel.Dock="Left" Width="125">HP: 00000 / 00000</TextBlock>
-                <ProgressBar x:Name="hpBar" Height="20" Minimum="0" Maximum="1" Margin="2,2" />
+        <StackPanel x:Name="targetPanel" IsEnabled="False" Opacity="0.5" Visibility="Collapsed">
+            <DockPanel Height="16" MouseLeftButtonDown="dockPanel_MouseLeftButtonDown" Tag="{Binding ElementName=hpPoisePanel}">
+                <TextBlock Text="HP / Poise ▼" Margin="2,0,2,0" FontWeight="Bold"/>
+                <Separator Margin="0,5,0,0"/>
             </DockPanel>
-            <DockPanel>
-                <TextBlock x:Name="poiseText" Margin="5,2" DockPanel.Dock="Left" Width="125">Poise: 000 / 000</TextBlock>
-                <ProgressBar x:Name="poiseBar" Height="20" Minimum="0" Maximum="1" Margin="2,2"/>
-            </DockPanel>
-            <DockPanel>
-                <TextBlock x:Name="poiseTimerText" Margin="5,2" DockPanel.Dock="Left" Width="125">Poise reset time: 00.0</TextBlock>
-                <ProgressBar x:Name="poiseTimerBar" Height="20" Minimum="0" Maximum="1" Margin="2,2" />
+            <StackPanel x:Name="hpPoisePanel">
+                <DockPanel>
+                    <TextBlock x:Name="hpText" Margin="5,2" DockPanel.Dock="Left" Width="125">HP: 00000 / 00000</TextBlock>
+                    <ProgressBar x:Name="hpBar" Height="20" Minimum="0" Maximum="1" Margin="2,2" />
+                </DockPanel>
+                <DockPanel>
+                    <TextBlock x:Name="poiseText" Margin="5,2" DockPanel.Dock="Left" Width="125">Poise: 000 / 000</TextBlock>
+                    <ProgressBar x:Name="poiseBar" Height="20" Minimum="0" Maximum="1" Margin="2,2"/>
+                </DockPanel>
+                <DockPanel>
+                    <TextBlock x:Name="poiseTimerText" Margin="5,2" DockPanel.Dock="Left" Width="125">Poise reset time: 00.0</TextBlock>
+                    <ProgressBar x:Name="poiseTimerBar" Height="20" Minimum="0" Maximum="1" Margin="2,2" />
+                </DockPanel>
+                <StackPanel Orientation="Horizontal" x:Name="freezeHPPanel">
+                    <CheckBox Checked="targetHpFreezeOn" Unchecked="targetHpFreezeOff" Margin="0,2" x:Name="chkFreezeHP">Freeze HP</CheckBox>
+                    <Button Click="killTarget" Margin="5,0">Kill</Button>
+                    <Button Click="setHP" Margin="2,0">25%</Button>
+                    <Button Click="setHP" Margin="2,0">50%</Button>
+                    <Button Click="setHP" Margin="2,0">75%</Button>
+                    <Button Click="setHP" Margin="2,0">100%</Button>
+                    <Button Click="setHPCustom" Margin="2,0">Custom</Button>
+                </StackPanel>
+            </StackPanel>
+            <DockPanel Height="16" MouseLeftButtonDown="dockPanel_MouseLeftButtonDown" Tag="{Binding ElementName=resistsPanel}">
+                <TextBlock Text="Resists ▲" Margin="2,0,2,0" FontWeight="Bold"/>
+                <Separator Margin="0,5,0,0"/>
             </DockPanel>
             <StackPanel x:Name="resistsPanel" Visibility="Collapsed">
                 <DockPanel>
                     <TextBlock x:Name="poisonText" Margin="5,2" DockPanel.Dock="Left" Width="125" FontSize="10">Poison: 0000 / 0000</TextBlock>
-                    <ProgressBar x:Name="poisonBar" Height="15" Minimum="0" Maximum="1" Margin="2,2" />
+                    <ProgressBar x:Name="poisonBar" Height="15" Minimum="0" Maximum="1" Margin="2,2" Foreground="#FF006D14" />
                 </DockPanel>
                 <DockPanel>
                     <TextBlock x:Name="toxicText" Margin="5,2" DockPanel.Dock="Left" Width="125" FontSize="10">Toxic: 0000 / 0000</TextBlock>
-                    <ProgressBar x:Name="toxicBar" Height="15" Minimum="0" Maximum="1" Margin="2,2" />
+                    <ProgressBar x:Name="toxicBar" Height="15" Minimum="0" Maximum="1" Margin="2,2" Foreground="#FF7006B0" />
                 </DockPanel>
                 <DockPanel>
                     <TextBlock x:Name="bleedText" Margin="5,2" DockPanel.Dock="Left" Width="125" FontSize="10">Bleed: 0000 / 0000</TextBlock>
-                    <ProgressBar x:Name="bleedBar" Height="15" Minimum="0" Maximum="1" Margin="2,2" />
-                </DockPanel>
-                <DockPanel>
-                    <TextBlock x:Name="curseText" Margin="5,2" DockPanel.Dock="Left" Width="125" FontSize="10">Curse: 0000 / 0000</TextBlock>
-                    <ProgressBar x:Name="curseBar" Height="15" Minimum="0" Maximum="1" Margin="2,2" />
+                    <ProgressBar x:Name="bleedBar" Height="15" Minimum="0" Maximum="1" Margin="2,2" Foreground="#FF840909" />
                 </DockPanel>
                 <DockPanel>
                     <TextBlock x:Name="frostText" Margin="5,2" DockPanel.Dock="Left" Width="125" FontSize="10">Frost: 0000 / 0000</TextBlock>
-                    <ProgressBar x:Name="frostBar" Height="15" Minimum="0" Maximum="1" Margin="2,2" />
+                    <ProgressBar x:Name="frostBar" Height="15" Minimum="0" Maximum="1" Margin="2,2" Foreground="#FF068DB0" />
+                </DockPanel>
+                <DockPanel>
+                    <TextBlock x:Name="curseText" Margin="5,2" DockPanel.Dock="Left" Width="125" FontSize="10">Curse: 0000 / 0000</TextBlock>
+                    <ProgressBar x:Name="curseBar" Height="15" Minimum="0" Maximum="1" Margin="2,2" Foreground="#FF252525" />
                 </DockPanel>
             </StackPanel>
-            <StackPanel Orientation="Horizontal" x:Name="freezeHPPanel">
-                <CheckBox Checked="targetHpFreezeOn" Unchecked="targetHpFreezeOff" Margin="0,2" x:Name="chkFreezeHP">Freeze HP</CheckBox>
-                <Button Click="killTarget" Margin="5,0">Kill</Button>
-                <Button Click="setHP" Margin="2,0">25%</Button>
-                <Button Click="setHP" Margin="2,0">50%</Button>
-                <Button Click="setHP" Margin="2,0">75%</Button>
-                <Button Click="setHP" Margin="2,0">100%</Button>
-                <Button Click="setHPCustom" Margin="2,0">Custom</Button>
-            </StackPanel>
-        </StackPanel>
-        <StackPanel Orientation="Horizontal" Margin="0,0" x:Name="resizePanel">
-            <CheckBox Checked="stayOnTop" Unchecked="dontStayOnTop" FontSize="10" Margin="5,0" x:Name="chkStayOnTop">Stay on top</CheckBox>
-            <Button FontSize="10" Click="hpPoiseOnly" x:Name="compactButton">Toggle Stats/Full</Button>
-            <Button FontSize="10" Click="toggleResists" x:Name="resistsToggle" Margin="5,0">Toggle Resists</Button>
-            <Button Click="hotkeySetup" FontSize="10" HorizontalAlignment="Right" Margin="0,0" x:Name="btnHotkeys">Hotkey Setup</Button>
-        </StackPanel>
-        <Button Click="doQuitout" x:Name="quitoutButton" Height="30">Instant Quitout</Button>
-        <GroupBox Header="Stats" Margin="5">
-            <UniformGrid x:Name="StatGrid" Columns="3">
-                <Button Click="EditStat" Tag="VIGOR" Margin="2">Vigor: 0</Button>
-                <Button Click="EditStat" Tag="ATTUNEMENT" Margin="2">Attunement: 0</Button>
-                <Button Click="EditStat" Tag="ENDURANCE" Margin="2">Endurance: 0</Button>
-                <Button Click="EditStat" Tag="VITALITY" Margin="2">Vitality: 0</Button>
-                <Button Click="EditStat" Tag="STRENGTH" Margin="2">Strength: 0</Button>
-                <Button Click="EditStat" Tag="DEXTERITY" Margin="2">Dexterity: 0</Button>
-                <Button Click="EditStat" Tag="INTELLIGENCE" Margin="2">Intelligence: 0</Button>
-                <Button Click="EditStat" Tag="FAITH" Margin="2">Faith: 0</Button>
-                <Button Click="EditStat" Tag="LUCK" Margin="2">Luck: 0</Button>
-                <Button Click="EditStat" Tag="SOULS" Margin="2">Souls: 0</Button>
-                <ComboBox Width="80" Height="30" Margin="5" Text="NG" IsEditable="True" SelectedIndex="-1"
-                          SelectionChanged="NgLevelComboBox_SelectionChanged" x:Name="NgLevelComboBox" >
-                    <ComboBoxItem Content="NG"/>
-                    <ComboBoxItem Content="NG+1"/>
-                    <ComboBoxItem Content="NG+2"/>
-                    <ComboBoxItem Content="NG+3"/>
-                    <ComboBoxItem Content="NG+4"/>
-                    <ComboBoxItem Content="NG+5"/>
-                    <ComboBoxItem Content="NG+6"/>
-                    <ComboBoxItem Content="NG+7"/>
-                </ComboBox>
-            </UniformGrid>
-        </GroupBox>
-        <StackPanel Margin="5">
-            <GroupBox Header="Item Spawner">
-                <StackPanel Margin="2">
-                    <ComboBox x:Name="infusionTypeComboBox" 
-                    Margin="0,5"
-                    Width="200"
-                    Height="25"/>
-                    <ComboBox x:Name="upgradeComboBox"
-                    Margin="0,5"
-                    Width="200"
-                    Height="25"/>
-                    <ComboBox x:Name="itemList" 
-                     Width="200" 
-                     Height="25"
-                     Margin="0,5"
-                     MaxDropDownHeight="200"
-                     IsTextSearchEnabled="True"
-                     IsEditable="True"
-                     StaysOpenOnEdit="True">
-                        <ComboBox.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <VirtualizingStackPanel />
-                            </ItemsPanelTemplate>
-                        </ComboBox.ItemsPanel>
-                    </ComboBox>
-                    <StackPanel Orientation="Horizontal" 
-                    Margin="0,5" 
-                    Width="200">
-                        <TextBlock Text="Quantity: " 
-                       VerticalAlignment="Center"/>
-                        <Slider x:Name="quantitySlider"
-                    Minimum="1"
-                    Maximum="99"
-                    Value="1"
-                    Width="130"
-                    VerticalAlignment="Center"
-                    IsSnapToTickEnabled="True"
-                    TickFrequency="1"/>
-                        <TextBlock Text="{Binding ElementName=quantitySlider, Path=Value, StringFormat={}{0:0}}"
-                       Margin="5,0,0,0"
-                       Width="30"
-                       VerticalAlignment="Center"/>
+            <StackPanel x:Name="MasterCinderPanel" Visibility="Collapsed">
+                <DockPanel Height="16" MouseLeftButtonDown="dockPanel_MouseLeftButtonDown" Tag="{Binding ElementName=cinderPanel}">
+                    <TextBlock Text="Cinder Phases ▲" Margin="2,0,2,0" FontWeight="Bold"/>
+                    <Separator Margin="0,5,0,0"/>
+                </DockPanel>
+                <StackPanel x:Name="cinderPanel" Visibility="Collapsed" >
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="Sword" Tag="0" Margin="2,0,2,0" Click="OnPhaseButtonClick"/>
+                        <Button Content="Lance" Tag="1" Margin="2,0,2,0" Click="OnPhaseButtonClick"/>
+                        <Button Content="Curved" Tag="2" Margin="2,0,2,0" Click="OnPhaseButtonClick"/>
+                        <Button Content="Staff" Tag="3" Margin="2,0,2,0" Click="OnPhaseButtonClick"/>
+                        <Button Content="Gwyn" Tag="4" Margin="2,0,2,0" Click="OnPhaseButtonClick"/>
                     </StackPanel>
-                    <Button x:Name="spawnButton"
-                    Content="Spawn Item"
-                    Width="200"
-                    Height="25"
-                    Margin="0,5"
-                    Click="SpawnButton_Click"/>
-
+                    <StackPanel Orientation="Horizontal">
+                        <CheckBox x:Name="chkLockPhase" Content="Lock Phase" Margin="0,2" Checked="OnLockPhaseChanged" Unchecked="OnLockPhaseChanged"/>
+                    </StackPanel>
                 </StackPanel>
-            </GroupBox>
-
-        </StackPanel>
-        <Grid>
-
-            <ComboBox x:Name="TemplateComboBox" Width="200" Height="30" Margin="5" 
-                  DisplayMemberPath="Name" VerticalAlignment="Top" HorizontalAlignment="Left" />
-
-
-            <Button Content="Apply template" Width="80" Height="30" Margin="219,0,21,0" VerticalAlignment="Center"
-                Click="ApplyTemplateButton_Click"/>
-        </Grid>
-        <Grid>
-            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                <ComboBox x:Name="BonfireDropdown" Width="200" Height="30" Text="Bonfires" IsEditable="True" SelectedIndex="-1">
-                    <ComboBoxItem Content="Coiled Sword"/>
-                    <ComboBoxItem Content="Cemetery of Ash"/>
-                    <ComboBoxItem Content="Iudex Gundyr"/>
-                    <ComboBoxItem Content="Firelink Shrine"/>
-                    <ComboBoxItem Content="Untended Graves"/>
-                    <ComboBoxItem Content="Champion Gundyr"/>
-                    <ComboBoxItem Content="High Wall of Lothric"/>
-                    <ComboBoxItem Content="Tower on the Wall"/>
-                    <ComboBoxItem Content="Vordt of the Boreal Valley"/>
-                    <ComboBoxItem Content="Dancer of the Boreal Valley"/>
-                    <ComboBoxItem Content="Oceiros the Consumed King"/>
-                    <ComboBoxItem Content="Foot of the High Wall"/>
-                    <ComboBoxItem Content="Undead Settlement"/>
-                    <ComboBoxItem Content="Dilapidated Bridge"/>
-                    <ComboBoxItem Content="Cliff Underside"/>
-                    <ComboBoxItem Content="Pit of Hollows"/>
-                    <ComboBoxItem Content="Road of Sacrifices"/>
-                    <ComboBoxItem Content="Halfway Fortress"/>
-                    <ComboBoxItem Content="Crucifixion Woods"/>
-                    <ComboBoxItem Content="Farron Keep"/>
-                    <ComboBoxItem Content="Keep Ruins"/>
-                    <ComboBoxItem Content="Old Wolf of Farron"/>
-                    <ComboBoxItem Content="Crystal Sage"/>
-                    <ComboBoxItem Content="Farron Keep Perimeter"/>
-                    <ComboBoxItem Content="Abyss Watchers"/>
-                    <ComboBoxItem Content="Cathedral of the Deep"/>
-                    <ComboBoxItem Content="Cleansing Chapel"/>
-                    <ComboBoxItem Content="Deacons of the Deep"/>
-                    <ComboBoxItem Content="Rosaria's Bed Chamber"/>
-                    <ComboBoxItem Content="Catacombs of Carthus"/>
-                    <ComboBoxItem Content="Abandoned Tomb"/>
-                    <ComboBoxItem Content="Demon Ruins"/>
-                    <ComboBoxItem Content="Old King's Antechamber"/>
-                    <ComboBoxItem Content="High Lord Wolnir"/>
-                    <ComboBoxItem Content="Old Demon King"/>
-                    <ComboBoxItem Content="Irithyll of the Boreal Valley"/>
-                    <ComboBoxItem Content="Central Irithyll"/>
-                    <ComboBoxItem Content="Church of Yorshka"/>
-                    <ComboBoxItem Content="Distant Manor"/>
-                    <ComboBoxItem Content="Pontiff Sulyvahn"/>
-                    <ComboBoxItem Content="Water Reserve"/>
-                    <ComboBoxItem Content="Anor Londo"/>
-                    <ComboBoxItem Content="Prison Tower"/>
-                    <ComboBoxItem Content="Aldrich Devourer of Gods"/>
-                    <ComboBoxItem Content="Irithyll Dungeon"/>
-                    <ComboBoxItem Content="Profaned Capital"/>
-                    <ComboBoxItem Content="Yhorm the Giant"/>
-                    <ComboBoxItem Content="Archdragon Peak"/>
-                    <ComboBoxItem Content="Kin Mausoleum"/>
-                    <ComboBoxItem Content="Great Belfry"/>
-                    <ComboBoxItem Content="Nameless King"/>
-                    <ComboBoxItem Content="Lothric Castle"/>
-                    <ComboBoxItem Content="Dragon Barracks"/>
-                    <ComboBoxItem Content="Dragonslayer Armor"/>
-                    <ComboBoxItem Content="Grand Archives"/>
-                    <ComboBoxItem Content="Twin Princes"/>
-                    <ComboBoxItem Content="Flameless Shrine"/>
-                    <ComboBoxItem Content="Kiln of the First Flame"/>
-                    <ComboBoxItem Content="Soul of Cinder"/>
-                    <ComboBoxItem Content="Snowfield"/>
-                    <ComboBoxItem Content="Rope Bridge Cave"/>
-                    <ComboBoxItem Content="Ariandel Chapel"/>
-                    <ComboBoxItem Content="Corvian Settlement"/>
-                    <ComboBoxItem Content="Snowy Mountain Pass"/>
-                    <ComboBoxItem Content="Depths of the Painting"/>
-                    <ComboBoxItem Content="The Dreg Heap"/>
-                    <ComboBoxItem Content="Earthen Peak Ruins"/>
-                    <ComboBoxItem Content="Within the Earthen Peak Ruins"/>
-                    <ComboBoxItem Content="The Demon Prince"/>
-                    <ComboBoxItem Content="Mausoleum Lookout"/>
-                    <ComboBoxItem Content="Ringed Inner Wall"/>
-                    <ComboBoxItem Content="Ringed City Streets"/>
-                    <ComboBoxItem Content="Shared Grave"/>
-                    <ComboBoxItem Content="Church of Filianore"/>
-                    <ComboBoxItem Content="Darkeater Midir"/>
-                    <ComboBoxItem Content="Filianore's Rest"/>
-                    <ComboBoxItem Content="Slave Knight Gael"/>
-                </ComboBox>
-                <Button Content="Unlock Selected Bonfire" Width="200" Height="30" Margin="5" Click="UnlockSelectedButton_Click"/>
-                <Button Content="Unlock All Bonfires" Width="200" Height="30" Margin="5" Click="UnlockAllButton_Click"/>
-                
             </StackPanel>
-            
-        </Grid>
-        <StackPanel Margin="10">
-            <Button x:Name="btnSwordPhase" Content="Sword Phase" Tag="0" Height="30" Margin="0,5" Click="OnPhaseButtonClick"/>
-            <Button x:Name="btnLancePhase" Content="Lance Phase" Tag="1" Height="30" Margin="0,5" Click="OnPhaseButtonClick"/>
-            <Button x:Name="btnCurvedPhase" Content="Curved Phase" Tag="2" Height="30" Margin="0,5" Click="OnPhaseButtonClick"/>
-            <Button x:Name="btnStaffPhase" Content="Staff Phase" Tag="3" Height="30" Margin="0,5" Click="OnPhaseButtonClick"/>
-            <Button x:Name="btnGwynPhase" Content="Gwyn Phase" Tag="4" Height="30" Margin="0,5" Click="OnPhaseButtonClick"/>
-            <CheckBox x:Name="chkLockPhase" Content="Lock Phase" Margin="0,10" Checked="OnLockPhaseChanged" Unchecked="OnLockPhaseChanged"/>
         </StackPanel>
-        
+        <Button Click="doQuitout" x:Name="quitoutButton" Height="30" Margin="0,10,0,0">Instant Quitout</Button>
     </StackPanel>
     
 </Window>

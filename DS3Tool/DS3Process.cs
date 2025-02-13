@@ -365,19 +365,18 @@ namespace DS3Tool
         }
 
         private readonly Dictionary<PlayerStats, int> statOffsets = new Dictionary<PlayerStats, int>
-    {
-        { PlayerStats.VIGOR, 0x44 },
-        { PlayerStats.ATTUNEMENT, 0x48 },
-        { PlayerStats.ENDURANCE, 0x4C },
-        { PlayerStats.VITALITY, 0x6C },
-        { PlayerStats.STRENGTH, 0x50 },
-        { PlayerStats.DEXTERITY, 0x54 },
-        { PlayerStats.INTELLIGENCE, 0x58 },
-        { PlayerStats.FAITH, 0x5C },
-        { PlayerStats.LUCK, 0x60 },
-    
-        {PlayerStats.SOULS, 0x74 }
-    };
+        {
+            { PlayerStats.VIGOR, 0x44 },
+            { PlayerStats.ATTUNEMENT, 0x48 },
+            { PlayerStats.ENDURANCE, 0x4C },
+            { PlayerStats.VITALITY, 0x6C },
+            { PlayerStats.STRENGTH, 0x50 },
+            { PlayerStats.DEXTERITY, 0x54 },
+            { PlayerStats.INTELLIGENCE, 0x58 },
+            { PlayerStats.FAITH, 0x5C },
+            { PlayerStats.LUCK, 0x60 },
+            {PlayerStats.SOULS, 0x74 }
+        };
 
 
         //1.15 stuff by shilkey
@@ -1156,6 +1155,46 @@ namespace DS3Tool
             return ReadInt32(statAddress);
         }
 
+        public List<(string, int)> GetSetPlayerStats(List<(string, int)> newStats = null)
+        {
+            var gameDataPtr = ReadUInt64(ds3Base + GAME_DATA_MAN_OFFSET);
+            var playerStatsPtr = ReadUInt64((IntPtr)(gameDataPtr + 0x10));
+
+            var ret = new List<(string, int)>();
+
+            foreach(PlayerStats stat in Enum.GetValues(typeof(PlayerStats)))
+            {
+                ret.Add((stat.ToString(), GetSetPlayerStat(stat)));
+            }
+
+            if (newStats != null)
+            {
+                foreach((string, int)updatedStat in newStats)
+                {
+                    if (Enum.TryParse(updatedStat.Item1, out PlayerStats enumStatName))
+                    {
+                        if (updatedStat.Item1 != "SOULS")
+                        {
+                            if (updatedStat.Item2 > 0 && updatedStat.Item2 < 100)
+                            {
+                                GetSetPlayerStat(enumStatName, updatedStat.Item2);
+                            }
+                        }
+                        else
+                        {
+                            if (updatedStat.Item2 > 0)
+                            {
+                                GetSetPlayerStat(enumStatName, updatedStat.Item2);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return ret;
+
+        }
+
         private void UpdatePlayerStat(PlayerStats stat, IntPtr statAddress, ulong playerStatsPtr, int newValue)
         {
 
@@ -1184,7 +1223,7 @@ namespace DS3Tool
         {
             var ptr1 = ReadUInt64(ds3Base + GAME_DATA_MAN_OFFSET);
             var finalAddress = (IntPtr)(ptr1 + 0x78);
-            if (newValue.HasValue)
+            if (newValue.HasValue && newValue >= 0)
             {
                 WriteInt32(finalAddress, newValue.Value);
             }
