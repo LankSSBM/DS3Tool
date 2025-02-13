@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using static DS3Tool.MainWindow;
+using static DS3Tool.services.BonfireService;
 
 namespace DS3Tool
 {
@@ -13,15 +14,11 @@ namespace DS3Tool
     /// </summary>
     public partial class BonfireUnlock : Window
     {
-        DS3Process _process;
         BonfireService _bonfireService;
-        Dictionary<string, Item> _itemDict;
-        List<LoadoutTemplate> Templates;
 
-        public BonfireUnlock(DS3Process process)
+        public BonfireUnlock(DS3Process process, Dictionary<string, BonfireLocation> bonfireDict)
         {
-            _process = process;
-            _bonfireService = new BonfireService(process);
+            _bonfireService = new BonfireService(process, bonfireDict);
 
             InitializeComponent();
             populate();
@@ -30,7 +27,7 @@ namespace DS3Tool
         private void populate()
         {
             BonfireDropdown.Items.Clear();
-            BonfireDropdown.ItemsSource = _bonfireService.BonfireLocations.Keys;
+            BonfireDropdown.ItemsSource = _bonfireService._bonfireDict.Keys;
             BonfireDropdown.SelectedIndex = 0;
         }
 

@@ -22,8 +22,6 @@ namespace DS3Tool
     public partial class MainWindow : Window, IDisposable
     {
         DS3Process _process = null;
-        private BonfireService _bonfireService;
-        private ItemSpawnService _itemSpawnService;
         private CinderPhaseManager _cinderManager;
         private NoClipService noclipService;
         private const string CINDER_ENEMY_ID = "c5280_0000";
@@ -42,7 +40,7 @@ namespace DS3Tool
 
 
         public Dictionary<string, Item> ItemDictionary { get; private set; }
-        public Dictionary<string, BonfireUnlock> BonfireDictionary { get; private set; }
+        public Dictionary<string, BonfireLocation> BonfireDictionary { get; private set; }
 
         (float, float, float, float)? savedPos = null;
 
@@ -51,8 +49,9 @@ namespace DS3Tool
             InitializeComponent();
 
             string projectDirectory = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).Parent.Parent.FullName;
-            string path = Path.Combine(projectDirectory, "data", "items.csv");
-            LoadItemsFromCsv(path);
+            //string path = Path.Combine(projectDirectory, "data", "items.csv");
+            LoadItemsFromCsv(Path.Combine(projectDirectory, "data", "items.csv"));
+            LoadBonfiresFromCsv(Path.Combine(projectDirectory, "data", "bonfires.csv"));
 
 
             var assInfo = Assembly.GetEntryAssembly().GetName();
@@ -85,11 +84,9 @@ namespace DS3Tool
                 _timer.Interval = TimeSpan.FromSeconds(0.1);
                 _timer.Start();
 
-                _bonfireService = new BonfireService(_process);
                 _cinderManager = new CinderPhaseManager(_process);
                 noclipService = new NoClipService(_process);
 
-                _itemSpawnService = new ItemSpawnService(_process);
 
             }
         }
@@ -105,6 +102,18 @@ namespace DS3Tool
                 Name = name;
                 Address = address;
                 Type = type;
+            }
+        }
+
+        public class BonfireLocation
+        {
+            public int Offset { get; }
+            public int StartBit { get; }
+
+            public BonfireLocation(int offset, int startBit)
+            {
+                Offset = offset;
+                StartBit = startBit;
             }
         }
 
@@ -125,6 +134,29 @@ namespace DS3Tool
 
                     var item = new Item(name, address, type);
                     ItemDictionary[name] = item;
+                }
+            }
+        }
+
+        private void LoadBonfiresFromCsv(string filePath)
+        {
+            BonfireDictionary = new Dictionary<string, BonfireLocation>();
+            string[] lines = File.ReadAllLines(filePath);
+
+            for (int i = 1; i < lines.Length; i++)
+            {
+                string[] columns = lines[i].Split(',');
+                if (columns.Length >= 2)
+                {
+                    string name = columns[0].Trim('"', ' ');
+
+                    int startBit;
+                    int offset = Convert.ToInt32(columns[1].Trim('"', ' '), 16);
+                    int.TryParse(columns[2].Trim('"', ' '), out startBit);
+                    string type = columns.Length > 2 ? columns[2].Trim('"', ' ') : null;
+
+                    var location = new BonfireLocation(offset, startBit);
+                    BonfireDictionary[name] = location;
                 }
             }
         }
@@ -1137,7 +1169,7 @@ namespace DS3Tool
 
         private void UnlockBonfire(object sender, RoutedEventArgs e)
         {
-            var unlockBonFire = new BonfireUnlock(_process);
+            var unlockBonFire = new BonfireUnlock(_process, BonfireDictionary);
             unlockBonFire.Owner = this;
             unlockBonFire.Show();
         }

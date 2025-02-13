@@ -12,15 +12,13 @@ namespace DS3Tool
     /// </summary>
     public partial class ItemSpawn : Window
     {
-        DS3Process _process;
         ItemSpawnService _itemSpawnService;
         Dictionary<string, Item> _itemDict;
         List<LoadoutTemplate> Templates;
 
         public ItemSpawn(DS3Process process, Dictionary<string, Item> itemDict)
         {
-            _process = process;
-            _itemSpawnService = new ItemSpawnService(_process);
+            _itemSpawnService = new ItemSpawnService(process);
             _itemDict = itemDict;
             InitializeComponent();
             populate();
