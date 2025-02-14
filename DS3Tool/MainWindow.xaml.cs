@@ -1,4 +1,5 @@
 ﻿using DS3Tool.services;
+using Microsoft.Win32;
 using MiscUtils;
 using System;
 using System.Collections.Generic;
@@ -13,13 +14,6 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
-using System.Text;
-using static DS3Tool.DS3Process;
-using DS3Tool.services;
-using DS3Tool.templates;
-using Microsoft.Win32;
-using System.Xml.Linq;
-using System.Runtime.InteropServices.ComTypes;
 
 
 namespace DS3Tool
@@ -124,8 +118,8 @@ namespace DS3Tool
                 return null;
 
             string gamePath = Path.Combine(steamPath, "steamapps", "common", "DARK SOULS III", "Game", "DarkSoulsIII.exe");
-      
-           return File.Exists(gamePath) ? gamePath : null;
+
+            return File.Exists(gamePath) ? gamePath : null;
         }
 
         public class Item
