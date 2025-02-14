@@ -36,8 +36,6 @@ namespace DS3Tool
         bool _initializing = false;
 
         bool _freeCamFirstActivation = true;
-        //bool _playerNoDeathStateWas = false;
-        //bool _noClipActive = false;
         bool panelsCollapsed = false;
 
 
@@ -52,7 +50,6 @@ namespace DS3Tool
             InitializeComponent();
 
             string projectDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            //string path = Path.Combine(projectDirectory, "data", "items.csv");
             LoadItemsFromCsv("items.csv");
             LoadBonfiresFromCsv("bonfires.csv");
 
@@ -190,7 +187,6 @@ namespace DS3Tool
             string steamInstallConfigPath = Path.Combine(steamPath, "steamapps", "libraryfolders.vdf"); // contains info about steam games install locations
             if (File.Exists(steamInstallConfigPath))
             {
-                //libraries.Add(steamPath);
 
                 string[] lines = File.ReadAllLines(steamInstallConfigPath);
                 var regex = new Regex(@"""path""\s+""(.+?)"""); // search the config for lines with the text: "path" 
