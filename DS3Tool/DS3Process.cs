@@ -400,6 +400,9 @@ namespace DS3Tool
         const int WORLD_CHR_MAN_DEBUG_OFFSET = 0x4768F98;
         const int GROUP_MASK_OFFSET = 0x4555CF0;
         const int USER_INPUT_MGR_IMPL_OFFSET = 0x494E9D8;
+        const int FONT_DRAW_FIRST_PATCH_OFFSET = 0x236E076;
+        const int WORLD_AI_MAN_OFFSET = 0x473A410;
+
 
 
         //offsets of main pointers/statics.
@@ -422,7 +425,7 @@ namespace DS3Tool
                                              //const int hitboxOff = 0x477DAC0; //no name. damage management?
 
         //const int newMenuSystemOff = 0x478DA50; //AppMenu::NewMenuSystem
-        const int worldAIManOff = 0x4751550; //NS_SPRJ::SprjWorldAiManagerImp
+        //const int worldAIManOff = 0x4751550; //NS_SPRJ::SprjWorldAiManagerImp
 
         //targeting is static, but maybe ?$DLRuntimeClassImpl@VSprjTargetingSystem@NS_SPRJ@@$0A@@DLRF@@ + 54
         //const int enemyTargetDrawAOff = 0x4750C04; //in 1.15, this is accessed at +41E6CA, which sadly is obfuscated in the exe. in 1.15.1, +41e74a (barely moved)
@@ -494,7 +497,7 @@ namespace DS3Tool
         //const int usrInputMgrImplOff = 0x49644C8; //virtually static pointing to 14494e9f0. no AOB but the class instance is DLUID::DLUserInputManagerImpl<DLKR::DLMultiThreadingPolicy>.
         //const int usrInputMgrImpSteamInputFlagOff = 0x24b;
 
-        const int fontDrawFirstPatchLoc = 0x237C736;
+        //const int fontDrawFirstPatchLoc = 0x237C736;
 
         //const int freeCamPlayerControlPatchLoc = 0x62C408; //address with debug menu ???
         const int freeCamPlayerControlPatchLoc = 0x62E821; //address without? why did it change? do we need to AOB scan in this region?
@@ -734,7 +737,7 @@ namespace DS3Tool
         void doFontPatch()
         {//all from DS3-Debug-Patch. not 100% sure but i assume it prevents drawing with a font that doesn't exist. only first one seems necessary for sound draw.
             if (_fontPatchesDone) { return; }
-            WriteBytes(ds3Base + fontDrawFirstPatchLoc, new byte[] { 0x90, 0x90, 0x90, 0x90, 0x90 });//all nop
+            WriteBytes(ds3Base + FONT_DRAW_FIRST_PATCH_OFFSET, new byte[] { 0x90, 0x90, 0x90, 0x90, 0x90 });//all nop
             /*WriteUInt8(ds3Base + 0x2352600, 0xC3);
             WriteUInt8(ds3Base + 0x23B7670, 0xC3);
             WriteUInt8(ds3Base + 0x1915370, 0xC3);
@@ -748,7 +751,7 @@ namespace DS3Tool
             //alternative to this enabling method is to patch the instruction that reads it
             //40 56 48 83EC ?? 8079 ?? 00 48 8BF2 74 ??    <--- works in sekiro and DS3 but in DS3 it's obfuscated in the exe. patch the cmp of 00 to 01.
             doFontPatch();
-            var ptr1 = (IntPtr)ReadUInt64(ds3Base + worldAIManOff);
+            var ptr1 = (IntPtr)ReadUInt64(ds3Base + WORLD_AI_MAN_OFFSET);
             var ptr2 = (IntPtr)ReadUInt64(ptr1 + 0x28); //WorldBlockAi
             for (int off = 0; off <= 0x3200; off += 0x200)
             {
