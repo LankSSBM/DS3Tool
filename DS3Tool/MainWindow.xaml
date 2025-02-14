@@ -29,6 +29,7 @@
                     <Button FontSize="12" Click="OpenSpawnItem" Margin="1,0,5,0" x:Name="btnSpawItem">Spawn Items</Button>
                     <Button FontSize="12" Click="EditStats" Margin="1,0,5,0" x:Name="btnEditStats">Edit Stats</Button>
                     <Button FontSize="12" Click="EditSouls" Margin="1,0,5,0" x:Name="btnEditSouls">Edit Souls</Button>
+                    <Button Click="btnSetPlayerHP_Click" x:Name="btnSetPlayerHP" Content="Set HP" Margin="1,0,5,0"/>
                     <Button FontSize="12" Click="instantDeath" Margin="1,0,5,0" x:Name="btnDie">Die</Button>
                 </StackPanel>
             </StackPanel>
