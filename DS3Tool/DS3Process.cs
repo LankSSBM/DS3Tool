@@ -388,7 +388,7 @@ namespace DS3Tool
         const int MENU_MAN_OFF = 0x474c2e8;
         const int DEBUG_FLAGS_OFFSET = 0x4768f68;
         const int MESHES_OFFSET = 0x4766C6C;
-        const int ENEMY_TARGET_DRAW_A_OFFSET = 0x41E6CA;
+        const int ENEMY_TARGET_DRAW_A_OFFSET = 0x4739AC4;
         const int GLOBAL_SPEED_OFFSET = 0x999C28;
         const int TARGET_HOOK_LOCATION = 0x85A74A;
         const int CODE_CAVE_PTR_LOCATION = 0x1914670;
