@@ -54,7 +54,8 @@ namespace DS3Tool
             }
         }
 
-        private void spawnItem(object sender, RoutedEventArgs e) {
+        private void spawnItem(object sender, RoutedEventArgs e)
+        {
             const string MIN_WEAPON_ID = "000D9490";
             const string MAX_WEAPON_ID = "015F1AD0";
 

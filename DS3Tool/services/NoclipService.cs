@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Threading;
 
 namespace DS3Tool.services
 {
@@ -30,13 +29,13 @@ namespace DS3Tool.services
         private IntPtr COORDS_UPDATE_Z_START;
         private IntPtr COORDS_UPDATE_BLOCK_EXIT;
 
-       private IntPtr PLAYER_COORD_BASE;
-       private IntPtr PLAYER_CAM_INFO;
-       private IntPtr PLAYER_MOVEMENT_INFO;
-       private IntPtr IX_OFFSET;
-       private IntPtr FLY_MODE;
-       private IntPtr Z_DIRECTION;
-      
+        private IntPtr PLAYER_COORD_BASE;
+        private IntPtr PLAYER_CAM_INFO;
+        private IntPtr PLAYER_MOVEMENT_INFO;
+        private IntPtr IX_OFFSET;
+        private IntPtr FLY_MODE;
+        private IntPtr Z_DIRECTION;
+
         private class HookData
         {
             public string Name { get; set; }
@@ -55,7 +54,7 @@ namespace DS3Tool.services
 
         public void EnableNoClip()
         {
-           
+
             InitCodeCaves();
 
             InstallHooks();
@@ -74,17 +73,17 @@ namespace DS3Tool.services
         private void InitCodeCaves()
         {
 
-            PLAYER_COORD_BASE = CODE_CAVE_OFFSET + 0x500;      
-            PLAYER_CAM_INFO = CODE_CAVE_OFFSET + 0x508;        
-            PLAYER_MOVEMENT_INFO = CODE_CAVE_OFFSET + 0x510;   
-            IX_OFFSET = CODE_CAVE_OFFSET + 0x518;            
-            FLY_MODE = CODE_CAVE_OFFSET + 0x520;             
+            PLAYER_COORD_BASE = CODE_CAVE_OFFSET + 0x500;
+            PLAYER_CAM_INFO = CODE_CAVE_OFFSET + 0x508;
+            PLAYER_MOVEMENT_INFO = CODE_CAVE_OFFSET + 0x510;
+            IX_OFFSET = CODE_CAVE_OFFSET + 0x518;
+            FLY_MODE = CODE_CAVE_OFFSET + 0x520;
             Z_DIRECTION = CODE_CAVE_OFFSET + 0x528;
 
             PLAYER_COORD_BLOCK_START = CODE_CAVE_OFFSET + 0x540;
-            IN_AIR_TIMER_BLOCK_START = CODE_CAVE_OFFSET + 0x600; 
-            CAM_H_ROTATE_BLOCK_START = CODE_CAVE_OFFSET + 0x6C0; 
-            MOVEMENT_BLOCK_START = CODE_CAVE_OFFSET + 0x780;     
+            IN_AIR_TIMER_BLOCK_START = CODE_CAVE_OFFSET + 0x600;
+            CAM_H_ROTATE_BLOCK_START = CODE_CAVE_OFFSET + 0x6C0;
+            MOVEMENT_BLOCK_START = CODE_CAVE_OFFSET + 0x780;
             COORDS_UPDATE_BLOCK_START = CODE_CAVE_OFFSET + 0x840;
             COORDS_UPDATE_Z_START = CODE_CAVE_OFFSET + 0x913;
             COORDS_UPDATE_BLOCK_EXIT = CODE_CAVE_OFFSET + 0x949;
@@ -98,14 +97,14 @@ namespace DS3Tool.services
             int playerCoordOffset = (int)(PLAYER_COORD_BASE.ToInt64() -
                 (PLAYER_COORD_BLOCK_START.ToInt64() + playerCoordCave.Length + 4));
 
-         playerCoordCave = playerCoordCave
-                .Concat(BitConverter.GetBytes(playerCoordOffset))
-                .Concat(new byte[] {
+            playerCoordCave = playerCoordCave
+                   .Concat(BitConverter.GetBytes(playerCoordOffset))
+                   .Concat(new byte[] {
                     0x48, 0x8B, 0x48, 0x18, // mov rcx,[rax+18]
                     0x8D, 0x46, 0x9C,       // lea eax,[rsi-0x64]
                   
                     0xE9                    // jmp return
-                }).ToArray();
+                   }).ToArray();
 
 
             int playerCoordReturn = (int)(ORIGIN_COORD_BASE.ToInt64() + 7 -
@@ -316,7 +315,7 @@ namespace DS3Tool.services
                         (COORDS_UPDATE_BLOCK_START.ToInt64() + coordsUpdateCave.Length + 4));
 
             coordsUpdateCave = coordsUpdateCave.Concat(BitConverter.GetBytes(caveExitOffset))
-                 .Concat(new byte[] 
+                 .Concat(new byte[]
                 {
         0x66, 0x0F, 0x6F, 0xB3, 0x80, 0x00, 0x00, 0x00,  // movdqa [rbx+80], xmm6
         0x50, 0x52,                                    // push rax, push rdx
@@ -455,7 +454,7 @@ namespace DS3Tool.services
                         
              0x45, 0x0F, 0x57, 0xF6,
 0x45, 0x0F, 0x57, 0xFF,
-           
+
                 }).ToArray();
             try
             {
@@ -492,7 +491,7 @@ namespace DS3Tool.services
             {
                 Console.WriteLine($"Error writing coords update cave: {ex.Message}");
                 throw;
-            }      
+            }
         }
 
 
@@ -518,9 +517,9 @@ namespace DS3Tool.services
                 }
 
                 byte[] jumpBytes = new byte[hook.OriginalBytes.Length];
-                jumpBytes[0] = 0xE9; 
+                jumpBytes[0] = 0xE9;
 
-            
+
                 long delta = hook.CaveAddr.ToInt64() - (hook.OriginAddr.ToInt64() + 5);
                 if (delta > int.MaxValue || delta < int.MinValue)
                 {
@@ -528,13 +527,13 @@ namespace DS3Tool.services
                     continue;
                 }
 
-             
+
                 Buffer.BlockCopy(BitConverter.GetBytes((int)delta), 0, jumpBytes, 1, 4);
 
-        
+
                 for (int i = 5; i < jumpBytes.Length; i++)
                 {
-                    jumpBytes[i] = 0x90; 
+                    jumpBytes[i] = 0x90;
                 }
 
 
@@ -561,7 +560,8 @@ namespace DS3Tool.services
             return currentBytes.SequenceEqual(expectedBytes);
         }
 
-        public void disableNoClip() {
+        public void disableNoClip()
+        {
 
             RestoreOriginalBytes();
 
@@ -618,7 +618,7 @@ namespace DS3Tool.services
                 throw;
             }
         }
-        
+
     }
 
 }

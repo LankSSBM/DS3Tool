@@ -1,8 +1,8 @@
-﻿using System;
+﻿using MiscUtils;
+using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
-using MiscUtils;
 
 namespace DS3Tool
 {

@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DS3Tool.services
 {
@@ -63,31 +61,31 @@ namespace DS3Tool.services
             try
             {
 
-            uint finalItemId = baseItemId + INFUSION_TYPES[infusionType] + UPGRADES[upgradeLevel];
+                uint finalItemId = baseItemId + INFUSION_TYPES[infusionType] + UPGRADES[upgradeLevel];
 
-            var request = new SpawnRequest(finalItemId, quantity, durability);
+                var request = new SpawnRequest(finalItemId, quantity, durability);
 
-            ValidateMemoryRegions(requestLocation, outputLocation, shellcodeLocation);
+                ValidateMemoryRegions(requestLocation, outputLocation, shellcodeLocation);
 
-            process.WriteBytes(requestLocation, StructToBytes(request));
+                process.WriteBytes(requestLocation, StructToBytes(request));
 
-            process.WriteBytes(outputLocation, new byte[16]);
+                process.WriteBytes(outputLocation, new byte[16]);
 
-            IntPtr spawnFuncPtr = IntPtr.Add(process.ds3Base, ITEM_SPAWN_OFFSET);
-  
-            IntPtr mapItemManPtr = IntPtr.Add(process.ds3Base, MAP_ITEM_MANAGER_OFFSET);
+                IntPtr spawnFuncPtr = IntPtr.Add(process.ds3Base, ITEM_SPAWN_OFFSET);
 
-            IntPtr actualMapItemMan = (IntPtr)process.ReadUInt64(mapItemManPtr);
+                IntPtr mapItemManPtr = IntPtr.Add(process.ds3Base, MAP_ITEM_MANAGER_OFFSET);
 
-            byte[] shellcode = GenerateSpawnShellcode(
-                spawnFuncPtr.ToInt64(),
-                actualMapItemMan.ToInt64(),
-                requestLocation.ToInt64(),
-                outputLocation.ToInt64()
-            );
+                IntPtr actualMapItemMan = (IntPtr)process.ReadUInt64(mapItemManPtr);
 
-            process.WriteBytes(shellcodeLocation, shellcode);
-            process.RunThread(shellcodeLocation);
+                byte[] shellcode = GenerateSpawnShellcode(
+                    spawnFuncPtr.ToInt64(),
+                    actualMapItemMan.ToInt64(),
+                    requestLocation.ToInt64(),
+                    outputLocation.ToInt64()
+                );
+
+                process.WriteBytes(shellcodeLocation, shellcode);
+                process.RunThread(shellcodeLocation);
 
             }
             finally
@@ -137,7 +135,7 @@ namespace DS3Tool.services
             shellcode.AddRange(BitConverter.GetBytes(outputPtr));
             shellcode.AddRange(new byte[] { 0x48, 0xB8 });  // mov rax, spawnFunc
             shellcode.AddRange(BitConverter.GetBytes(spawnFunc));
-            shellcode.AddRange(new byte[] 
+            shellcode.AddRange(new byte[]
             {
                 0xFF, 0xD0,              // call rax
                 0x48, 0x83, 0xC4, 0x28,  // add rsp, 28h

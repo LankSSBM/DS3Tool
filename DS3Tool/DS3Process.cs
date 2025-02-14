@@ -1,16 +1,10 @@
-﻿using System;
+﻿using MiscUtils;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
-using MiscUtils;
-using System.Xml.Linq;
-using System.Net.Sockets;
-using DS3Tool.services;
-using System.Net;
 
 namespace DS3Tool
 {
@@ -361,7 +355,7 @@ namespace DS3Tool
             FAITH,
             LUCK,
             SOULS,
-     
+
         }
 
         private readonly Dictionary<PlayerStats, int> statOffsets = new Dictionary<PlayerStats, int>
@@ -1165,14 +1159,14 @@ namespace DS3Tool
 
             var ret = new List<(string, int)>();
 
-            foreach(PlayerStats stat in Enum.GetValues(typeof(PlayerStats)))
+            foreach (PlayerStats stat in Enum.GetValues(typeof(PlayerStats)))
             {
                 ret.Add((stat.ToString(), GetSetPlayerStat(stat)));
             }
 
             if (newStats != null)
             {
-                foreach((string, int)updatedStat in newStats)
+                foreach ((string, int) updatedStat in newStats)
                 {
                     if (Enum.TryParse(updatedStat.Item1, out PlayerStats enumStatName))
                     {
@@ -1207,8 +1201,9 @@ namespace DS3Tool
                 int currentTotalSouls = ReadInt32(totalSoulsAddress);
                 WriteInt32(totalSoulsAddress, currentTotalSouls + newValue);
                 WriteInt32(statAddress, newValue);
-          
-            } else
+
+            }
+            else
             {
                 int oldStat = ReadInt32(statAddress);
                 var soulLevelAddress = (IntPtr)(playerStatsPtr + 0x70);
@@ -1236,4 +1231,4 @@ namespace DS3Tool
 }
 
 
-    
+

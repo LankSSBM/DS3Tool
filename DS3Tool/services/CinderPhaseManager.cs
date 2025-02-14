@@ -1,10 +1,9 @@
 ﻿using DS3Tool;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Threading;
-using System;
+using System.Threading.Tasks;
 using System.Windows;
 
 internal class CinderPhaseManager : IDisposable
@@ -21,17 +20,17 @@ internal class CinderPhaseManager : IDisposable
 
 
     private readonly DS3Process _ds3Process;
-   
+
     private CancellationTokenSource _monitorCancellation;
     private Task _monitoringTask;
     private int _currentPhase;
     private bool _isLocked;
 
-    
+
     public CinderPhaseManager(DS3Process ds3Process)
     {
         _ds3Process = ds3Process;
-     
+
         _isLocked = false;
     }
 
@@ -43,7 +42,7 @@ internal class CinderPhaseManager : IDisposable
         {
             Name = name;
             AnimationId = animationId;
-          
+
         }
     }
 
@@ -59,7 +58,7 @@ internal class CinderPhaseManager : IDisposable
 
     public void SetPhase(int phaseIndex, bool lockPhase)
     {
-       
+
         if (!_phases.ContainsKey(phaseIndex))
             throw new ArgumentException($"Invalid phase index: {phaseIndex}");
 
@@ -124,7 +123,7 @@ internal class CinderPhaseManager : IDisposable
                 catch (TaskCanceledException) { }
             });
 
-        
+
             _monitorCancellation?.Dispose();
             _monitorCancellation = null;
             _monitoringTask = null;
@@ -158,7 +157,7 @@ internal class CinderPhaseManager : IDisposable
             }
             catch (Exception ex)
             {
-             
+
                 Debug.WriteLine($"Error in phase monitoring: {ex.Message}");
                 await Task.Delay(1000, token);
             }
@@ -194,7 +193,7 @@ internal class CinderPhaseManager : IDisposable
         if (codeCavePointer == 0)
         {
             MessageBox.Show("Please lock on to Cinder and Enable target options before selecting a phase", "Error", MessageBoxButton.OK);
-            return; 
+            return;
         }
 
         var basePtr = new IntPtr(codeCavePointer);
