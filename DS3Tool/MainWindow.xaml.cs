@@ -41,6 +41,8 @@ namespace DS3Tool
         bool panelsCollapsed = false;
 
 
+
+
         public Dictionary<string, Item> ItemDictionary { get; private set; }
         public Dictionary<string, BonfireLocation> BonfireDictionary { get; private set; }
 
@@ -184,14 +186,69 @@ namespace DS3Tool
         {
             hotkeyInit();
 
-            //loadWindowState(); //restore last state if saved
+            loadWindowState(); //restore last state if saved
 
             //maybeDoUpdateCheck();
         }
 
-        private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        {//TODO: window state save?
+        private void loadWindowState()
+        {
+            try
+            {
+                var windowInfo = File.ReadAllText(windowStateFile());
+                if (string.IsNullOrEmpty(windowInfo)) { return; }
+                var spl = windowInfo.Split(' ');
+                var left = double.Parse(spl[0]);
+                var top = double.Parse(spl[1]);
 
+                if ((left + Width) > System.Windows.SystemParameters.VirtualScreenWidth || (top + Height) > System.Windows.SystemParameters.VirtualScreenHeight)
+                {
+                    Console.WriteLine("Not restoring position, would go off-screen");
+                }
+                else
+                {
+                    Left = left;
+                    Top = top;
+                }
+
+                chkSteamInputEnum.IsChecked = bool.Parse(spl[2]);
+                chkStayOnTop.IsChecked = bool.Parse(spl[3]);
+
+                RestorePanelVisibility(spl[4], resistsPanelControl);
+                RestorePanelVisibility(spl[5], PlayerPanelControl);
+                RestorePanelVisibility(spl[6], EnemyPanelControl);
+                RestorePanelVisibility(spl[7], ViewsPanelControl);
+                RestorePanelVisibility(spl[8], MovementPanelControl);
+                RestorePanelVisibility(spl[9], MeshPanelControl);
+
+            }
+            catch (Exception ex) { Console.WriteLine(ex.ToString()); }
+        }
+
+        private void RestorePanelVisibility(string panelVisibility, DockPanel panel)
+        {
+            if (panelVisibility == Visibility.Visible.ToString())
+            {
+                dockPanel_MouseLeftButtonDown(panel, new MouseButtonEventArgs(Mouse.PrimaryDevice, 0, MouseButton.Left)
+                                                { RoutedEvent = UIElement.MouseLeftButtonDownEvent, Source = panel });
+            }
+        }
+
+        private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            try
+            {
+                var windowInfo = $"{Left} {Top} {chkSteamInputEnum.IsChecked} {chkStayOnTop.IsChecked} " +
+                    $"{resistsPanel.Visibility} {PlayerPanel.Visibility} {EnemyPanel.Visibility} " +
+                    $"{ViewsPanel.Visibility} {MovementPanel.Visibility} {MeshPanel.Visibility}";
+                File.WriteAllText(windowStateFile(), windowInfo);
+            }
+            catch (Exception ex) { Console.WriteLine(ex.ToString()); }
+        }
+
+        static string windowStateFile()
+        {
+            return Utils.getFnameInAppdata("windowstate.txt", "DS3Tool");
         }
 
         private void _timer_Tick(object sender, EventArgs e)
@@ -527,49 +584,6 @@ namespace DS3Tool
         private void dontStayOnTop(object sender, RoutedEventArgs e)
         {
             Topmost = false;
-        }
-
-        bool isCompact = false;
-
-        private void hpPoiseOnly(object sender, RoutedEventArgs e)
-        {
-            if (!isCompact)
-            {
-                setCompact();
-            }
-            else
-            {
-                setFull();
-            }
-        }
-        void setCompact()
-        {
-            //chkStayOnTop.IsChecked = true;
-            //if (targetHookButton.IsEnabled) { installTargetHook(targetHookButton, null); }
-
-            //mainPanel.Visibility = Visibility.Collapsed;
-
-            //freezeHPPanel.Visibility = Visibility.Collapsed;
-            //quitoutButton.Visibility = Visibility.Collapsed;
-            ////updatePanel.Visibility = Visibility.Collapsed;
-
-            //isCompact = true;
-        }
-
-        void setFull()
-        {
-            mainPanel.Visibility = Visibility.Visible;
-
-            freezeHPPanel.Visibility = Visibility.Visible;
-            quitoutButton.Visibility = Visibility.Visible;
-            //updatePanel.Visibility = Visibility.Visible;
-
-            isCompact = false;
-        }
-
-        private void toggleResists(object sender, RoutedEventArgs e)
-        {
-            resistsPanel.Visibility = resistsPanel.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
         }
 
         private void targetHpFreezeOn(object sender, RoutedEventArgs e)
