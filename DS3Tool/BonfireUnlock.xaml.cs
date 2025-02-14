@@ -1,12 +1,8 @@
 ﻿using DS3Tool.services;
-using DS3Tool.templates;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Windows;
-using System.Windows.Controls;
 using static DS3Tool.MainWindow;
-using static DS3Tool.services.BonfireService;
 
 namespace DS3Tool
 {
@@ -50,10 +46,10 @@ namespace DS3Tool
         private void UnlockAllButton_Click(object sender, RoutedEventArgs e)
         {
             _bonfireService.unlockAllBonfires();
-            
+
             if (MessageBox.Show("All Bonfires Unlocked.") == MessageBoxResult.OK)
             {
-                this.Close(); 
+                this.Close();
             }
         }
     }

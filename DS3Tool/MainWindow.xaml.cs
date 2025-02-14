@@ -1,23 +1,18 @@
-﻿using System;
+﻿using DS3Tool.services;
+using MiscUtils;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Threading;
-using MiscUtils;
-using System.Runtime.InteropServices;
 using System.Windows.Interop;
-using System.IO;
-using System.Diagnostics;
 using System.Windows.Media;
-using System.Text;
-using static DS3Tool.DS3Process;
-using DS3Tool.services;
-using DS3Tool.templates;
-using System.Xml.Linq;
-using System.Runtime.InteropServices.ComTypes;
 
 namespace DS3Tool
 {
@@ -36,11 +31,9 @@ namespace DS3Tool
         bool _hooked = false;
 
         bool _freeCamFirstActivation = true;
-        bool _playerNoDeathStateWas = false;
-        bool _noClipActive = false;
+        //bool _playerNoDeathStateWas = false;
+        //bool _noClipActive = false;
         bool panelsCollapsed = false;
-
-
 
 
         public Dictionary<string, Item> ItemDictionary { get; private set; }
@@ -214,23 +207,24 @@ namespace DS3Tool
                 chkSteamInputEnum.IsChecked = bool.Parse(spl[2]);
                 chkStayOnTop.IsChecked = bool.Parse(spl[3]);
 
-                RestorePanelVisibility(spl[4], resistsPanelControl);
-                RestorePanelVisibility(spl[5], PlayerPanelControl);
-                RestorePanelVisibility(spl[6], EnemyPanelControl);
-                RestorePanelVisibility(spl[7], ViewsPanelControl);
-                RestorePanelVisibility(spl[8], MovementPanelControl);
-                RestorePanelVisibility(spl[9], MeshPanelControl);
+                RestorePanelVisibility(resistsPanelControl, resistsPanel, spl[4]);
+                RestorePanelVisibility(PlayerPanelControl, PlayerPanel, spl[5]);
+                RestorePanelVisibility(EnemyPanelControl, EnemyPanel, spl[6]);
+                RestorePanelVisibility(ViewsPanelControl, ViewsPanel, spl[7]);
+                RestorePanelVisibility(MovementPanelControl, MovementPanel, spl[8]);
+                RestorePanelVisibility(MeshPanelControl, MeshPanel, spl[9]);
+                RestorePanelVisibility(MiscPanelControl, MiscPanel, spl[10]);
 
             }
             catch (Exception ex) { Console.WriteLine(ex.ToString()); }
         }
 
-        private void RestorePanelVisibility(string panelVisibility, DockPanel panel)
+        private void RestorePanelVisibility(DockPanel dockPanel, StackPanel stackPanel, string panelVisibility)
         {
-            if (panelVisibility == Visibility.Visible.ToString())
+            if (panelVisibility != Visibility.Visible.ToString())
             {
-                dockPanel_MouseLeftButtonDown(panel, new MouseButtonEventArgs(Mouse.PrimaryDevice, 0, MouseButton.Left)
-                                                { RoutedEvent = UIElement.MouseLeftButtonDownEvent, Source = panel });
+                stackPanel.Visibility = Visibility.Collapsed;
+                FixPanelArrows(dockPanel, panelVisibility);
             }
         }
 
@@ -240,7 +234,7 @@ namespace DS3Tool
             {
                 var windowInfo = $"{Left} {Top} {chkSteamInputEnum.IsChecked} {chkStayOnTop.IsChecked} " +
                     $"{resistsPanel.Visibility} {PlayerPanel.Visibility} {EnemyPanel.Visibility} " +
-                    $"{ViewsPanel.Visibility} {MovementPanel.Visibility} {MeshPanel.Visibility}";
+                    $"{ViewsPanel.Visibility} {MovementPanel.Visibility} {MeshPanel.Visibility} {MiscPanel.Visibility}";
                 File.WriteAllText(windowStateFile(), windowInfo);
             }
             catch (Exception ex) { Console.WriteLine(ex.ToString()); }
@@ -430,11 +424,11 @@ namespace DS3Tool
 
         protected virtual void Dispose(bool disposing)
         {
-            if(!disposedValue)
-    {
+            if (!disposedValue)
+            {
                 if (disposing)
                 {
-            
+
                     if (_process != null)
                     {
                         _process.Dispose();
@@ -446,7 +440,7 @@ namespace DS3Tool
                         _timer = null;
                     }
 
-                    
+
                 }
                 disposedValue = true;
             }
@@ -737,8 +731,8 @@ namespace DS3Tool
         private void noClipOn(object sender, RoutedEventArgs e)
         {
             noclipService.EnableNoClip();
-            
-       
+
+
         }
 
         private void noClipOff(object sender, RoutedEventArgs e)
@@ -748,7 +742,7 @@ namespace DS3Tool
 
         }
 
-       
+
 
         private void savePos(object sender, RoutedEventArgs e)
         {
@@ -804,7 +798,7 @@ namespace DS3Tool
             [In] int id);
 
         const int WM_HOTKEY = 0x0312;
- 
+
 
         [Flags]
         public enum Modifiers
@@ -835,7 +829,7 @@ namespace DS3Tool
             FREE_CAMERA, FREE_CAMERA_CONTROL, NO_CLIP,
             DISABLE_STEAM_INPUT_ENUM,
             GAME_SPEED_50PC, GAME_SPEED_75PC, GAME_SPEED_100PC, GAME_SPEED_150PC, GAME_SPEED_200PC, GAME_SPEED_300PC, GAME_SPEED_500PC, GAME_SPEED_1000PC,
-     
+
         }
 
 
@@ -1078,7 +1072,7 @@ namespace DS3Tool
                 case HOTKEY_ACTIONS.GAME_SPEED_300PC: _process.getSetGameSpeed(3.0f); break;
                 case HOTKEY_ACTIONS.GAME_SPEED_500PC: _process.getSetGameSpeed(5.0f); break;
                 case HOTKEY_ACTIONS.GAME_SPEED_1000PC: _process.getSetGameSpeed(10.0f); break;
-           
+
 
                 default: Utils.debugWrite("Action not handled: " + act.ToString()); break;
             }
@@ -1168,22 +1162,31 @@ namespace DS3Tool
             if (sender is DockPanel dockPanel && dockPanel.Tag is StackPanel stackPanel)
             {
                 stackPanel.Visibility = stackPanel.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
-
-                var textBox = dockPanel.Children.OfType<TextBlock>().FirstOrDefault();
-                if (textBox != null)
-                {
-                    textBox.Text = stackPanel.Visibility == Visibility.Visible ?
-                                                            textBox.Text.Substring(0, textBox.Text.Length - 1) + "▼" :
-                                                            textBox.Text.Substring(0, textBox.Text.Length - 1) + "▲";
-                }
+                FixPanelArrows(dockPanel, stackPanel.Visibility.ToString());
             }
         }
+
+        private void FixPanelArrows(DockPanel panel, string visibility)
+        {
+            var textBox = panel.Children.OfType<TextBlock>().FirstOrDefault();
+            if (textBox != null)
+            {
+                textBox.Text = visibility == Visibility.Visible.ToString() ?
+                                                        textBox.Text.Substring(0, textBox.Text.Length - 1) + "▼" :
+                                                        textBox.Text.Substring(0, textBox.Text.Length - 1) + "▲";
+            }
+        }
+
         private void ToggleCollapse(object sender, RoutedEventArgs e)
         {
             var newVisibility = panelsCollapsed ? Visibility.Visible : Visibility.Collapsed;
 
             foreach (UIElement element in mainPanel.Children)
             {
+                if (element is DockPanel dockPanel)
+                {
+                    FixPanelArrows(dockPanel, newVisibility.ToString());
+                }
                 if (element is StackPanel stackPanel && stackPanel.Name != null && stackPanel.Visibility != newVisibility)
                 {
                     dockPanel_MouseLeftButtonDown(stackPanel, null);

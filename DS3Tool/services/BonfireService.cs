@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using static DS3Tool.MainWindow;
 
 namespace DS3Tool.services
@@ -19,7 +16,8 @@ namespace DS3Tool.services
         private const int SprjLuaEventManOff = 0x473A9C8;
         private readonly DS3Process _process;
         public Dictionary<string, BonfireLocation> _bonfireDict;
-        public BonfireService(DS3Process _ds3Process, Dictionary<string, BonfireLocation> bonfireDict) {
+        public BonfireService(DS3Process _ds3Process, Dictionary<string, BonfireLocation> bonfireDict)
+        {
 
             _process = _ds3Process;
             _bonfireDict = bonfireDict;
@@ -32,13 +30,13 @@ namespace DS3Tool.services
 
             _process.RunThread(codeBlockStart);
             Thread.Sleep(100);
-           CleanUpCodeCave();
+            CleanUpCodeCave();
 
         }
 
         private void InitCodeCave(int id)
         {
-            
+
             IntPtr bonfireIdOffset = codeCaveOffset + 0x20;
             _process.WriteInt32(bonfireIdOffset, id);
 
@@ -59,15 +57,15 @@ namespace DS3Tool.services
                   0x4C, 0x8B, 0x05,
             }).ToArray();
 
-            int idRelativeOffset = (int) (bonfireIdOffset.ToInt64() - (codeBlockStart.ToInt64() + codeCave.Length + 4));
-            
+            int idRelativeOffset = (int)(bonfireIdOffset.ToInt64() - (codeBlockStart.ToInt64() + codeCave.Length + 4));
+
             codeCave = codeCave.Concat(BitConverter.GetBytes(idRelativeOffset))
                 .Concat(new byte[]
-                {                  
+                {
                     0x48, 0x8B, 0x15,
                 }).ToArray();
 
-            int bonfireStateOffset = (int) (_process.ds3Base.ToInt64() + GameManOff + 0xACC - (codeBlockStart.ToInt64() + codeCave.Length + 4));
+            int bonfireStateOffset = (int)(_process.ds3Base.ToInt64() + GameManOff + 0xACC - (codeBlockStart.ToInt64() + codeCave.Length + 4));
 
             codeCave = codeCave.Concat(BitConverter.GetBytes(bonfireStateOffset))
                 .Concat(new byte[]
@@ -76,7 +74,7 @@ namespace DS3Tool.services
                     0xE8,
                 }).ToArray();
 
-            int warpOffset = (int) (_process.ds3Base.ToInt64() + 0x475DC0 - (codeBlockStart.ToInt64() + codeCave.Length + 4));
+            int warpOffset = (int)(_process.ds3Base.ToInt64() + 0x475DC0 - (codeBlockStart.ToInt64() + codeCave.Length + 4));
 
             codeCave = codeCave.Concat(BitConverter.GetBytes(warpOffset))
                 .Concat(new byte[]
@@ -86,7 +84,7 @@ namespace DS3Tool.services
                 }).ToArray();
 
             _process.WriteBytes(codeBlockStart, codeCave);
-            
+
         }
 
         private void CleanUpCodeCave()
@@ -115,6 +113,6 @@ namespace DS3Tool.services
             }
         }
 
-       
+
     }
 }
