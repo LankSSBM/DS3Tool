@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -117,9 +118,38 @@ namespace DS3Tool
             if (string.IsNullOrEmpty(steamPath))
                 return null;
 
-            string gamePath = Path.Combine(steamPath, "steamapps", "common", "DARK SOULS III", "Game", "DarkSoulsIII.exe");
+            List<string> libraries = new List<string>();
 
-            return File.Exists(gamePath) ? gamePath : null;
+            string steamInstallConfigPath = Path.Combine(steamPath, "steamapps", "libraryfolders.vdf"); // contains info about steam games install locations
+            if (File.Exists(steamInstallConfigPath))
+            {
+                //libraries.Add(steamPath);
+
+                string[] lines = File.ReadAllLines(steamInstallConfigPath);
+                var regex = new Regex(@"""path""\s+""(.+?)"""); // search the config for lines with the text: "path" 
+
+                foreach (string line in lines)
+                {
+                    var match = regex.Match(line);
+                    if (match.Success)
+                    {
+                        string path = match.Groups[1].Value.Replace(@"\\", @"\");
+                        libraries.Add(path);
+                    }
+                }
+
+            }
+
+            foreach (string installDir in libraries)
+            {
+                string gamePath = Path.Combine(installDir, "steamapps", "common", "DARK SOULS III", "Game", "DarkSoulsIII.exe");
+                if (File.Exists(gamePath))
+                {
+                    return gamePath;
+                }
+            }
+
+            return null;
         }
 
         public class Item
