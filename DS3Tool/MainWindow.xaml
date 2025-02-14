@@ -107,6 +107,7 @@
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
                     <CheckBox Checked="stayOnTop" Unchecked="dontStayOnTop" x:Name="chkStayOnTop" Margin="0,2,0,0">Stay on top</CheckBox>
+                    <CheckBox Checked="disableHotkeys" Unchecked="enableHotkeys" x:Name="chkEnableHotkeys" Margin="5,2,0,0">Disable Hotkeys</CheckBox>
                     <Button Click="hotkeySetup" HorizontalAlignment="Right" Margin="5,0,0,0" x:Name="btnHotkeys">Hotkey Setup</Button>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,2,0,0">

@@ -32,6 +32,8 @@ namespace DS3Tool
         string _normalTitle = "";
 
         bool _hooked = false;
+        bool _hotkeysEnabled = true;
+        bool _initializing = false;
 
         bool _freeCamFirstActivation = true;
         //bool _playerNoDeathStateWas = false;
@@ -90,6 +92,71 @@ namespace DS3Tool
 
 
             }
+        }
+
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            _initializing = true;
+            loadWindowState();
+            _initializing = false;
+
+            if (_hotkeysEnabled)
+            {
+                hotkeyInit();
+            }
+
+            //maybeDoUpdateCheck();
+        }
+
+        private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            try
+            {
+                var windowInfo = $"{Left} {Top} {chkSteamInputEnum.IsChecked} {chkStayOnTop.IsChecked} " +
+                    $"{resistsPanel.Visibility} {PlayerPanel.Visibility} {EnemyPanel.Visibility} " +
+                    $"{ViewsPanel.Visibility} {MovementPanel.Visibility} {MeshPanel.Visibility} {MiscPanel.Visibility} " +
+                    $"{!chkEnableHotkeys.IsChecked}";
+                File.WriteAllText(windowStateFile(), windowInfo);
+            }
+            catch (Exception ex) { Console.WriteLine(ex.ToString()); }
+        }
+
+        private void loadWindowState()
+        {
+            try
+            {
+                var windowInfo = File.ReadAllText(windowStateFile());
+                if (string.IsNullOrEmpty(windowInfo)) { return; }
+                var spl = windowInfo.Split(' ');
+                var left = double.Parse(spl[0]);
+                var top = double.Parse(spl[1]);
+                _hotkeysEnabled = bool.Parse(spl[11]);
+                chkEnableHotkeys.IsChecked = !_hotkeysEnabled;
+                btnHotkeys.IsEnabled = _hotkeysEnabled;
+
+                if ((left + Width) > System.Windows.SystemParameters.VirtualScreenWidth || (top + Height) > System.Windows.SystemParameters.VirtualScreenHeight)
+                {
+                    Console.WriteLine("Not restoring position, would go off-screen");
+                }
+                else
+                {
+                    Left = left;
+                    Top = top;
+                }
+
+                chkSteamInputEnum.IsChecked = bool.Parse(spl[2]);
+                chkStayOnTop.IsChecked = bool.Parse(spl[3]);
+
+                RestorePanelVisibility(resistsPanelControl, resistsPanel, spl[4]);
+                RestorePanelVisibility(PlayerPanelControl, PlayerPanel, spl[5]);
+                RestorePanelVisibility(EnemyPanelControl, EnemyPanel, spl[6]);
+                RestorePanelVisibility(ViewsPanelControl, ViewsPanel, spl[7]);
+                RestorePanelVisibility(MovementPanelControl, MovementPanel, spl[8]);
+                RestorePanelVisibility(MeshPanelControl, MeshPanel, spl[9]);
+                RestorePanelVisibility(MiscPanelControl, MiscPanel, spl[10]);
+
+            }
+            catch (Exception ex) { Console.WriteLine(ex.ToString()); }
         }
 
         private void VersionCheck()
@@ -239,50 +306,6 @@ namespace DS3Tool
             }
         }
 
-        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
-        {
-            hotkeyInit();
-
-            loadWindowState(); //restore last state if saved
-
-            //maybeDoUpdateCheck();
-        }
-
-        private void loadWindowState()
-        {
-            try
-            {
-                var windowInfo = File.ReadAllText(windowStateFile());
-                if (string.IsNullOrEmpty(windowInfo)) { return; }
-                var spl = windowInfo.Split(' ');
-                var left = double.Parse(spl[0]);
-                var top = double.Parse(spl[1]);
-
-                if ((left + Width) > System.Windows.SystemParameters.VirtualScreenWidth || (top + Height) > System.Windows.SystemParameters.VirtualScreenHeight)
-                {
-                    Console.WriteLine("Not restoring position, would go off-screen");
-                }
-                else
-                {
-                    Left = left;
-                    Top = top;
-                }
-
-                chkSteamInputEnum.IsChecked = bool.Parse(spl[2]);
-                chkStayOnTop.IsChecked = bool.Parse(spl[3]);
-
-                RestorePanelVisibility(resistsPanelControl, resistsPanel, spl[4]);
-                RestorePanelVisibility(PlayerPanelControl, PlayerPanel, spl[5]);
-                RestorePanelVisibility(EnemyPanelControl, EnemyPanel, spl[6]);
-                RestorePanelVisibility(ViewsPanelControl, ViewsPanel, spl[7]);
-                RestorePanelVisibility(MovementPanelControl, MovementPanel, spl[8]);
-                RestorePanelVisibility(MeshPanelControl, MeshPanel, spl[9]);
-                RestorePanelVisibility(MiscPanelControl, MiscPanel, spl[10]);
-
-            }
-            catch (Exception ex) { Console.WriteLine(ex.ToString()); }
-        }
-
         private void RestorePanelVisibility(DockPanel dockPanel, StackPanel stackPanel, string panelVisibility)
         {
             if (panelVisibility != Visibility.Visible.ToString())
@@ -290,18 +313,6 @@ namespace DS3Tool
                 stackPanel.Visibility = Visibility.Collapsed;
                 FixPanelArrows(dockPanel, panelVisibility);
             }
-        }
-
-        private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-            try
-            {
-                var windowInfo = $"{Left} {Top} {chkSteamInputEnum.IsChecked} {chkStayOnTop.IsChecked} " +
-                    $"{resistsPanel.Visibility} {PlayerPanel.Visibility} {EnemyPanel.Visibility} " +
-                    $"{ViewsPanel.Visibility} {MovementPanel.Visibility} {MeshPanel.Visibility} {MiscPanel.Visibility}";
-                File.WriteAllText(windowStateFile(), windowInfo);
-            }
-            catch (Exception ex) { Console.WriteLine(ex.ToString()); }
         }
 
         static string windowStateFile()
@@ -1314,6 +1325,24 @@ namespace DS3Tool
             {
                 _process.getSetPlayerHP(newValInt);
                 lastSetHP = newValInt;
+            }
+        }
+
+        private void disableHotkeys(object sender, RoutedEventArgs e)
+        {
+            btnHotkeys.IsEnabled = _hotkeysEnabled = false;
+            if (!_initializing)
+            {
+                MessageBox.Show("For this to take effect, you must restart DS3Tool.\nYour preference will be saved.", "BlameLank");
+            }
+        }
+
+        private void enableHotkeys(object sender, RoutedEventArgs e)
+        {
+            btnHotkeys.IsEnabled = _hotkeysEnabled = true;
+            if (!_initializing)
+            {
+                MessageBox.Show("For this to take effect, you must restart DS3Tool.\nYour preference will be saved.", "BlameLank");
             }
         }
     }
