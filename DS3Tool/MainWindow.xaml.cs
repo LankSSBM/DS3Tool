@@ -16,6 +16,7 @@ using System.Text;
 using static DS3Tool.DS3Process;
 using DS3Tool.services;
 using DS3Tool.templates;
+using Microsoft.Win32;
 
 namespace DS3Tool
 {
@@ -46,6 +47,7 @@ namespace DS3Tool
 
         public MainWindow()
         {
+            VersionCheck();
             InitializeComponent();
 
             string projectDirectory = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).Parent.Parent.FullName;
@@ -89,6 +91,37 @@ namespace DS3Tool
 
 
             }
+        }
+
+        private void VersionCheck()
+        {
+            string gameExePath = GetDarkSouls3ExePath();
+            if (!string.IsNullOrEmpty(gameExePath) && File.Exists(gameExePath))
+            {
+                FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(gameExePath);
+
+                if (fileVersionInfo.FileVersion != "1.15.0.0")
+                {
+                    MessageBox.Show("Your Dark Souls 3 patch might not be 1.15. Most features may not work properly unless you update the game to patch 1.15.",
+                        "Version Mismatch", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+            else
+            {
+                MessageBox.Show("Your Dark Souls 3 patch may not be 1.15 or the game might not be located at the expected path. Ensure the game is updated to this version for proper functionality.",
+                        "Version Check Failed", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private string GetDarkSouls3ExePath()
+        {
+            string steamPath = Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Valve\Steam", "InstallPath", null) as string;
+            if (string.IsNullOrEmpty(steamPath))
+                return null;
+
+            string gamePath = Path.Combine(steamPath, "steamapps", "common", "DARK SOULS III", "Game", "DarkSoulsIII.exe");
+      
+           return File.Exists(gamePath) ? gamePath : null;
         }
 
         public class Item
