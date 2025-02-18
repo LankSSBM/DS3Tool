@@ -61,12 +61,16 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="AobScanner.cs" />
     <Compile Include="BonfireUnlock.xaml.cs">
       <DependentUpon>BonfireUnlock.xaml</DependentUpon>
     </Compile>
+    <Compile Include="CrudUtils.cs" />
+    <Compile Include="FileUtils.cs" />
     <Compile Include="ItemSpawn.xaml.cs">
       <DependentUpon>ItemSpawn.xaml</DependentUpon>
     </Compile>
+    <Compile Include="LaunchUtils.cs" />
     <Compile Include="services\BonfireService.cs" />
     <Compile Include="services\ItemSpawnService.cs" />
     <Compile Include="StatsEditor.xaml.cs">

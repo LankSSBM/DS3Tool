@@ -1,5 +1,4 @@
-﻿using MiscUtils;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -11,302 +10,39 @@ namespace DS3Tool
     public class DS3Process : IDisposable
     {
         public const uint PROCESS_ALL_ACCESS = 2035711;
+        const string DS3_PRO_NAME = "darksoulsiii";
+
         private Process _targetProcess = null;
         public IntPtr _targetProcessHandle = IntPtr.Zero;
         public IntPtr ds3Base = IntPtr.Zero;
         public const int CodeCavePtrLoc = 0x1914670;
+        
+        //1.15 stuff by shilkey
+        const int WORLD_CHR_MAN_OFFSET = 0x4768E78;
+        const int WORLD_CHR_MAN_PLAYER_INS_OFFSET = 0x80; //NS_SPRJ::PlayerIns?
+        const int PLAYER_DEBUG_FLAGS_OFFSET = 0x1EEA;
+        const int HITBOX_OFFSET = 0x4766B80;
+        const int GAME_DATA_MAN_OFFSET = 0x4740178;
+        const int MENU_MAN_OFF = 0x474c2e8;
+        const int DEBUG_FLAGS_OFFSET = 0x4768f68;
+        const int MESHES_OFFSET = 0x4766C6C;
+        const int ENEMY_TARGET_DRAW_A_OFFSET = 0x4739AC4;
+        const int GLOBAL_SPEED_OFFSET = 0x999C28;
+        const int TARGET_HOOK_LOCATION = 0x85A74A;
+        const int CODE_CAVE_PTR_LOCATION = 0x1914670;
+        const int CODE_CAVE_CODE_LOCATION = CODE_CAVE_PTR_LOCATION + 0x10;
+        const int ENEMY_REPEAT_ACTION_OFFSET = 0x3E2510 + 4 + 3;
+        const int FIELD_AREA_OFFSET = 0x4743A80;
+        const int SPRJ_DEBUG_EVENT_OFFSET = 0x473AD78; //BaseF
+        const int NEW_MENU_SYSTEMS_OFFSET = 0x4776B08;
+        const int WORLD_CHR_MAN_DEBUG_OFFSET = 0x4768F98;
+        const int GROUP_MASK_OFFSET = 0x4555CF0;
+        const int USER_INPUT_MGR_IMPL_OFFSET = 0x494E9D8;
+        const int FONT_DRAW_FIRST_PATCH_OFFSET = 0x236E076;
+        const int WORLD_AI_MAN_OFFSET = 0x473A410;
 
-        protected bool disposed = false;
-
-        [DllImport("kernel32.dll")]
-        private static extern IntPtr OpenProcess(uint dwDesiredAcess, bool bInheritHandle, int dwProcessId);
-
-        [DllImport("kernel32.dll")]
-        private static extern bool ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, int iSize, ref int lpNumberOfBytesRead);
-
-        [DllImport("kernel32.dll")]
-        private static extern bool WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, int iSize, int lpNumberOfBytesWritten);
-
-        [DllImport("ntdll.dll")]
-        static extern int NtWriteVirtualMemory(IntPtr ProcessHandle, IntPtr BaseAddress, byte[] Buffer, UInt32 NumberOfBytesToWrite, ref UInt32 NumberOfBytesWritten); //TODO: replace all read/write process memory with this and the equivalent read func.
-
-        [DllImport("kernel32.dll")]
-        private static extern IntPtr CreateRemoteThread(IntPtr hProcess, IntPtr lpThreadAttributes, uint dwStackSize, IntPtr lpStartAddress, IntPtr lpParameter, uint dwCreationFlags, IntPtr lpThreadId);
-
-        [DllImport("kernel32.dll")]
-        private static extern uint WaitForSingleObject(IntPtr hHandle, uint dwMilliseconds);
-
-        [DllImport("kernel32.dll")]
-        private static extern bool CloseHandle(IntPtr hObject);
-
-        public uint RunThread(IntPtr address, uint timeout = 0xFFFFFFFF)
-        {
-            IntPtr thread = CreateRemoteThread(_targetProcessHandle, IntPtr.Zero, 0, address, IntPtr.Zero, 0, IntPtr.Zero);
-            var ret = WaitForSingleObject(thread, timeout);
-            CloseHandle(thread); //return value unimportant
-            return ret;
-        }
-
-        Thread freezeThread = null;
-        bool _running = true;
-        public DS3Process()
-        {
-            findAttach();
-            findBaseAddress();
-
-            freezeThread = new Thread(() => { freezeFunc(); });
-            freezeThread.Start();
-
-        }
-
-        public void Dispose()
-        {
-            if (!disposed)
-            {
-                _running = false;
-                if (freezeThread != null)
-                {
-                    freezeThread.Abort();
-                    freezeThread = null;
-                }
-                detach();
-                disposed = true;
-            }
-        }
-
-        ~DS3Process()
-        {
-            Dispose();
-        }
-
-        const string ds3ProName = "darksoulsiii";
-
-        private void findAttach()
-        {
-            var processes = Process.GetProcesses();
-            foreach (Process process in processes)
-            {
-                if (string.Equals(process.ProcessName.ToLowerInvariant(), ds3ProName.ToLowerInvariant(), StringComparison.InvariantCulture) && !process.HasExited)
-                {
-                    attach(process);
-                    return;
-                }
-            }
-            throw new Exception("DS3 not running");
-        }
-
-        private void attach(Process proc)
-        {
-            if (_targetProcessHandle == IntPtr.Zero)
-            {
-                _targetProcess = proc;
-                _targetProcessHandle = OpenProcess(PROCESS_ALL_ACCESS, bInheritHandle: false, _targetProcess.Id);
-                if (_targetProcessHandle == IntPtr.Zero)
-                {
-                    throw new Exception("Attach failed");
-                }
-            }
-            else
-            {
-                System.Windows.MessageBox.Show("Already attached");
-            }
-        }
-
-        private void findBaseAddress()
-        {//kinda pointless since the base address is always the same (0x140000000), however this isn't true in other games. (this is due to ASLR)
-            try
-            {
-                foreach (var module in _targetProcess.Modules)
-                {
-                    var processModule = module as ProcessModule;
-                    //Utils.debugWrite(processModule.ModuleName);
-                    switch (processModule.ModuleName.ToLower())
-                    {
-                        case ds3ProName + ".exe":
-                            ds3Base = processModule.BaseAddress;
-                            break;
-                    }
-                }
-            }
-            catch (Exception ex) { Utils.debugWrite(ex.ToString()); }
-            if (ds3Base == IntPtr.Zero)
-            {
-                throw new Exception("Couldn't find DS3 base address");
-            }
-        }
-
-        private void detach()
-        {
-            if (!(_targetProcessHandle == IntPtr.Zero))
-            {
-                _targetProcess = null;
-                try
-                {
-                    CloseHandle(_targetProcessHandle);
-                    _targetProcessHandle = IntPtr.Zero;
-                }
-                catch (Exception ex)
-                {
-                    Utils.debugWrite(ex.ToString());
-                }
-            }
-        }
-
-        //all read/write funcs just fail silently, except this one:
-        public bool ReadTest(IntPtr addr)
-        {
-            var array = new byte[1];
-            var lpNumberOfBytesRead = 1;
-            return ReadProcessMemory(_targetProcessHandle, addr, array, 1, ref lpNumberOfBytesRead) && lpNumberOfBytesRead == 1;
-        }
-
-        public void ReadTestFull(IntPtr addr)
-        {
-            Console.WriteLine($"Testing Address: 0x{addr.ToInt64():X}");
-
-            bool available = ReadTest(addr);
-            Console.WriteLine($"Availability: {available}");
-
-            if (!available)
-            {
-                Console.WriteLine("Memory is not readable at this address.");
-                return;
-            }
-
-            try
-            {
-                Console.WriteLine($"Int32: {ReadInt32(addr)}");
-                Console.WriteLine($"Int64: {ReadInt64(addr)}");
-                Console.WriteLine($"UInt8: {ReadUInt8(addr)}");
-                Console.WriteLine($"UInt32: {ReadUInt32(addr)}");
-                Console.WriteLine($"UInt64: {ReadUInt64(addr)}");
-                Console.WriteLine($"Float: {ReadFloat(addr)}");
-                Console.WriteLine($"Double: {ReadDouble(addr)}");
-                Console.WriteLine($"String: {ReadString(addr)}");
-
-                byte[] bytes = ReadBytes(addr, 16);
-                Console.WriteLine("Bytes: " + BitConverter.ToString(bytes));
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error reading memory: " + ex.Message);
-            }
-        }
-
-        public int ReadInt32(IntPtr addr)
-        {
-            var bytes = ReadBytes(addr, 4);
-            return BitConverter.ToInt32(bytes, 0);
-        }
-
-        public long ReadInt64(IntPtr addr)
-        {
-            var bytes = ReadBytes(addr, 8);
-            return BitConverter.ToInt64(bytes, 0);
-        }
-
-        public byte ReadUInt8(IntPtr addr)
-        {
-            var bytes = ReadBytes(addr, 1);
-            return bytes[0];
-        }
-
-        public uint ReadUInt32(IntPtr addr)
-        {
-            var bytes = ReadBytes(addr, 4);
-            return BitConverter.ToUInt32(bytes, 0);
-        }
-
-        public ulong ReadUInt64(IntPtr addr)
-        {
-            var bytes = ReadBytes(addr, 8);
-            return BitConverter.ToUInt64(bytes, 0);
-        }
-
-        public float ReadFloat(IntPtr addr)
-        {
-            var bytes = ReadBytes(addr, 4);
-            return BitConverter.ToSingle(bytes, 0);
-        }
-
-        public double ReadDouble(IntPtr addr)
-        {
-            var bytes = ReadBytes(addr, 8);
-            return BitConverter.ToDouble(bytes, 0);
-        }
-
-        public byte[] ReadBytes(IntPtr addr, int size)
-        {
-            var array = new byte[size];
-            var targetProcessHandle = _targetProcessHandle;
-            var lpNumberOfBytesRead = 1;
-            ReadProcessMemory(targetProcessHandle, addr, array, size, ref lpNumberOfBytesRead);
-            return array;
-        }
-
-        public string ReadString(IntPtr addr, int maxLength = 32)
-        {
-            var bytes = ReadBytes(addr, maxLength * 2);
-
-            int stringLength = 0;
-            for (int i = 0; i < bytes.Length - 1; i += 2)
-            {
-                if (bytes[i] == 0 && bytes[i + 1] == 0)
-                {
-                    stringLength = i;
-                    break;
-                }
-            }
-
-            if (stringLength == 0)
-            {
-                stringLength = bytes.Length - (bytes.Length % 2);
-            }
-
-            return System.Text.Encoding.Unicode.GetString(bytes, 0, stringLength);
-        }
-
-        public void WriteInt32(IntPtr addr, int val)
-        {
-            WriteBytes(addr, BitConverter.GetBytes(val));
-        }
-
-        public void WriteUInt32(IntPtr addr, uint val)
-        {
-            WriteBytes(addr, BitConverter.GetBytes(val));
-        }
-
-        public void WriteFloat(IntPtr addr, float val)
-        {
-            WriteBytes(addr, BitConverter.GetBytes(val));
-        }
-
-        public void WriteUInt8(IntPtr addr, byte val)
-        {
-            var bytes = new byte[] { val };
-            WriteBytes(addr, bytes);
-        }
-
-        public void WriteBytes(IntPtr addr, byte[] val, bool useNewWrite = true)
-        {
-            if (useNewWrite)
-            {
-                uint written = 0;
-                NtWriteVirtualMemory(_targetProcessHandle, addr, val, (uint)val.Length, ref written); //MUCH faster, <1ms
-            }
-            else
-            {
-                WriteProcessMemory(_targetProcessHandle, addr, val, val.Length, 0); //can take as long as 15ms!
-            }
-        }
-
-        public void WriteString(IntPtr addr, string value, int maxLength = 32)
-        {
-            var bytes = new byte[maxLength];
-            var stringBytes = System.Text.Encoding.Unicode.GetBytes(value);
-            Array.Copy(stringBytes, bytes, Math.Min(stringBytes.Length, maxLength));
-            WriteBytes(addr, bytes);
-        }
+        const long SANE_MINIMUM = 0x140000000; //base addr
+        const long SANE_MAXIMUM = 0x800000000000; //TODO: refine
 
         public enum DebugOpts
         {
@@ -373,53 +109,8 @@ namespace DS3Tool
         };
 
 
-        //1.15 stuff by shilkey
-        const int WORLD_CHR_MAN_OFFSET = 0x4768E78;
-        const int WORLD_CHR_MAN_PLAYER_INS_OFFSET = 0x80; //NS_SPRJ::PlayerIns?
-        const int PLAYER_DEBUG_FLAGS_OFFSET = 0x1EEA;
-        const int HITBOX_OFFSET = 0x4766B80;
-        const int GAME_DATA_MAN_OFFSET = 0x4740178;
-        const int MENU_MAN_OFF = 0x474c2e8;
-        const int DEBUG_FLAGS_OFFSET = 0x4768f68;
-        const int MESHES_OFFSET = 0x4766C6C;
-        const int ENEMY_TARGET_DRAW_A_OFFSET = 0x4739AC4;
-        const int GLOBAL_SPEED_OFFSET = 0x999C28;
-        const int TARGET_HOOK_LOCATION = 0x85A74A;
-        const int CODE_CAVE_PTR_LOCATION = 0x1914670;
-        const int CODE_CAVE_CODE_LOCATION = CODE_CAVE_PTR_LOCATION + 0x10;
-        const int ENEMY_REPEAT_ACTION_OFFSET = 0x3E2510 + 4 + 3;
-        const int FIELD_AREA_OFFSET = 0x4743A80;
-        const int SPRJ_DEBUG_EVENT_OFFSET = 0x473AD78; //BaseF
-        const int NEW_MENU_SYSTEMS_OFFSET = 0x4776B08;
-        const int WORLD_CHR_MAN_DEBUG_OFFSET = 0x4768F98;
-        const int GROUP_MASK_OFFSET = 0x4555CF0;
-        const int USER_INPUT_MGR_IMPL_OFFSET = 0x494E9D8;
-        const int FONT_DRAW_FIRST_PATCH_OFFSET = 0x236E076;
-        const int WORLD_AI_MAN_OFFSET = 0x473A410;
-
-
-
         //offsets of main pointers/statics.
         //see aob scanner for aobs.
-        // const int gameDataManOff = 0x47572B8; //NS_SPRJ::GameDataMan
-        //const int worldChrManOff = 0x477FDB8; //NS_SPRJ::WorldChrManImp
-
-        const int gameManOff = 0x475AC00; //NS_SPRJ::GameMan
-        //const int fieldAreaOff = 0x475ABD0; //NS_SPRJ::FieldArea
-        const int BaseEOff = 0x4756E48; //NS_SPRJ::FrpgNetManImp
-        const int BaseFOff = 0x4751EB8; //no name, seems lua related? //SprjDebugEvent ?
-        //const int worldChrManDbgOff = 0x477FED8; //NS_SPRJ::WorldChrManDbgImp. all debug drawing is under here. presumably others like 'all no death' and such
-        const int ParamOff = 0x4798118; //NS_SPRJ::SoloParamRepositoryImp
-        //const int GameFlagDataOff = 0x4752F68; //no name //SprjEventFlagMan ?
-        const int LockBonus_ptrOff = 0x477DBE0; //NS_SPRJ::LockTgtManImp
-        //const int DrawNearOnly_ptrOff = 0x4766555; //not a pointer - static debug flag? (no refs to this addr) //not updated for 1.15.1
-        //const int debug_flagsOff = 0x477FEA8; //also static? "all" debug flags, not specific to any character.
-        const int GROUP_MASKOff = 0x456CBA8; //also static
-                                             //const int menuManOff = 0x4763258; //NS_SPRJ::MenuMan
-                                             //const int hitboxOff = 0x477DAC0; //no name. damage management?
-
-        //const int newMenuSystemOff = 0x478DA50; //AppMenu::NewMenuSystem
-        //const int worldAIManOff = 0x4751550; //NS_SPRJ::SprjWorldAiManagerImp
 
         //targeting is static, but maybe ?$DLRuntimeClassImpl@VSprjTargetingSystem@NS_SPRJ@@$0A@@DLRF@@ + 54
         //const int enemyTargetDrawAOff = 0x4750C04; //in 1.15, this is accessed at +41E6CA, which sadly is obfuscated in the exe. in 1.15.1, +41e74a (barely moved)
@@ -430,30 +121,14 @@ namespace DS3Tool
 
         //offsets from a main pointer
         const int playerInsModulesOff = 0x1F90;
-        const int XB = 0x1FA0;
-        const int XC = 0x950;
 
         //const int worldChrManPlayerInsOff = 0x80; //NS_SPRJ::PlayerIns?
         //modules
         const int chrDataModuleOff = 0x18; //NS_SPRJ::SprjChrDataModule
-        const int chrResistModuleOff = 0x20;
-        const int chrSuperArmorModuleOff = 0x40;
         const int chrPhysModuleOff = 0x68;
 
         //others
         // const int playerDebugFlagsOff = 0x1EEA; //expect this to change if any patches occur
-
-        //const int globalSpeedOff = 0x9A3D48;
-        public float getSetGameSpeed(float? val = null)
-        {
-            var ptr = ds3Base + GLOBAL_SPEED_OFFSET;
-            var ret = ReadFloat(ptr);
-            if (val.HasValue)
-            {
-                WriteFloat(ptr, val.Value);
-            }
-            return ret;
-        }
 
         //DbgGetForceActIdx. patch changes it to use the addr from DbgSetLastActIdx
         //const int enemyRepeatActionOff = 0x3E2590 + 4 + 3;
@@ -509,13 +184,310 @@ namespace DS3Tool
 
         static readonly byte[] targetHookOrigCode = new byte[] { 0x48, 0x8B, 0x80, 0x90, 0x1F, 0x00, 0x00, };
         /*
-000000014085A74A | 48:8B80 901F0000                | mov rax,qword ptr ds:[rax+1F90]                       |
-000000014085A751 | 48:8B08                         | mov rcx,qword ptr ds:[rax]                            |
-000000014085A754 | 48:8B51 58                      | mov rdx,qword ptr ds:[rcx+58]                         |
-*/
+        000000014085A74A | 48:8B80 901F0000                | mov rax,qword ptr ds:[rax+1F90]                       |
+        000000014085A751 | 48:8B08                         | mov rcx,qword ptr ds:[rax]                            |
+        000000014085A754 | 48:8B51 58                      | mov rdx,qword ptr ds:[rcx+58]                         |
+        */
         static readonly byte[] targetHookReplacementCodeTemplate = new byte[] { 0xE9,
             0, 0, 0, 0, //address offset
             0x90, 0x90, };
+        static readonly byte[] targetHookCaveCodeTemplate = new byte[] { 0x48, 0xA3,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //full 64 bit ptr address goes here
+            0x48, 0x8B, 0x80, 0x90, 0x1F, 0x00, 0x00, //should be identical to orig code from here to just before E9
+            0xE9,
+            0, 0, 0, 0, //address offset
+        };
+
+        protected bool disposed = false;
+
+        [DllImport("kernel32.dll")]
+        private static extern IntPtr OpenProcess(uint dwDesiredAcess, bool bInheritHandle, int dwProcessId);
+
+        [DllImport("kernel32.dll")]
+        private static extern bool ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, int iSize, ref int lpNumberOfBytesRead);
+
+        [DllImport("kernel32.dll")]
+        private static extern bool WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, int iSize, int lpNumberOfBytesWritten);
+
+        [DllImport("ntdll.dll")]
+        static extern int NtWriteVirtualMemory(IntPtr ProcessHandle, IntPtr BaseAddress, byte[] Buffer, UInt32 NumberOfBytesToWrite, ref UInt32 NumberOfBytesWritten); //TODO: replace all read/write process memory with this and the equivalent read func.
+
+        [DllImport("kernel32.dll")]
+        private static extern IntPtr CreateRemoteThread(IntPtr hProcess, IntPtr lpThreadAttributes, uint dwStackSize, IntPtr lpStartAddress, IntPtr lpParameter, uint dwCreationFlags, IntPtr lpThreadId);
+
+        [DllImport("kernel32.dll")]
+        private static extern uint WaitForSingleObject(IntPtr hHandle, uint dwMilliseconds);
+
+        [DllImport("kernel32.dll")]
+        private static extern bool CloseHandle(IntPtr hObject);
+
+        public uint RunThread(IntPtr address, uint timeout = 0xFFFFFFFF)
+        {
+            IntPtr thread = CreateRemoteThread(_targetProcessHandle, IntPtr.Zero, 0, address, IntPtr.Zero, 0, IntPtr.Zero);
+            var ret = WaitForSingleObject(thread, timeout);
+            CloseHandle(thread); //return value unimportant
+            return ret;
+        }
+
+        Thread freezeThread = null;
+        bool _running = true;
+        public DS3Process()
+        {
+            findAttach();
+            findBaseAddress();
+
+            freezeThread = new Thread(() => { freezeFunc(); });
+            freezeThread.Start();
+
+        }
+
+        public void Dispose()
+        {
+            if (!disposed)
+            {
+                _running = false;
+                if (freezeThread != null)
+                {
+                    freezeThread.Abort();
+                    freezeThread = null;
+                }
+                detach();
+                disposed = true;
+            }
+        }
+
+        ~DS3Process()
+        {
+            Dispose();
+        }
+
+        private void findAttach()
+        {
+            var processes = Process.GetProcesses();
+            foreach (Process process in processes)
+            {
+                if (string.Equals(process.ProcessName.ToLowerInvariant(), DS3_PRO_NAME.ToLowerInvariant(), StringComparison.InvariantCulture) && !process.HasExited)
+                {
+                    attach(process);
+                    return;
+                }
+            }
+            throw new Exception("DS3 not running");
+        }
+
+        private void attach(Process proc)
+        {
+            if (_targetProcessHandle == IntPtr.Zero)
+            {
+                _targetProcess = proc;
+                _targetProcessHandle = OpenProcess(PROCESS_ALL_ACCESS, bInheritHandle: false, _targetProcess.Id);
+                if (_targetProcessHandle == IntPtr.Zero)
+                {
+                    throw new Exception("Attach failed");
+                }
+            }
+            else
+            {
+                System.Windows.MessageBox.Show("Already attached");
+            }
+        }
+
+        private void findBaseAddress()
+        {//kinda pointless since the base address is always the same (0x140000000), however this isn't true in other games. (this is due to ASLR)
+            try
+            {
+                foreach (var module in _targetProcess.Modules)
+                {
+                    var processModule = module as ProcessModule;
+                    //Utils.debugWrite(processModule.ModuleName);
+                    switch (processModule.ModuleName.ToLower())
+                    {
+                        case DS3_PRO_NAME + ".exe":
+                            ds3Base = processModule.BaseAddress;
+                            break;
+                    }
+                }
+            }
+            catch (Exception ex) { Utils.debugWrite(ex.ToString()); }
+            if (ds3Base == IntPtr.Zero)
+            {
+                throw new Exception("Couldn't find DS3 base address");
+            }
+        }
+
+        private void detach()
+        {
+            if (!(_targetProcessHandle == IntPtr.Zero))
+            {
+                _targetProcess = null;
+                try
+                {
+                    CloseHandle(_targetProcessHandle);
+                    _targetProcessHandle = IntPtr.Zero;
+                }
+                catch (Exception ex)
+                {
+                    Utils.debugWrite(ex.ToString());
+                }
+            }
+        }
+
+        //all read/write funcs just fail silently, except this one:
+        //public bool ReadTest(IntPtr addr)
+        //{
+        //    var array = new byte[1];
+        //    var lpNumberOfBytesRead = 1;
+        //    return ReadProcessMemory(_targetProcessHandle, addr, array, 1, ref lpNumberOfBytesRead) && lpNumberOfBytesRead == 1;
+        //}
+
+        //public void ReadTestFull(IntPtr addr)
+        //{
+        //    Console.WriteLine($"Testing Address: 0x{addr.ToInt64():X}");
+
+        //    bool available = ReadTest(addr);
+        //    Console.WriteLine($"Availability: {available}");
+
+        //    if (!available)
+        //    {
+        //        Console.WriteLine("Memory is not readable at this address.");
+        //        return;
+        //    }
+
+        //    try
+        //    {
+        //        Console.WriteLine($"Int32: {ReadInt32(addr)}");
+        //        Console.WriteLine($"Int64: {ReadInt64(addr)}");
+        //        Console.WriteLine($"UInt8: {ReadUInt8(addr)}");
+        //        Console.WriteLine($"UInt32: {ReadUInt32(addr)}");
+        //        Console.WriteLine($"UInt64: {ReadUInt64(addr)}");
+        //        Console.WriteLine($"Float: {ReadFloat(addr)}");
+        //        Console.WriteLine($"Double: {ReadDouble(addr)}");
+        //        Console.WriteLine($"String: {ReadString(addr)}");
+
+        //        byte[] bytes = ReadBytes(addr, 16);
+        //        Console.WriteLine("Bytes: " + BitConverter.ToString(bytes));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Console.WriteLine("Error reading memory: " + ex.Message);
+        //    }
+        //}
+
+        //public int ReadInt32(IntPtr addr)
+        //{
+        //    var bytes = ReadBytes(addr, 4);
+        //    return BitConverter.ToInt32(bytes, 0);
+        //}
+
+        //public long ReadInt64(IntPtr addr)
+        //{
+        //    var bytes = ReadBytes(addr, 8);
+        //    return BitConverter.ToInt64(bytes, 0);
+        //}
+
+        //public byte ReadUInt8(IntPtr addr)
+        //{
+        //    var bytes = ReadBytes(addr, 1);
+        //    return bytes[0];
+        //}
+
+        //public uint ReadUInt32(IntPtr addr)
+        //{
+        //    var bytes = ReadBytes(addr, 4);
+        //    return BitConverter.ToUInt32(bytes, 0);
+        //}
+
+        //public ulong ReadUInt64(IntPtr addr)
+        //{
+        //    var bytes = ReadBytes(addr, 8);
+        //    return BitConverter.ToUInt64(bytes, 0);
+        //}
+
+        //public float ReadFloat(IntPtr addr)
+        //{
+        //    var bytes = ReadBytes(addr, 4);
+        //    return BitConverter.ToSingle(bytes, 0);
+        //}
+
+        //public double ReadDouble(IntPtr addr)
+        //{
+        //    var bytes = ReadBytes(addr, 8);
+        //    return BitConverter.ToDouble(bytes, 0);
+        //}
+
+        //public byte[] ReadBytes(IntPtr addr, int size)
+        //{
+        //    var array = new byte[size];
+        //    var targetProcessHandle = _targetProcessHandle;
+        //    var lpNumberOfBytesRead = 1;
+        //    ReadProcessMemory(targetProcessHandle, addr, array, size, ref lpNumberOfBytesRead);
+        //    return array;
+        //}
+
+        //public string ReadString(IntPtr addr, int maxLength = 32)
+        //{
+        //    var bytes = ReadBytes(addr, maxLength * 2);
+
+        //    int stringLength = 0;
+        //    for (int i = 0; i < bytes.Length - 1; i += 2)
+        //    {
+        //        if (bytes[i] == 0 && bytes[i + 1] == 0)
+        //        {
+        //            stringLength = i;
+        //            break;
+        //        }
+        //    }
+
+        //    if (stringLength == 0)
+        //    {
+        //        stringLength = bytes.Length - (bytes.Length % 2);
+        //    }
+
+        //    return System.Text.Encoding.Unicode.GetString(bytes, 0, stringLength);
+        //}
+
+        //public void WriteInt32(IntPtr addr, int val)
+        //{
+        //    WriteBytes(addr, BitConverter.GetBytes(val));
+        //}
+
+        //public void WriteUInt32(IntPtr addr, uint val)
+        //{
+        //    WriteBytes(addr, BitConverter.GetBytes(val));
+        //}
+
+        //public void WriteFloat(IntPtr addr, float val)
+        //{
+        //    WriteBytes(addr, BitConverter.GetBytes(val));
+        //}
+
+        //public void WriteUInt8(IntPtr addr, byte val)
+        //{
+        //    var bytes = new byte[] { val };
+        //    WriteBytes(addr, bytes);
+        //}
+
+        //public void WriteBytes(IntPtr addr, byte[] val, bool useNewWrite = true)
+        //{
+        //    if (useNewWrite)
+        //    {
+        //        uint written = 0;
+        //        NtWriteVirtualMemory(_targetProcessHandle, addr, val, (uint)val.Length, ref written); //MUCH faster, <1ms
+        //    }
+        //    else
+        //    {
+        //        WriteProcessMemory(_targetProcessHandle, addr, val, val.Length, 0); //can take as long as 15ms!
+        //    }
+        //}
+
+        //public void WriteString(IntPtr addr, string value, int maxLength = 32)
+        //{
+        //    var bytes = new byte[maxLength];
+        //    var stringBytes = System.Text.Encoding.Unicode.GetBytes(value);
+        //    Array.Copy(stringBytes, bytes, Math.Min(stringBytes.Length, maxLength));
+        //    WriteBytes(addr, bytes);
+        //}
+
         //replacement code contains the offset from the following instruction (basically hook loc + 5) to the code cave.
         //then it just nops to fill out the rest of the old instructions
         static byte[] getTargetHookReplacementCode()
@@ -527,12 +499,17 @@ namespace DS3Tool
             return ret;
         }
 
-        static readonly byte[] targetHookCaveCodeTemplate = new byte[] { 0x48, 0xA3,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //full 64 bit ptr address goes here
-        0x48, 0x8B, 0x80, 0x90, 0x1F, 0x00, 0x00, //should be identical to orig code from here to just before E9
-        0xE9,
-        0, 0, 0, 0, //address offset
-         };
+        //const int globalSpeedOff = 0x9A3D48;
+        public float getSetGameSpeed(float? val = null)
+        {
+            var ptr = ds3Base + GLOBAL_SPEED_OFFSET;
+            var ret = CrudUtils.ReadFloat(_targetProcessHandle, ptr);
+            if (val.HasValue)
+            {
+                CrudUtils.WriteFloat(_targetProcessHandle, ptr, val.Value);
+            }
+            return ret;
+        }
 
         static byte[] getTargetHookCaveCodeTemplate()
         {
@@ -550,7 +527,7 @@ namespace DS3Tool
             var targetHookReplacementCode = getTargetHookReplacementCode();
             var targetHookCaveCode = getTargetHookCaveCodeTemplate(); //still needs to have ptr addr added in
 
-            var code = ReadBytes(ds3Base + TARGET_HOOK_LOCATION, targetHookOrigCode.Length);
+            var code = CrudUtils.ReadBytes(_targetProcessHandle, ds3Base + TARGET_HOOK_LOCATION, targetHookOrigCode.Length);
             if (code.SequenceEqual(targetHookReplacementCode))
             {
                 Console.WriteLine("Already hooked");
@@ -562,8 +539,8 @@ namespace DS3Tool
                 return false;
             }
 
-            var caveCheck1 = ReadUInt64(ds3Base + CODE_CAVE_PTR_LOCATION);
-            var caveCheck2 = ReadUInt64(ds3Base + CODE_CAVE_CODE_LOCATION);
+            var caveCheck1 = CrudUtils.ReadUInt64(_targetProcessHandle, ds3Base + CODE_CAVE_PTR_LOCATION);
+            var caveCheck2 = CrudUtils.ReadUInt64(_targetProcessHandle, ds3Base + CODE_CAVE_CODE_LOCATION);
             if (caveCheck1 != 0 || caveCheck2 != 0)
             {
                 Console.WriteLine("Code cave not empty");
@@ -577,31 +554,31 @@ namespace DS3Tool
             var fullAddrBytes = BitConverter.GetBytes((Int64)targetHookFullAddr);
             Array.Copy(fullAddrBytes, 0, caveCode, 2, 8);
             //patch cave
-            WriteBytes(ds3Base + CODE_CAVE_CODE_LOCATION, caveCode);
+            CrudUtils.WriteBytes(_targetProcessHandle, ds3Base + CODE_CAVE_CODE_LOCATION, caveCode);
             //patch hook loc
-            WriteBytes(ds3Base + TARGET_HOOK_LOCATION, targetHookReplacementCode);
+            CrudUtils.WriteBytes(_targetProcessHandle, ds3Base + TARGET_HOOK_LOCATION, targetHookReplacementCode);
             return true;
         }
 
         public void cleanUpTargetHook()
         {
-            WriteBytes(ds3Base + TARGET_HOOK_LOCATION, targetHookOrigCode);
-            WriteBytes(ds3Base + CODE_CAVE_PTR_LOCATION, new byte[8]);
-            WriteBytes(ds3Base + CODE_CAVE_CODE_LOCATION, new byte[22]);
+            CrudUtils.WriteBytes(_targetProcessHandle, ds3Base + TARGET_HOOK_LOCATION, targetHookOrigCode);
+            CrudUtils.WriteBytes(_targetProcessHandle, ds3Base + CODE_CAVE_PTR_LOCATION, new byte[8]);
+            CrudUtils.WriteBytes(_targetProcessHandle, ds3Base + CODE_CAVE_CODE_LOCATION, new byte[22]);
         }
 
 
 
         public void setEnemyRepeatActionPatch(bool on)
         {
-            var b = ReadUInt8(ds3Base + ENEMY_REPEAT_ACTION_OFFSET);
+            var b = CrudUtils.ReadUInt8(_targetProcessHandle, ds3Base + ENEMY_REPEAT_ACTION_OFFSET);
             if (on && b == enemyRepeatActionOrigVal)
             {
-                WriteUInt8(ds3Base + ENEMY_REPEAT_ACTION_OFFSET, enemyRepeatActionPatchVal);
+                CrudUtils.WriteUInt8(_targetProcessHandle, ds3Base + ENEMY_REPEAT_ACTION_OFFSET, enemyRepeatActionPatchVal);
             }
             else if (!on && b == enemyRepeatActionPatchVal)
             {
-                WriteUInt8(ds3Base + ENEMY_REPEAT_ACTION_OFFSET, enemyRepeatActionOrigVal);
+                CrudUtils.WriteUInt8(_targetProcessHandle, ds3Base + ENEMY_REPEAT_ACTION_OFFSET, enemyRepeatActionOrigVal);
             }
             else
             {
@@ -611,7 +588,7 @@ namespace DS3Tool
 
         public bool patchLogos()
         {
-            var code = ReadBytes(ds3Base + noLogoPatchLoc, noLogoPatchCode.Length);
+            var code = CrudUtils.ReadBytes(_targetProcessHandle, ds3Base + noLogoPatchLoc, noLogoPatchCode.Length);
             if (code.SequenceEqual(noLogoPatchCode))
             {
                 Utils.debugWrite("Already patched");
@@ -619,7 +596,7 @@ namespace DS3Tool
             }
             else if (code[0] == 0xE8) //just check first byte
             {//original code
-                WriteBytes(ds3Base + noLogoPatchLoc, noLogoPatchCode);
+                CrudUtils.WriteBytes(_targetProcessHandle, ds3Base + noLogoPatchLoc, noLogoPatchCode);
                 Utils.debugWrite("Patched");
                 return true;
             }
@@ -630,43 +607,40 @@ namespace DS3Tool
             }
         }
 
-        const long SANE_MINIMUM = 0x140000000; //base addr
-        const long SANE_MAXIMUM = 0x800000000000; //TODO: refine
-
         ulong getPlayerInsPtr()
         {
-            var ptr1 = ReadUInt64(ds3Base + WORLD_CHR_MAN_OFFSET);
-            var ptr2 = ReadUInt64((IntPtr)(ptr1 + WORLD_CHR_MAN_PLAYER_INS_OFFSET));
+            var ptr1 = CrudUtils.ReadUInt64(_targetProcessHandle, ds3Base + WORLD_CHR_MAN_OFFSET);
+            var ptr2 = CrudUtils.ReadUInt64(_targetProcessHandle, (IntPtr)(ptr1 + WORLD_CHR_MAN_PLAYER_INS_OFFSET));
             return ptr2;
         }
 
         public ulong getCharPtrModules()
         {
             var ptr2 = getPlayerInsPtr();
-            var ptr3 = ReadUInt64((IntPtr)(ptr2 + playerInsModulesOff));
+            var ptr3 = CrudUtils.ReadUInt64(_targetProcessHandle, (IntPtr)(ptr2 + playerInsModulesOff));
             return ptr3;
         }
 
         public (float x, float y, float z, float dir) getSetPlayerLocalCoords((float, float, float, float)? pos = null)
         {
             var ptr4 = getCharPtrModules();
-            var ptr5 = ReadUInt64((IntPtr)(ptr4 + chrPhysModuleOff));
+            var ptr5 = CrudUtils.ReadUInt64(_targetProcessHandle, (IntPtr)(ptr4 + chrPhysModuleOff));
             var ptrX = (IntPtr)(ptr5 + 0x80); //another copy at +170
             var ptrY = (IntPtr)(ptr5 + 0x84);
             var ptrZ = (IntPtr)(ptr5 + 0x88);
             var ptrDir = (IntPtr)(ptr5 + 74); //chr facing direction
 
-            float x = ReadFloat(ptrX);
-            float y = ReadFloat(ptrY);
-            float z = ReadFloat(ptrZ);
-            float dir = ReadFloat(ptrDir);
+            float x = CrudUtils.ReadFloat(_targetProcessHandle, ptrX);
+            float y = CrudUtils.ReadFloat(_targetProcessHandle, ptrY);
+            float z = CrudUtils.ReadFloat(_targetProcessHandle, ptrZ);
+            float dir = CrudUtils.ReadFloat(_targetProcessHandle, ptrDir);
 
             if (pos != null)
             {
-                WriteFloat(ptrX, pos.Value.Item1);
-                WriteFloat(ptrY, pos.Value.Item2);
-                WriteFloat(ptrZ, pos.Value.Item3);
-                if (!float.IsNaN(pos.Value.Item4)) { WriteFloat(ptrDir, pos.Value.Item4); } //direction is optional; set NaN if not caring //doesn't seem to work?
+                CrudUtils.WriteFloat(_targetProcessHandle, ptrX, pos.Value.Item1);
+                CrudUtils.WriteFloat(_targetProcessHandle, ptrY, pos.Value.Item2);
+                CrudUtils.WriteFloat(_targetProcessHandle, ptrZ, pos.Value.Item3);
+                if (!float.IsNaN(pos.Value.Item4)) { CrudUtils.WriteFloat(_targetProcessHandle, ptrDir, pos.Value.Item4); } //direction is optional; set NaN if not caring //doesn't seem to work?
             }
 
             return (x, y, z, dir);
@@ -676,9 +650,9 @@ namespace DS3Tool
 
         public IntPtr getFreeCamPtr()
         {//pointer to CSDebugCam
-            var ptr1 = ReadUInt64(ds3Base + FIELD_AREA_OFFSET);
-            var ptr2 = ReadUInt64((IntPtr)(ptr1 + 0x18)); //GameRend
-            var ptr3 = ReadUInt64((IntPtr)(ptr2 + 0xE8)); //SprjDebugCam
+            var ptr1 = CrudUtils.ReadUInt64(_targetProcessHandle, ds3Base + FIELD_AREA_OFFSET);
+            var ptr2 = CrudUtils.ReadUInt64(_targetProcessHandle, (IntPtr)(ptr1 + 0x18)); //GameRend
+            var ptr3 = CrudUtils.ReadUInt64(_targetProcessHandle, (IntPtr)(ptr2 + 0xE8)); //SprjDebugCam
             return (IntPtr)ptr3;
         }
         //free cam 'look at matrix' is at +10
@@ -690,29 +664,26 @@ namespace DS3Tool
             var ptrY = (IntPtr)(ptr3 + 0x44);
             var ptrZ = (IntPtr)(ptr3 + 0x48);
 
-            float x = ReadFloat(ptrX);
-            float y = ReadFloat(ptrY);
-            float z = ReadFloat(ptrZ);
+            float x = CrudUtils.ReadFloat(_targetProcessHandle, ptrX);
+            float y = CrudUtils.ReadFloat(_targetProcessHandle, ptrY);
+            float z = CrudUtils.ReadFloat(_targetProcessHandle, ptrZ);
 
             if (pos != null)
             {
-                WriteFloat(ptrX, pos.Value.Item1);
-                WriteFloat(ptrY, pos.Value.Item2);
-                WriteFloat(ptrZ, pos.Value.Item3);
+                CrudUtils.WriteFloat(_targetProcessHandle, ptrX, pos.Value.Item1);
+                CrudUtils.WriteFloat(_targetProcessHandle, ptrY, pos.Value.Item2);
+                CrudUtils.WriteFloat(_targetProcessHandle, ptrZ, pos.Value.Item3);
             }
 
             return (x, y, z);
         }
 
-
-
         public void setNoClipSpeed(float speed)
         {
             var ptr = getCharPtrModules();
-            var ptr2 = ReadUInt64((IntPtr)(ptr + 0x28));
-            WriteFloat((IntPtr)ptr2 + 0xA58, speed);
+            var ptr2 = CrudUtils.ReadUInt64(_targetProcessHandle, (IntPtr)(ptr + 0x28));
+            CrudUtils.WriteFloat(_targetProcessHandle, (IntPtr)ptr2 + 0xA58, speed);
         }
-
 
         public void moveCamToPlayer()
         {
@@ -731,7 +702,7 @@ namespace DS3Tool
         void doFontPatch()
         {//all from DS3-Debug-Patch. not 100% sure but i assume it prevents drawing with a font that doesn't exist. only first one seems necessary for sound draw.
             if (_fontPatchesDone) { return; }
-            WriteBytes(ds3Base + FONT_DRAW_FIRST_PATCH_OFFSET, new byte[] { 0x90, 0x90, 0x90, 0x90, 0x90 });//all nop
+            CrudUtils.WriteBytes(_targetProcessHandle, ds3Base + FONT_DRAW_FIRST_PATCH_OFFSET, new byte[] { 0x90, 0x90, 0x90, 0x90, 0x90 });//all nop
             /*WriteUInt8(ds3Base + 0x2352600, 0xC3);
             WriteUInt8(ds3Base + 0x23B7670, 0xC3);
             WriteUInt8(ds3Base + 0x1915370, 0xC3);
@@ -745,16 +716,16 @@ namespace DS3Tool
             //alternative to this enabling method is to patch the instruction that reads it
             //40 56 48 83EC ?? 8079 ?? 00 48 8BF2 74 ??    <--- works in sekiro and DS3 but in DS3 it's obfuscated in the exe. patch the cmp of 00 to 01.
             doFontPatch();
-            var ptr1 = (IntPtr)ReadUInt64(ds3Base + WORLD_AI_MAN_OFFSET);
-            var ptr2 = (IntPtr)ReadUInt64(ptr1 + 0x28); //WorldBlockAi
+            var ptr1 = (IntPtr)CrudUtils.ReadUInt64(_targetProcessHandle, ds3Base + WORLD_AI_MAN_OFFSET);
+            var ptr2 = (IntPtr)CrudUtils.ReadUInt64(_targetProcessHandle, ptr1 + 0x28); //WorldBlockAi
             for (int off = 0; off <= 0x3200; off += 0x200)
             {
                 var ptr3 = ptr2 + off;
-                var ptr4 = (IntPtr)ReadUInt64(ptr3 + 0xB8);
+                var ptr4 = (IntPtr)CrudUtils.ReadUInt64(_targetProcessHandle, ptr3 + 0xB8);
                 if (ptr4.ToInt64() >= 0x7FF000000000 && ptr4.ToInt64() <= 0x800000000000) //just a null check is probably adequate (that's all the game does)
                 {
                     var addr = ptr4 + 0x28;
-                    WriteUInt8(addr, on ? (byte)1 : (byte)0);
+                    CrudUtils.WriteUInt8(_targetProcessHandle, addr, on ? (byte)1 : (byte)0);
                 }
             }
         }
@@ -773,7 +744,7 @@ namespace DS3Tool
                 case DebugOpts.HITBOX_VIEW:
                 case DebugOpts.IMPACT_VIEW:
                     {
-                        var ptr = ReadUInt64(ds3Base + HITBOX_OFFSET);
+                        var ptr = CrudUtils.ReadUInt64(_targetProcessHandle, ds3Base + HITBOX_OFFSET);
                         if (ptr < SANE_MINIMUM) { return badVal; }
                         ptr += 0x30;
                         if (opt == DebugOpts.IMPACT_VIEW) { ptr += 1; }
@@ -785,7 +756,7 @@ namespace DS3Tool
                 case DebugOpts.NO_DEATH:
                     {
                         var ptr3 = getCharPtrModules();
-                        var ptr4 = ReadUInt64((IntPtr)(ptr3 + chrDataModuleOff));
+                        var ptr4 = CrudUtils.ReadUInt64(_targetProcessHandle, (IntPtr)(ptr3 + chrDataModuleOff));
                         var ptr5 = (IntPtr)(ptr4 + 0x1C0); //character debug flags?
                         return (ptr5, 0x12); //bitfield, bit 2
                     }
@@ -795,21 +766,21 @@ namespace DS3Tool
                 case DebugOpts.INSTANT_QUITOUT:
                     {
 
-                        var ptr = ReadUInt64(ds3Base + MENU_MAN_OFF);
+                        var ptr = CrudUtils.ReadUInt64(_targetProcessHandle, ds3Base + MENU_MAN_OFF);
                         return ((IntPtr)(ptr + 0x250), 1); //likely other menu functions nearby
                     }
                 case DebugOpts.ONE_HP:
                 case DebugOpts.MAX_HP:
                     {
                         var ptr3 = getCharPtrModules();
-                        var ptr4 = ReadUInt64((IntPtr)(ptr3 + chrDataModuleOff));
+                        var ptr4 = CrudUtils.ReadUInt64(_targetProcessHandle, (IntPtr)(ptr3 + chrDataModuleOff));
                         var ptr5 = (IntPtr)(ptr4 + 0xD8);
                         if (opt == DebugOpts.MAX_HP) { return (ptr5, 0xfe); }
                         return (ptr5, 0xff);
                     }
                 case DebugOpts.ALL_CHRS_DBG_DRAW_FLAG:
                     {
-                        var ptr = ReadUInt64((IntPtr)(ds3Base + WORLD_CHR_MAN_DEBUG_OFFSET));
+                        var ptr = CrudUtils.ReadUInt64(_targetProcessHandle, (IntPtr)(ds3Base + WORLD_CHR_MAN_DEBUG_OFFSET));
                         return ((IntPtr)(ptr + 0x65), 1);
                     }
                 case DebugOpts.DISABLE_AI: return (ds3Base + DEBUG_FLAGS_OFFSET + 0xD, 1);
@@ -824,27 +795,27 @@ namespace DS3Tool
                     }
                 case DebugOpts.DISABLE_STEAM_INPUT_ENUM:
                     {
-                        var ptr = ReadUInt64(ds3Base + USER_INPUT_MGR_IMPL_OFFSET);
+                        var ptr = CrudUtils.ReadUInt64(_targetProcessHandle, ds3Base + USER_INPUT_MGR_IMPL_OFFSET);
                         return ((IntPtr)(ptr + 0x24b), 1);
                     }
                 case DebugOpts.EVENT_STOP:
                     {
-                        var ptr = ReadUInt64(ds3Base + SPRJ_DEBUG_EVENT_OFFSET);
+                        var ptr =   CrudUtils.ReadUInt64(_targetProcessHandle, ds3Base + SPRJ_DEBUG_EVENT_OFFSET);
                         return ((IntPtr)(ptr + 0xD4), 1); //was D4, changed in 1.15.1 to E4
                     }
                 case DebugOpts.EVENT_DRAW:
                     {
-                        var ptr = ReadUInt64(ds3Base + SPRJ_DEBUG_EVENT_OFFSET);
+                        var ptr = CrudUtils.ReadUInt64(_targetProcessHandle, ds3Base + SPRJ_DEBUG_EVENT_OFFSET);
                         return ((IntPtr)(ptr + 0xA8), 1);
                     }
                 case DebugOpts.HIDDEN_DEBUG_MENU:
                     {
-                        var ptr = ReadUInt64(ds3Base + NEW_MENU_SYSTEMS_OFFSET);
+                        var ptr = CrudUtils.ReadUInt64(_targetProcessHandle, ds3Base + NEW_MENU_SYSTEMS_OFFSET);
                         return ((IntPtr)(ptr + 0x3083), 1);
                     }
                 case DebugOpts.ALL_DEBUG_DRAWING:
                     {
-                        var ptr = ReadUInt64(ds3Base + WORLD_CHR_MAN_DEBUG_OFFSET);
+                        var ptr = CrudUtils.ReadUInt64(_targetProcessHandle, ds3Base + WORLD_CHR_MAN_DEBUG_OFFSET);
                         return ((IntPtr)(ptr + 0x65), 1);
                     }
                 case DebugOpts.ENEMY_TARGETING_A:
@@ -857,14 +828,14 @@ namespace DS3Tool
                     }
                 case DebugOpts.FREE_CAMERA:
                     {
-                        var ptr = ReadUInt64(ds3Base + FIELD_AREA_OFFSET);
-                        var ptr2 = ReadUInt64((IntPtr)ptr + 0x18); //GameRend
+                        var ptr = CrudUtils.ReadUInt64(_targetProcessHandle, ds3Base + FIELD_AREA_OFFSET);
+                        var ptr2 = CrudUtils.ReadUInt64(_targetProcessHandle, (IntPtr)ptr + 0x18); //GameRend
                         return ((IntPtr)(ptr2 + 0xE0), 1);
                     }
                 case DebugOpts.COLLISION:
                     {
-                        var ptr = ReadUInt64(ds3Base + FIELD_AREA_OFFSET);
-                        var ptr2 = ReadUInt64((IntPtr)ptr + 0x60);
+                        var ptr = CrudUtils.ReadUInt64(_targetProcessHandle, ds3Base + FIELD_AREA_OFFSET);
+                        var ptr2 = CrudUtils.ReadUInt64(_targetProcessHandle, (IntPtr)ptr + 0x60);
                         return ((IntPtr)(ptr2 + 0x48), 0);
                     }
 
@@ -886,36 +857,36 @@ namespace DS3Tool
         public int getSetPlayerHP(int? val = null)
         {
             var ptr3 = getCharPtrModules();
-            var ptr4 = ReadUInt64((IntPtr)(ptr3 + chrDataModuleOff));
+            var ptr4 = CrudUtils.ReadUInt64(_targetProcessHandle, (IntPtr)(ptr3 + chrDataModuleOff));
             var ptr5 = (IntPtr)(ptr4 + 0xD8);
-            int ret = ReadInt32(ptr5);
-            if (val.HasValue) { WriteInt32(ptr5, val.Value); }
+            int ret = CrudUtils.ReadInt32(_targetProcessHandle, ptr5);
+            if (val.HasValue) { CrudUtils.WriteInt32(_targetProcessHandle, ptr5, val.Value); }
             return ret;
         }
 
         public void doFreeCamPlayerControlPatch()
         {
-            if (ReadBytes(ds3Base + freeCamPlayerControlPatchLoc, 6).SequenceEqual(freeCamPlayerControlPatchOrig))
+            if (CrudUtils.ReadBytes(_targetProcessHandle, ds3Base + freeCamPlayerControlPatchLoc, 6).SequenceEqual(freeCamPlayerControlPatchOrig))
             {
-                WriteBytes(ds3Base + freeCamPlayerControlPatchLoc, freeCamPlayerControlPatchReplacement);
+                CrudUtils.WriteBytes(_targetProcessHandle, ds3Base + freeCamPlayerControlPatchLoc, freeCamPlayerControlPatchReplacement);
             }
         }
 
         public void undoFreeCamPlayerControlPatch()
         {
-            if (ReadBytes(ds3Base + freeCamPlayerControlPatchLoc, 6).SequenceEqual(freeCamPlayerControlPatchReplacement))
+            if (CrudUtils.ReadBytes(_targetProcessHandle, ds3Base + freeCamPlayerControlPatchLoc, 6).SequenceEqual(freeCamPlayerControlPatchReplacement))
             {
-                WriteBytes(ds3Base + freeCamPlayerControlPatchLoc, freeCamPlayerControlPatchOrig);
+                CrudUtils.WriteBytes(_targetProcessHandle, ds3Base + freeCamPlayerControlPatchLoc, freeCamPlayerControlPatchOrig);
             }
         }
 
         public void cycleMeshColours()
         {
             IntPtr addr = ds3Base + MESHES_OFFSET + 8;
-            int meshColours = ReadInt32(addr);
+            int meshColours = CrudUtils.ReadInt32(_targetProcessHandle, addr);
             meshColours++;
             if (meshColours > 3) { meshColours = 0; }
-            WriteInt32(addr, meshColours);
+            CrudUtils.WriteInt32(_targetProcessHandle, addr, meshColours);
         }
 
         public void enableOpt(DebugOpts opt)
@@ -939,25 +910,25 @@ namespace DS3Tool
             var val = tuple.Item2;
             if (val == 0 || val == 1)
             {
-                WriteUInt8(tuple.Item1, val);
+                CrudUtils.WriteUInt8(_targetProcessHandle, tuple.Item1, val);
             }
             else if (val >= 0x10 && val <= 0x17)
             {//bitfield (set to enable)
                 int setMask = 1 << (val - 0x10);
-                var oldVal = ReadUInt8(tuple.Item1);
+                var oldVal = CrudUtils.ReadUInt8(_targetProcessHandle, tuple.Item1);
                 var newVal = oldVal | setMask;
-                WriteUInt8(tuple.Item1, (byte)newVal);
+                CrudUtils.WriteUInt8(_targetProcessHandle, tuple.Item1, (byte)newVal);
             }
 
 
             else if (val == 0xff)
             {//special case, write 1 as 32 bit
-                WriteUInt32(tuple.Item1, 1);
+                CrudUtils.WriteUInt32(_targetProcessHandle, tuple.Item1, 1);
             }
             else if (val == 0xfe)
             {//special case, read next 32 bit int and write
-                var nextVal = ReadUInt32(tuple.Item1 + 4); //max HP is after hp in the character struct (i think)
-                WriteUInt32(tuple.Item1, nextVal);
+                var nextVal = CrudUtils.ReadUInt32(_targetProcessHandle, tuple.Item1 + 4); //max HP is after hp in the character struct (i think)
+                CrudUtils.WriteUInt32(_targetProcessHandle, tuple.Item1, nextVal);
             }
         }
 
@@ -978,19 +949,19 @@ namespace DS3Tool
             if (val == 0 || val == 1)
             {
                 var newVal = (tuple.Item2 == 1) ? (byte)0 : (byte)1;
-                WriteUInt8(tuple.Item1, newVal);
+                CrudUtils.WriteUInt8(_targetProcessHandle, tuple.Item1, newVal);
             }
             else if (val >= 0x10 && val <= 0x17)
             {//bitfield (clear to disable)
                 int setMask = 1 << (val - 0x10);
-                var oldVal = ReadUInt8(tuple.Item1);
+                var oldVal = CrudUtils.ReadUInt8(_targetProcessHandle, tuple.Item1);
                 var newVal = oldVal & ~setMask;
-                WriteUInt8(tuple.Item1, (byte)newVal);
+                CrudUtils.WriteUInt8(_targetProcessHandle, tuple.Item1, (byte)newVal);
             }
 
             else if (val == 0xff)
             {//special case, write 9999 as 32 bit
-                WriteUInt32(tuple.Item1, 9999);
+                CrudUtils.WriteUInt32(_targetProcessHandle, tuple.Item1, 9999);
             }
             else if (val == 0xfe)
             {//nothing to do
@@ -1028,7 +999,7 @@ namespace DS3Tool
         {
             while (_running)
             {
-                weGood = ReadTest(ds3Base); //is it possible to come good later, or should we just fail immediately and dispose ourself?
+                weGood = CrudUtils.ReadTest(_targetProcessHandle, ds3Base); //is it possible to come good later, or should we just fail immediately and dispose ourself?
                 lock (setLock)
                 {
                     foreach (var opt in unFreezeSet)
@@ -1051,9 +1022,9 @@ namespace DS3Tool
         public double getSetTargetInfo(TargetInfo info, int? setVal = null)
         {//most are actually ints but it's easier just to use a common type. double can store fairly large ints exactly.
             double ret = double.NaN;
-            var targetPtr = ReadUInt64(ds3Base + CODE_CAVE_PTR_LOCATION); //NS_SPRJ::EnemyIns
+            var targetPtr = CrudUtils.ReadUInt64(_targetProcessHandle, ds3Base + CODE_CAVE_PTR_LOCATION); //NS_SPRJ::EnemyIns
             if (targetPtr < SANE_MINIMUM || targetPtr > SANE_MAXIMUM) { return ret; }
-            var p1 = ReadUInt64((IntPtr)(targetPtr + playerInsModulesOff));
+            var p1 = CrudUtils.ReadUInt64(_targetProcessHandle, (IntPtr)(targetPtr + playerInsModulesOff));
             if (p1 < SANE_MINIMUM || p1 > SANE_MAXIMUM) { return ret; }
 
             uint p2off = 0;
@@ -1072,7 +1043,7 @@ namespace DS3Tool
                     p2off = 0x20; //NS_SPRJ::SprjChrResistModule
                     break;
             }
-            var p2 = ReadUInt64((IntPtr)(p1 + p2off));
+            var p2 = CrudUtils.ReadUInt64(_targetProcessHandle, (IntPtr)(p1 + p2off));
 
             uint p3off = 0;
             switch (info)
@@ -1098,11 +1069,11 @@ namespace DS3Tool
             }
             var pFinal = (IntPtr)(p2 + p3off);
 
-            var fourBytes = ReadBytes(pFinal, 4);
+            var fourBytes = CrudUtils.ReadBytes(_targetProcessHandle, pFinal, 4);
 
             if (setVal.HasValue)
             {//TODO: support setting float? pass in object i guess
-                WriteInt32(pFinal, setVal.Value);
+                CrudUtils.WriteInt32(_targetProcessHandle, pFinal, setVal.Value);
                 if (info == TargetInfo.HP)
                 {//special case
                     targetHpFreeze = (int)setVal; //change our freeze value. the freeze itself will keep setting this, but that's harmless.
@@ -1125,23 +1096,23 @@ namespace DS3Tool
 
         public string GetSetTargetEnemyID(string newValue = null)
         {
-            var targetPtr = ReadInt64(ds3Base + CodeCavePtrLoc);
-            var modulesPtr = ReadInt64((IntPtr)targetPtr + 0x1F90);
-            var chrDataPtr = ReadInt64((IntPtr)modulesPtr + 0x18);
+            var targetPtr = CrudUtils.ReadInt64(_targetProcessHandle, ds3Base + CodeCavePtrLoc);
+            var modulesPtr = CrudUtils.ReadInt64(_targetProcessHandle, (IntPtr)targetPtr + 0x1F90);
+            var chrDataPtr = CrudUtils.ReadInt64(_targetProcessHandle, (IntPtr)modulesPtr + 0x18);
             var enemyIdPtr = (IntPtr)(chrDataPtr + 0x130);
 
             if (newValue != null)
             {
-                WriteString(enemyIdPtr, newValue);
+                CrudUtils.WriteString(_targetProcessHandle, enemyIdPtr, newValue);
             }
 
-            return ReadString(enemyIdPtr);
+            return CrudUtils.ReadString(_targetProcessHandle, enemyIdPtr);
         }
 
         public int GetSetPlayerStat(PlayerStats stat, int? newValue = null)
         {
-            var gameDataPtr = ReadUInt64(ds3Base + GAME_DATA_MAN_OFFSET);
-            var playerStatsPtr = ReadUInt64((IntPtr)(gameDataPtr + 0x10));
+            var gameDataPtr = CrudUtils.ReadUInt64(_targetProcessHandle, ds3Base + GAME_DATA_MAN_OFFSET);
+            var playerStatsPtr = CrudUtils.ReadUInt64(_targetProcessHandle, (IntPtr)(gameDataPtr + 0x10));
             var statAddress = (IntPtr)(playerStatsPtr + (ulong)statOffsets[stat]);
 
             if (newValue.HasValue)
@@ -1149,13 +1120,13 @@ namespace DS3Tool
                 UpdatePlayerStat(stat, statAddress, playerStatsPtr, newValue.Value);
             }
 
-            return ReadInt32(statAddress);
+            return CrudUtils.ReadInt32(_targetProcessHandle, statAddress);
         }
 
         public List<(string, int)> GetSetPlayerStats(List<(string, int)> newStats = null)
         {
-            var gameDataPtr = ReadUInt64(ds3Base + GAME_DATA_MAN_OFFSET);
-            var playerStatsPtr = ReadUInt64((IntPtr)(gameDataPtr + 0x10));
+            var gameDataPtr = CrudUtils.ReadUInt64(_targetProcessHandle, ds3Base + GAME_DATA_MAN_OFFSET);
+            var playerStatsPtr = CrudUtils.ReadUInt64(_targetProcessHandle, (IntPtr)(gameDataPtr + 0x10));
 
             var ret = new List<(string, int)>();
 
@@ -1198,34 +1169,34 @@ namespace DS3Tool
             if (stat == PlayerStats.SOULS)
             {
                 var totalSoulsAddress = (IntPtr)(playerStatsPtr + 0x78);
-                int currentTotalSouls = ReadInt32(totalSoulsAddress);
-                WriteInt32(totalSoulsAddress, currentTotalSouls + newValue);
-                WriteInt32(statAddress, newValue);
+                int currentTotalSouls = CrudUtils.ReadInt32(_targetProcessHandle, totalSoulsAddress);
+                CrudUtils.WriteInt32(_targetProcessHandle, totalSoulsAddress, currentTotalSouls + newValue);
+                CrudUtils.WriteInt32(_targetProcessHandle, statAddress, newValue);
 
             }
             else
             {
-                int oldStat = ReadInt32(statAddress);
+                int oldStat = CrudUtils.ReadInt32(_targetProcessHandle, statAddress);
                 var soulLevelAddress = (IntPtr)(playerStatsPtr + 0x70);
-                int soulLevel = ReadInt32(soulLevelAddress);
+                int soulLevel = CrudUtils.ReadInt32(_targetProcessHandle, soulLevelAddress);
 
                 soulLevel += newValue - oldStat;
-
-                WriteInt32(statAddress, newValue);
-                WriteInt32(soulLevelAddress, soulLevel);
+                    
+                CrudUtils.WriteInt32(_targetProcessHandle, statAddress, newValue);
+                CrudUtils.WriteInt32(_targetProcessHandle, soulLevelAddress, soulLevel);
             }
 
         }
 
         public int GetSetNewGameLevel(int? newValue = null)
         {
-            var ptr1 = ReadUInt64(ds3Base + GAME_DATA_MAN_OFFSET);
+            var ptr1 = CrudUtils.ReadUInt64(_targetProcessHandle, ds3Base + GAME_DATA_MAN_OFFSET);
             var finalAddress = (IntPtr)(ptr1 + 0x78);
             if (newValue.HasValue && newValue >= 0)
             {
-                WriteInt32(finalAddress, newValue.Value);
+                CrudUtils.WriteInt32(_targetProcessHandle, finalAddress, newValue.Value);
             }
-            return ReadInt32(finalAddress);
+            return CrudUtils.ReadInt32(_targetProcessHandle, finalAddress);
         }
     }
 }
