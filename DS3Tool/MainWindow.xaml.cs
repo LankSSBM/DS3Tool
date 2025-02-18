@@ -782,11 +782,11 @@ namespace DS3Tool
         {
             var existing = _process.getSetGameSpeed();
             var newVal = Microsoft.VisualBasic.Interaction.InputBox("Enter game speed multiplier", "Game Speed", existing.ToString());
-            if (string.IsNullOrEmpty(newVal)) { return; }
-            if (float.TryParse(newVal, out var newValFlt))
-            {
-                _process.getSetGameSpeed(newValFlt);
-            }
+
+            if (!float.TryParse(newVal, out var newValFlt)) { return; } // if you put junk, return
+            if (string.IsNullOrEmpty(newVal) && newValFlt <= 0) { return; } // if you put non-junk but its stupid, return
+
+            _process.getSetGameSpeed(newValFlt);
         }
 
         private void noGravOn(object sender, RoutedEventArgs e)
