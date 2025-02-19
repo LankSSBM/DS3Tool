@@ -8,6 +8,9 @@
         Title="DS3Tool VERSION" Width="320" SizeToContent="Height" ResizeMode="NoResize">
     <StackPanel Name="topPanel">
         <StackPanel Name="mainPanel">
+            <TextBlock x:Name="AppUpdateTxt" FontSize="12" Margin="0,2,0,0" FontWeight="Bold" HorizontalAlignment="Center" Foreground="Red" Visibility="Collapsed">
+                <Run Text="Update Available"/>
+            </TextBlock>
             <DockPanel Height="16" x:Name="PlayerPanelControl" MouseLeftButtonDown="dockPanel_MouseLeftButtonDown" Tag="{Binding ElementName=PlayerPanel}">
                 <TextBlock Text="Player ▼" Margin="2,0,2,0" FontWeight="Bold"/>
                 <Button Width="15" DockPanel.Dock="Right" HorizontalAlignment="Right" Content="▼" Click="ToggleCollapse"></Button>
