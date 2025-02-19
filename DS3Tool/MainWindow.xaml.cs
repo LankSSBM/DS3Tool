@@ -900,7 +900,7 @@ namespace DS3Tool
             FREE_CAMERA, FREE_CAMERA_CONTROL, NO_CLIP,
             DISABLE_STEAM_INPUT_ENUM,
             GAME_SPEED_50PC, GAME_SPEED_75PC, GAME_SPEED_100PC, GAME_SPEED_150PC, GAME_SPEED_200PC, GAME_SPEED_300PC, GAME_SPEED_500PC, GAME_SPEED_1000PC,
-
+            CINDER_SWORD, CINDER_STAFF, CINDER_LANCE, CINDER_CURVED, CINDER_GWYN,
         }
 
 
@@ -1143,6 +1143,11 @@ namespace DS3Tool
                 case HOTKEY_ACTIONS.GAME_SPEED_300PC: _process.getSetGameSpeed(3.0f); break;
                 case HOTKEY_ACTIONS.GAME_SPEED_500PC: _process.getSetGameSpeed(5.0f); break;
                 case HOTKEY_ACTIONS.GAME_SPEED_1000PC: _process.getSetGameSpeed(10.0f); break;
+                case HOTKEY_ACTIONS.CINDER_SWORD:   if (_process.GetSetTargetEnemyID() == CINDER_ENEMY_ID) { _cinderManager.SetPhase(0, chkLockPhase.IsChecked ?? false); } break;
+                case HOTKEY_ACTIONS.CINDER_LANCE:   if (_process.GetSetTargetEnemyID() == CINDER_ENEMY_ID) { _cinderManager.SetPhase(1, chkLockPhase.IsChecked ?? false); } break;
+                case HOTKEY_ACTIONS.CINDER_CURVED:  if (_process.GetSetTargetEnemyID() == CINDER_ENEMY_ID) { _cinderManager.SetPhase(2, chkLockPhase.IsChecked ?? false); } break;
+                case HOTKEY_ACTIONS.CINDER_STAFF:   if (_process.GetSetTargetEnemyID() == CINDER_ENEMY_ID) { _cinderManager.SetPhase(3, chkLockPhase.IsChecked ?? false); } break;
+                case HOTKEY_ACTIONS.CINDER_GWYN:    if (_process.GetSetTargetEnemyID() == CINDER_ENEMY_ID) { _cinderManager.SetPhase(4, chkLockPhase.IsChecked ?? false); } break;
 
 
                 default: Utils.debugWrite("Action not handled: " + act.ToString()); break;
