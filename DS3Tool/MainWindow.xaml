@@ -8,8 +8,8 @@
         Title="DS3Tool VERSION" Width="320" SizeToContent="Height" ResizeMode="NoResize">
     <StackPanel Name="topPanel">
         <StackPanel Name="mainPanel">
-            <TextBlock x:Name="AppUpdateTxt" FontSize="12" Margin="0,2,0,0" FontWeight="Bold" HorizontalAlignment="Center" Foreground="Red" Visibility="Collapsed">
-                <Run Text="Update Available"/>
+            <TextBlock x:Name="AppUpdateTxt" Margin="0,2,0,0" HorizontalAlignment="Center" Visibility="Collapsed">
+                <Hyperlink Click="OpenNewVersionInBrowser" FontSize="12" Foreground="Red" FontWeight="Bold">Update Available</Hyperlink>
             </TextBlock>
             <DockPanel Height="16" x:Name="PlayerPanelControl" MouseLeftButtonDown="dockPanel_MouseLeftButtonDown" Tag="{Binding ElementName=PlayerPanel}">
                 <TextBlock Text="Player ▼" Margin="2,0,2,0" FontWeight="Bold"/>

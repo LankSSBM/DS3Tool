@@ -233,6 +233,11 @@ namespace DS3Tool
             }
         }
 
+        public void OpenNewVersionInBrowser(object sender, RoutedEventArgs e)
+        {
+            System.Diagnostics.Process.Start("https://github.com/LankSSBM/DS3Tool/releases");
+        }
+
         private string GetDarkSouls3ExePath()
         {
             string steamPath = Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Valve\Steam", "InstallPath", null) as string;
