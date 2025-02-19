@@ -70,8 +70,28 @@ namespace DS3Tool
             catch { _process = null; }
             if (null == _process)
             {
-                var res = MessageBox.Show("Could not attach to process. Retry?", "hobbWeird", MessageBoxButton.YesNo);
+                var res = MessageBox.Show("Could not attach to the game. This could be because it's not running, or because it was blocked by another process.\r\n\r\nClick Yes to try launching the game automatically, or No to just try attaching again.", "BlameLank", MessageBoxButton.YesNoCancel);
                 if (res == MessageBoxResult.Yes)
+                {
+                    if (!LaunchUtils.launchGame())
+                    {
+                        MessageBox.Show("Could not launch game.", "Sadge", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    }
+                    else
+                    {//success but wait a bit for it to start.
+                        for (int i = 0; i < 30; i++)
+                        {
+                            System.Threading.Thread.Sleep(1000);
+                            if (DS3Process.checkGameRunning())
+                            {
+                                System.Threading.Thread.Sleep(1000); 
+                                break;
+                            }
+                        }
+                    }
+                    goto retry;
+                }
+                else if (res == MessageBoxResult.No)
                 {
                     goto retry;
                 }
@@ -158,7 +178,7 @@ namespace DS3Tool
 
         private void VersionCheck()
         {
-            string gameExePath = GetDarkSouls3ExePath();
+            string gameExePath = LaunchUtils.GetDarkSouls3ExePath();
             if (!string.IsNullOrEmpty(gameExePath) && File.Exists(gameExePath))
             {
                 FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(gameExePath);
@@ -174,45 +194,6 @@ namespace DS3Tool
                 MessageBox.Show("Your Dark Souls 3 patch may not be 1.15 or the game might not be located at the expected path. Ensure the game is updated to this version for proper functionality.",
                         "Version Check Failed", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
-        }
-
-        private string GetDarkSouls3ExePath()
-        {
-            string steamPath = Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Valve\Steam", "InstallPath", null) as string;
-            if (string.IsNullOrEmpty(steamPath))
-                return null;
-
-            List<string> libraries = new List<string>();
-
-            string steamInstallConfigPath = Path.Combine(steamPath, "steamapps", "libraryfolders.vdf"); // contains info about steam games install locations
-            if (File.Exists(steamInstallConfigPath))
-            {
-
-                string[] lines = File.ReadAllLines(steamInstallConfigPath);
-                var regex = new Regex(@"""path""\s+""(.+?)"""); // search the config for lines with the text: "path" 
-
-                foreach (string line in lines)
-                {
-                    var match = regex.Match(line);
-                    if (match.Success)
-                    {
-                        string path = match.Groups[1].Value.Replace(@"\\", @"\");
-                        libraries.Add(path);
-                    }
-                }
-
-            }
-
-            foreach (string installDir in libraries)
-            {
-                string gamePath = Path.Combine(installDir, "steamapps", "common", "DARK SOULS III", "Game", "DarkSoulsIII.exe");
-                if (File.Exists(gamePath))
-                {
-                    return gamePath;
-                }
-            }
-
-            return null;
         }
 
         public class Item
