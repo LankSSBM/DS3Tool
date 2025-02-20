@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -46,7 +48,7 @@ namespace DS3Tool
 
         public MainWindow()
         {
-            VersionCheck();
+            GameVersionCheck();
             InitializeComponent();
 
             string projectDirectory = AppDomain.CurrentDomain.BaseDirectory;
@@ -122,7 +124,7 @@ namespace DS3Tool
                 hotkeyInit();
             }
 
-            //maybeDoUpdateCheck();
+            doUpdateCheck();
         }
 
         private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -176,7 +178,62 @@ namespace DS3Tool
             catch (Exception ex) { Console.WriteLine(ex.ToString()); }
         }
 
-        private void VersionCheck()
+        public async void doUpdateCheck(bool force = false)
+        {
+            HttpClient httpClient = new HttpClient();
+            var checkFile = Utils.getFnameInAppdata("LastUpdateCheck", "DS3Tool");
+            var lastCheckDate = Utils.getFileDate(checkFile);
+            var sinceLastCheck = DateTime.Now - lastCheckDate;
+            Utils.debugWrite($"Last check was {sinceLastCheck.TotalDays} days ago");
+
+            string apiUrl = $"https://api.github.com/repos/LankSSBM/DS3Tool/releases/latest";
+
+            if (force || sinceLastCheck.TotalDays >= 1)
+            {
+                try
+                {
+                    string currentVersionStr = Assembly.GetEntryAssembly().GetName().Version.ToString();
+                    string webVersionStr = "";
+                    Version currentVersion = new Version(currentVersionStr);
+
+                    httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("DS3Tool", currentVersionStr));
+                    Stream responseStream = await httpClient.GetStreamAsync(apiUrl);
+                    StreamReader reader = new StreamReader(responseStream);
+
+                    string line;
+
+                    while ((line = await reader.ReadLineAsync()) != null)
+                    {
+                        int tagIndex = line.IndexOf("\"tag_name\":", StringComparison.OrdinalIgnoreCase);
+
+                        if (tagIndex == -1) return;
+
+                        int quoteStart = line.IndexOf('"', tagIndex + "\"tag_name\":".Length) + 1;
+                        int quoteEnd = line.IndexOf('"', quoteStart);
+
+                        if (quoteStart == -1 || quoteEnd == -1) return;
+
+                        webVersionStr = line.Substring(quoteStart, quoteEnd - quoteStart).TrimStart('v');
+                    }
+
+                    if (currentVersion.CompareTo(new Version(webVersionStr)) == 1)
+                    {
+                        AppUpdateTxt.Visibility = Visibility.Visible;
+                    }
+                    else
+                    {
+                        AppUpdateTxt.Visibility = Visibility.Collapsed;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error checking for updates. {e.Message}");
+                }
+
+            }
+        }
+
+        private void GameVersionCheck()
         {
             string gameExePath = LaunchUtils.GetDarkSouls3ExePath();
             if (!string.IsNullOrEmpty(gameExePath) && File.Exists(gameExePath))
@@ -194,6 +251,50 @@ namespace DS3Tool
                 MessageBox.Show("Your Dark Souls 3 patch may not be 1.15 or the game might not be located at the expected path. Ensure the game is updated to this version for proper functionality.",
                         "Version Check Failed", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
+        }
+
+        public void OpenNewVersionInBrowser(object sender, RoutedEventArgs e)
+        {
+            System.Diagnostics.Process.Start("https://github.com/LankSSBM/DS3Tool/releases");
+        }
+
+        private string GetDarkSouls3ExePath()
+        {
+            string steamPath = Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Valve\Steam", "InstallPath", null) as string;
+            if (string.IsNullOrEmpty(steamPath))
+                return null;
+
+            List<string> libraries = new List<string>();
+
+            string steamInstallConfigPath = Path.Combine(steamPath, "steamapps", "libraryfolders.vdf"); // contains info about steam games install locations
+            if (File.Exists(steamInstallConfigPath))
+            {
+
+                string[] lines = File.ReadAllLines(steamInstallConfigPath);
+                var regex = new Regex(@"""path""\s+""(.+?)"""); // search the config for lines with the text: "path" 
+
+                foreach (string line in lines)
+                {
+                    var match = regex.Match(line);
+                    if (match.Success)
+                    {
+                        string path = match.Groups[1].Value.Replace(@"\\", @"\");
+                        libraries.Add(path);
+                    }
+                }
+
+            }
+
+            foreach (string installDir in libraries)
+            {
+                string gamePath = Path.Combine(installDir, "steamapps", "common", "DARK SOULS III", "Game", "DarkSoulsIII.exe");
+                if (File.Exists(gamePath))
+                {
+                    return gamePath;
+                }
+            }
+
+            return null;
         }
 
         public class Item
