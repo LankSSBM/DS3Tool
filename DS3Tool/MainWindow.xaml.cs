@@ -72,8 +72,28 @@ namespace DS3Tool
             catch { _process = null; }
             if (null == _process)
             {
-                var res = MessageBox.Show("Could not attach to process. Retry?", "hobbWeird", MessageBoxButton.YesNo);
+                var res = MessageBox.Show("Could not attach to the game. This could be because it's not running, or because it was blocked by another process.\r\n\r\nClick Yes to try launching the game automatically, or No to just try attaching again.", "BlameLank", MessageBoxButton.YesNoCancel);
                 if (res == MessageBoxResult.Yes)
+                {
+                    if (!LaunchUtils.launchGame())
+                    {
+                        MessageBox.Show("Could not launch game.", "Sadge", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    }
+                    else
+                    {//success but wait a bit for it to start.
+                        for (int i = 0; i < 30; i++)
+                        {
+                            System.Threading.Thread.Sleep(1000);
+                            if (DS3Process.checkGameRunning())
+                            {
+                                System.Threading.Thread.Sleep(1000); 
+                                break;
+                            }
+                        }
+                    }
+                    goto retry;
+                }
+                else if (res == MessageBoxResult.No)
                 {
                     goto retry;
                 }
@@ -215,7 +235,7 @@ namespace DS3Tool
 
         private void GameVersionCheck()
         {
-            string gameExePath = GetDarkSouls3ExePath();
+            string gameExePath = LaunchUtils.GetDarkSouls3ExePath();
             if (!string.IsNullOrEmpty(gameExePath) && File.Exists(gameExePath))
             {
                 FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(gameExePath);
@@ -962,7 +982,7 @@ namespace DS3Tool
             FREE_CAMERA, FREE_CAMERA_CONTROL, NO_CLIP,
             DISABLE_STEAM_INPUT_ENUM,
             GAME_SPEED_50PC, GAME_SPEED_75PC, GAME_SPEED_100PC, GAME_SPEED_150PC, GAME_SPEED_200PC, GAME_SPEED_300PC, GAME_SPEED_500PC, GAME_SPEED_1000PC,
-
+            CINDER_SWORD, CINDER_STAFF, CINDER_LANCE, CINDER_CURVED, CINDER_GWYN,
         }
 
 
@@ -1205,6 +1225,11 @@ namespace DS3Tool
                 case HOTKEY_ACTIONS.GAME_SPEED_300PC: _process.getSetGameSpeed(3.0f); break;
                 case HOTKEY_ACTIONS.GAME_SPEED_500PC: _process.getSetGameSpeed(5.0f); break;
                 case HOTKEY_ACTIONS.GAME_SPEED_1000PC: _process.getSetGameSpeed(10.0f); break;
+                case HOTKEY_ACTIONS.CINDER_SWORD:   if (_process.GetSetTargetEnemyID() == CINDER_ENEMY_ID) { _cinderManager.SetPhase(0, chkLockPhase.IsChecked ?? false); } break;
+                case HOTKEY_ACTIONS.CINDER_LANCE:   if (_process.GetSetTargetEnemyID() == CINDER_ENEMY_ID) { _cinderManager.SetPhase(1, chkLockPhase.IsChecked ?? false); } break;
+                case HOTKEY_ACTIONS.CINDER_CURVED:  if (_process.GetSetTargetEnemyID() == CINDER_ENEMY_ID) { _cinderManager.SetPhase(2, chkLockPhase.IsChecked ?? false); } break;
+                case HOTKEY_ACTIONS.CINDER_STAFF:   if (_process.GetSetTargetEnemyID() == CINDER_ENEMY_ID) { _cinderManager.SetPhase(3, chkLockPhase.IsChecked ?? false); } break;
+                case HOTKEY_ACTIONS.CINDER_GWYN:    if (_process.GetSetTargetEnemyID() == CINDER_ENEMY_ID) { _cinderManager.SetPhase(4, chkLockPhase.IsChecked ?? false); } break;
 
 
                 default: Utils.debugWrite("Action not handled: " + act.ToString()); break;
