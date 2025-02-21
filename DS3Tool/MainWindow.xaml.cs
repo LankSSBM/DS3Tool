@@ -257,45 +257,6 @@ namespace DS3Tool
             System.Diagnostics.Process.Start("https://github.com/LankSSBM/DS3Tool/releases");
         }
 
-        private string GetDarkSouls3ExePath()
-        {
-            string steamPath = Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Valve\Steam", "InstallPath", null) as string;
-            if (string.IsNullOrEmpty(steamPath))
-                return null;
-
-            List<string> libraries = new List<string>();
-
-            string steamInstallConfigPath = Path.Combine(steamPath, "steamapps", "libraryfolders.vdf"); // contains info about steam games install locations
-            if (File.Exists(steamInstallConfigPath))
-            {
-
-                string[] lines = File.ReadAllLines(steamInstallConfigPath);
-                var regex = new Regex(@"""path""\s+""(.+?)"""); // search the config for lines with the text: "path" 
-
-                foreach (string line in lines)
-                {
-                    var match = regex.Match(line);
-                    if (match.Success)
-                    {
-                        string path = match.Groups[1].Value.Replace(@"\\", @"\");
-                        libraries.Add(path);
-                    }
-                }
-
-            }
-
-            foreach (string installDir in libraries)
-            {
-                string gamePath = Path.Combine(installDir, "steamapps", "common", "DARK SOULS III", "Game", "DarkSoulsIII.exe");
-                if (File.Exists(gamePath))
-                {
-                    return gamePath;
-                }
-            }
-
-            return null;
-        }
-
         public class Item
         {
             public string Name { get; set; }

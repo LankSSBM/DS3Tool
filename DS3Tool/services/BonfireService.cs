@@ -38,7 +38,7 @@ namespace DS3Tool.services
         {
 
             IntPtr bonfireIdOffset = codeCaveOffset + 0x20;
-            _process.WriteInt32(bonfireIdOffset, id);
+            CrudUtils.WriteInt32(_process._targetProcessHandle, bonfireIdOffset, id);
 
             codeBlockStart = codeCaveOffset + 0x40;
 
@@ -83,14 +83,14 @@ namespace DS3Tool.services
                     0xC3
                 }).ToArray();
 
-            _process.WriteBytes(codeBlockStart, codeCave);
+            CrudUtils.WriteBytes(_process._targetProcessHandle, codeBlockStart, codeCave);
 
         }
 
         private void CleanUpCodeCave()
         {
             var zeroBytes = new byte[300];
-            _process.WriteBytes(codeCaveOffset, zeroBytes);
+            CrudUtils.WriteBytes(_process._targetProcessHandle, codeCaveOffset, zeroBytes);
 
         }
 
@@ -98,18 +98,18 @@ namespace DS3Tool.services
         {
             foreach (var bonfire in _bonfireDict.Keys)
             {
-                var ptr1 = _process.ReadUInt64(_process.ds3Base + GameFlagDataOff);
-                var ptr2 = _process.ReadUInt64((IntPtr)ptr1);
+                var ptr1 = CrudUtils.ReadUInt64(_process._targetProcessHandle, _process.ds3Base + GameFlagDataOff);
+                var ptr2 = CrudUtils.ReadUInt64(_process._targetProcessHandle, (IntPtr)ptr1);
 
                 var flagLoc = _bonfireDict[bonfire];
 
                 var finalAddress = (IntPtr)(ptr2 + (ulong)flagLoc.Offset);
 
-                uint currentValue = _process.ReadUInt32(finalAddress);
+                uint currentValue = CrudUtils.ReadUInt32(_process._targetProcessHandle, finalAddress);
                 uint mask = ((1u << 1) - 1) << flagLoc.StartBit;
                 currentValue |= mask;
 
-                _process.WriteUInt32(finalAddress, currentValue);
+                CrudUtils.WriteUInt32(_process._targetProcessHandle, finalAddress, currentValue);
             }
         }
 

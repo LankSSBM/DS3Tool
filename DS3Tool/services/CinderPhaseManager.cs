@@ -144,7 +144,7 @@ internal class CinderPhaseManager : IDisposable
                     continue;
                 }
 
-                var codeCavePointer = _ds3Process.ReadInt64(_ds3Process.ds3Base + CodeCavePointerOffset);
+                var codeCavePointer = CrudUtils.ReadInt64(_ds3Process._targetProcessHandle, _ds3Process.ds3Base + CodeCavePointerOffset);
                 if (codeCavePointer != 0)
                 {
                     CheckAndResetLuaCounter(codeCavePointer);
@@ -168,14 +168,14 @@ internal class CinderPhaseManager : IDisposable
 
     private void CheckAndResetLuaCounter(long targetPtr)
     {
-        var luaPtr = _ds3Process.ReadInt64(new IntPtr(targetPtr) + LuaStateOffset);
+        var luaPtr = CrudUtils.ReadInt64(_ds3Process._targetProcessHandle, new IntPtr(targetPtr) + LuaStateOffset);
         if (luaPtr != 0)
         {
-            var luaBase = _ds3Process.ReadInt64(new IntPtr(luaPtr) + LuaNumbersBaseOffset);
+            var luaBase = CrudUtils.ReadInt64(_ds3Process._targetProcessHandle, new IntPtr(luaPtr) + LuaNumbersBaseOffset);
             if (luaBase != 0)
             {
-                var currentValue = _ds3Process.ReadFloat(new IntPtr(luaBase) + LuaCounterOffset);
-                _ds3Process.WriteFloat(new IntPtr(luaBase) + LuaCounterOffset, 0);
+                var currentValue = CrudUtils.ReadFloat(_ds3Process._targetProcessHandle, new IntPtr(luaBase) + LuaCounterOffset);
+                CrudUtils.WriteFloat(_ds3Process._targetProcessHandle, new IntPtr(luaBase) + LuaCounterOffset, 0);
 
                 if (currentValue > 50)
                 {
@@ -189,7 +189,7 @@ internal class CinderPhaseManager : IDisposable
 
     private void ForceAnimation(int animationId)
     {
-        var codeCavePointer = _ds3Process.ReadInt64(_ds3Process.ds3Base + CodeCavePointerOffset);
+        var codeCavePointer = CrudUtils.ReadInt64(_ds3Process._targetProcessHandle, _ds3Process.ds3Base + CodeCavePointerOffset);
         if (codeCavePointer == 0)
         {
             MessageBox.Show("Please lock on to Cinder and Enable target options before selecting a phase", "Error", MessageBoxButton.OK);
@@ -197,10 +197,10 @@ internal class CinderPhaseManager : IDisposable
         }
 
         var basePtr = new IntPtr(codeCavePointer);
-        var ptr1 = _ds3Process.ReadInt64(basePtr + AnimationPointerChainOffset1);
-        var ptr2 = _ds3Process.ReadInt64(new IntPtr(ptr1) + AnimationPointerChainOffset2);
+        var ptr1 = CrudUtils.ReadInt64(_ds3Process._targetProcessHandle, basePtr + AnimationPointerChainOffset1);
+        var ptr2 = CrudUtils.ReadInt64(_ds3Process._targetProcessHandle, new IntPtr(ptr1) + AnimationPointerChainOffset2);
         var finalAddr = new IntPtr(ptr2) + AnimationFinalOffset;
-        _ds3Process.WriteInt32(finalAddr, animationId);
+        CrudUtils.WriteInt32(_ds3Process._targetProcessHandle, finalAddr, animationId);
     }
 
     private void ResetLuaNumbers()
@@ -212,11 +212,11 @@ internal class CinderPhaseManager : IDisposable
 
     private void SetLuaNumber(int numberIndex, float value)
     {
-        var codeCavePointer = _ds3Process.ReadInt64(_ds3Process.ds3Base + CodeCavePointerOffset);
-        var luaStatePointer = _ds3Process.ReadInt64(new IntPtr(codeCavePointer) + LuaStateOffset);
-        var luaBaseAddress = _ds3Process.ReadInt64(new IntPtr(luaStatePointer) + LuaNumbersBaseOffset);
+        var codeCavePointer = CrudUtils.ReadInt64(_ds3Process._targetProcessHandle, _ds3Process.ds3Base + CodeCavePointerOffset);
+        var luaStatePointer = CrudUtils.ReadInt64(_ds3Process._targetProcessHandle, new IntPtr(codeCavePointer) + LuaStateOffset);
+        var luaBaseAddress = CrudUtils.ReadInt64(_ds3Process._targetProcessHandle, new IntPtr(luaStatePointer) + LuaNumbersBaseOffset);
         var finalAddr = new IntPtr(luaBaseAddress) + 0x6BC + (4 * numberIndex);
-        _ds3Process.WriteFloat(finalAddr, value);
+        CrudUtils.WriteFloat(_ds3Process._targetProcessHandle, finalAddr, value);
     }
 
     public void Dispose()
@@ -226,7 +226,7 @@ internal class CinderPhaseManager : IDisposable
 
     private bool ValidateTargetIsCinder()
     {
-        var codeCavePointer = _ds3Process.ReadInt64(_ds3Process.ds3Base + CodeCavePointerOffset);
+        var codeCavePointer = CrudUtils.ReadInt64(_ds3Process._targetProcessHandle, _ds3Process.ds3Base + CodeCavePointerOffset);
         if (codeCavePointer == 0)
             return false;
 

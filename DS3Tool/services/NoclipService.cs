@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 
@@ -65,7 +66,7 @@ namespace DS3Tool.services
 
         private void SetNoClipFuncs()
         {
-            _ds3Process.WriteBytes(FLY_MODE, new byte[] { 1 });
+            CrudUtils.WriteBytes(_ds3Process._targetProcessHandle, FLY_MODE, new byte[] { 1 });
             _ds3Process.enableOpt(DS3Process.DebugOpts.HIDDEN);
             _ds3Process.enableOpt(DS3Process.DebugOpts.SILENT);
         }
@@ -114,7 +115,7 @@ namespace DS3Tool.services
                 .ToArray();
             try
             {
-                _ds3Process.WriteBytes(PLAYER_COORD_BLOCK_START, playerCoordCave);
+                CrudUtils.WriteBytes(_ds3Process._targetProcessHandle, PLAYER_COORD_BLOCK_START, playerCoordCave);
 
                 hooks.Add(new HookData
                 {
@@ -162,7 +163,7 @@ namespace DS3Tool.services
 
             try
             {
-                _ds3Process.WriteBytes(IN_AIR_TIMER_BLOCK_START, inAirTimerCave);
+                CrudUtils.WriteBytes(_ds3Process._targetProcessHandle, IN_AIR_TIMER_BLOCK_START, inAirTimerCave);
 
                 hooks.Add(new HookData
                 {
@@ -210,7 +211,7 @@ namespace DS3Tool.services
 
             try
             {
-                _ds3Process.WriteBytes(CAM_H_ROTATE_BLOCK_START, camHRotateCave);
+                CrudUtils.WriteBytes(_ds3Process._targetProcessHandle, CAM_H_ROTATE_BLOCK_START, camHRotateCave);
 
             }
             catch (Exception ex)
@@ -258,7 +259,7 @@ namespace DS3Tool.services
 
             try
             {
-                _ds3Process.WriteBytes(MOVEMENT_BLOCK_START, movementCave);
+                CrudUtils.WriteBytes(_ds3Process._targetProcessHandle, MOVEMENT_BLOCK_START, movementCave);
 
             }
             catch (Exception ex)
@@ -421,7 +422,7 @@ namespace DS3Tool.services
 
             try
             {
-                _ds3Process.WriteBytes(COORDS_UPDATE_BLOCK_START, coordsUpdateCave);
+                CrudUtils.WriteBytes(_ds3Process._targetProcessHandle, COORDS_UPDATE_BLOCK_START, coordsUpdateCave);
 
             }
             catch (Exception ex)
@@ -457,8 +458,8 @@ namespace DS3Tool.services
 
                 }).ToArray();
             try
-            {
-                _ds3Process.WriteBytes(COORDS_UPDATE_Z_START, zDirectCave);
+            {   
+                CrudUtils.WriteBytes(_ds3Process._targetProcessHandle, COORDS_UPDATE_Z_START, zDirectCave);
 
             }
             catch (Exception ex)
@@ -484,7 +485,7 @@ namespace DS3Tool.services
 
             try
             {
-                _ds3Process.WriteBytes(COORDS_UPDATE_BLOCK_EXIT, updateCoordsCaveExit);
+                CrudUtils.WriteBytes(_ds3Process._targetProcessHandle, COORDS_UPDATE_BLOCK_EXIT, updateCoordsCaveExit);
 
             }
             catch (Exception ex)
@@ -502,7 +503,7 @@ namespace DS3Tool.services
             foreach (var hook in hooks)
 
             {
-                byte[] currentBytes = _ds3Process.ReadBytes(hook.OriginAddr, hook.OriginalBytes.Length);
+                byte[] currentBytes = CrudUtils.ReadBytes(_ds3Process._targetProcessHandle, hook.OriginAddr, hook.OriginalBytes.Length);
 
                 if (currentBytes.Length > 0 && currentBytes[0] == 0xE9)
                 {
@@ -539,8 +540,8 @@ namespace DS3Tool.services
 
                 try
                 {
-                    _ds3Process.WriteBytes(hook.OriginAddr, jumpBytes);
-                    rollbackHooks.Add(() => _ds3Process.WriteBytes(hook.OriginAddr, hook.OriginalBytes));
+                    CrudUtils.WriteBytes(_ds3Process._targetProcessHandle, hook.OriginAddr, jumpBytes);
+                    rollbackHooks.Add(() => CrudUtils.WriteBytes(_ds3Process._targetProcessHandle, hook.OriginAddr, hook.OriginalBytes));
                 }
                 catch (Exception ex)
                 {
@@ -556,7 +557,7 @@ namespace DS3Tool.services
 
         private bool VerifyHookLocation(IntPtr location, byte[] expectedBytes)
         {
-            var currentBytes = _ds3Process.ReadBytes(location, expectedBytes.Length);
+            var currentBytes = CrudUtils.ReadBytes(_ds3Process._targetProcessHandle, location, expectedBytes.Length);
             return currentBytes.SequenceEqual(expectedBytes);
         }
 
@@ -578,10 +579,10 @@ namespace DS3Tool.services
             {
                 try
                 {
-                    _ds3Process.WriteBytes(hook.OriginAddr, hook.OriginalBytes);
+                    CrudUtils.WriteBytes(_ds3Process._targetProcessHandle, hook.OriginAddr, hook.OriginalBytes);
                     FlushInstructionCache(_ds3Process._targetProcessHandle, hook.OriginAddr, (UIntPtr)hook.OriginalBytes.Length);
 
-                    var verificationBytes = _ds3Process.ReadBytes(hook.OriginAddr, hook.OriginalBytes.Length);
+                    var verificationBytes = CrudUtils.ReadBytes(_ds3Process._targetProcessHandle, hook.OriginAddr, hook.OriginalBytes.Length);
                     if (!verificationBytes.SequenceEqual(hook.OriginalBytes))
                     {
                         throw new Exception($"Verification failed for {hook.Name}");
@@ -598,7 +599,7 @@ namespace DS3Tool.services
 
         private void DisableNoClipFuncs()
         {
-            _ds3Process.WriteBytes(FLY_MODE, new byte[] { 0 });
+            CrudUtils.WriteBytes(_ds3Process._targetProcessHandle, FLY_MODE, new byte[] { 0 });
             _ds3Process.disableOpt(DS3Process.DebugOpts.HIDDEN);
             _ds3Process.disableOpt(DS3Process.DebugOpts.SILENT);
         }
@@ -607,9 +608,8 @@ namespace DS3Tool.services
         {
             try
             {
-
                 var zeroBytes = new byte[3000];
-                _ds3Process.WriteBytes(CODE_CAVE_OFFSET, zeroBytes);
+                CrudUtils.WriteBytes(_ds3Process._targetProcessHandle, CODE_CAVE_OFFSET, zeroBytes);
 
             }
             catch (Exception ex)

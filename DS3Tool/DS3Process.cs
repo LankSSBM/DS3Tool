@@ -297,11 +297,11 @@ namespace DS3Tool
             var processes = Process.GetProcesses();
             foreach (var process in processes)
             {
-                if (process.ProcessName.ToLower().Equals(ds3ProName.ToLower()) && !process.HasExited)
+                if (process.ProcessName.ToLower().Equals(DS3_PRO_NAME.ToLower()) && !process.HasExited)
                 {
                     return true;
                 }
-                if (process.ProcessName.ToLower().Equals(ds3ProName.ToLower()) && !process.HasExited)
+                if (process.ProcessName.ToLower().Equals(DS3_PRO_NAME.ToLower()) && !process.HasExited)
                 {
                     return true;
                 }

@@ -10,6 +10,7 @@ namespace DS3Tool.services
         private const int ITEM_SPAWN_OFFSET = 0x7bba70;
         private const int MAP_ITEM_MANAGER_OFFSET = 0x4752300;
         private const long BASE_MEMORY_LOCATION = 0x143B40C1E;
+        private DS3Process process;
 
         public readonly Dictionary<string, uint> INFUSION_TYPES = new Dictionary<string, uint>
         {
@@ -27,8 +28,6 @@ namespace DS3Tool.services
             { "+5", 5 }, { "+6", 6 }, { "+7", 7 }, { "+8", 8 }, { "+9", 9 },
             { "+10", 10 }
         };
-
-        private DS3Process process;
 
         [StructLayout(LayoutKind.Sequential)]
         public struct SpawnRequest
@@ -67,15 +66,15 @@ namespace DS3Tool.services
 
                 ValidateMemoryRegions(requestLocation, outputLocation, shellcodeLocation);
 
-                process.WriteBytes(requestLocation, StructToBytes(request));
+                CrudUtils.WriteBytes(process._targetProcessHandle, requestLocation, StructToBytes(request));
 
-                process.WriteBytes(outputLocation, new byte[16]);
+                CrudUtils.WriteBytes(process._targetProcessHandle, outputLocation, new byte[16]);
 
                 IntPtr spawnFuncPtr = IntPtr.Add(process.ds3Base, ITEM_SPAWN_OFFSET);
 
                 IntPtr mapItemManPtr = IntPtr.Add(process.ds3Base, MAP_ITEM_MANAGER_OFFSET);
 
-                IntPtr actualMapItemMan = (IntPtr)process.ReadUInt64(mapItemManPtr);
+                IntPtr actualMapItemMan = (IntPtr)CrudUtils.ReadUInt64(process._targetProcessHandle, mapItemManPtr);
 
                 byte[] shellcode = GenerateSpawnShellcode(
                     spawnFuncPtr.ToInt64(),
@@ -84,15 +83,15 @@ namespace DS3Tool.services
                     outputLocation.ToInt64()
                 );
 
-                process.WriteBytes(shellcodeLocation, shellcode);
+                CrudUtils.WriteBytes(process._targetProcessHandle, shellcodeLocation, shellcode);
                 process.RunThread(shellcodeLocation);
 
             }
             finally
             {
-                process.WriteBytes(requestLocation, new byte[Marshal.SizeOf<SpawnRequest>()]);
-                process.WriteBytes(outputLocation, new byte[16]);
-                process.WriteBytes(shellcodeLocation, new byte[50]);
+                CrudUtils.WriteBytes(process._targetProcessHandle, requestLocation, new byte[Marshal.SizeOf<SpawnRequest>()]);
+                CrudUtils.WriteBytes(process._targetProcessHandle, outputLocation, new byte[16]);
+                CrudUtils.WriteBytes(process._targetProcessHandle, shellcodeLocation, new byte[50]);
             }
         }
 
@@ -112,7 +111,7 @@ namespace DS3Tool.services
         {
             try
             {
-                byte[] currentMemory = process.ReadBytes(address, size);
+                byte[] currentMemory = CrudUtils.ReadBytes(process._targetProcessHandle, address, size);
                 return currentMemory.All(b => b == 0);
             }
             catch
