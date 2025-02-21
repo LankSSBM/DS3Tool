@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -45,7 +47,7 @@ namespace DS3Tool
 
         public MainWindow()
         {
-            VersionCheck();
+            GameVersionCheck();
             InitializeComponent();
 
             string projectDirectory = AppDomain.CurrentDomain.BaseDirectory;
@@ -69,8 +71,28 @@ namespace DS3Tool
             catch { _process = null; }
             if (null == _process)
             {
-                var res = MessageBox.Show("Could not attach to process. Retry?", "hobbWeird", MessageBoxButton.YesNo);
+                var res = MessageBox.Show("Could not attach to the game. This could be because it's not running, or because it was blocked by another process.\r\n\r\nClick Yes to try launching the game automatically, or No to just try attaching again.", "BlameLank", MessageBoxButton.YesNoCancel);
                 if (res == MessageBoxResult.Yes)
+                {
+                    if (!LaunchUtils.launchGame())
+                    {
+                        MessageBox.Show("Could not launch game.", "Sadge", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    }
+                    else
+                    {//success but wait a bit for it to start.
+                        for (int i = 0; i < 30; i++)
+                        {
+                            System.Threading.Thread.Sleep(1000);
+                            if (DS3Process.checkGameRunning())
+                            {
+                                System.Threading.Thread.Sleep(1000); 
+                                break;
+                            }
+                        }
+                    }
+                    goto retry;
+                }
+                else if (res == MessageBoxResult.No)
                 {
                     goto retry;
                 }
@@ -101,7 +123,7 @@ namespace DS3Tool
                 hotkeyInit();
             }
 
-            //maybeDoUpdateCheck();
+            doUpdateCheck();
         }
 
         private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -155,9 +177,64 @@ namespace DS3Tool
             catch (Exception ex) { Console.WriteLine(ex.ToString()); }
         }
 
-        private void VersionCheck()
+        public async void doUpdateCheck(bool force = false)
         {
-            string gameExePath = GetDarkSouls3ExePath();
+            HttpClient httpClient = new HttpClient();
+            var checkFile = Utils.getFnameInAppdata("LastUpdateCheck", "DS3Tool");
+            var lastCheckDate = Utils.getFileDate(checkFile);
+            var sinceLastCheck = DateTime.Now - lastCheckDate;
+            Utils.debugWrite($"Last check was {sinceLastCheck.TotalDays} days ago");
+
+            string apiUrl = $"https://api.github.com/repos/LankSSBM/DS3Tool/releases/latest";
+
+            if (force || sinceLastCheck.TotalDays >= 1)
+            {
+                try
+                {
+                    string currentVersionStr = Assembly.GetEntryAssembly().GetName().Version.ToString();
+                    string webVersionStr = "";
+                    Version currentVersion = new Version(currentVersionStr);
+
+                    httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("DS3Tool", currentVersionStr));
+                    Stream responseStream = await httpClient.GetStreamAsync(apiUrl);
+                    StreamReader reader = new StreamReader(responseStream);
+
+                    string line;
+
+                    while ((line = await reader.ReadLineAsync()) != null)
+                    {
+                        int tagIndex = line.IndexOf("\"tag_name\":", StringComparison.OrdinalIgnoreCase);
+
+                        if (tagIndex == -1) return;
+
+                        int quoteStart = line.IndexOf('"', tagIndex + "\"tag_name\":".Length) + 1;
+                        int quoteEnd = line.IndexOf('"', quoteStart);
+
+                        if (quoteStart == -1 || quoteEnd == -1) return;
+
+                        webVersionStr = line.Substring(quoteStart, quoteEnd - quoteStart).TrimStart('v');
+                    }
+
+                    if (currentVersion.CompareTo(new Version(webVersionStr)) == 1)
+                    {
+                        AppUpdateTxt.Visibility = Visibility.Visible;
+                    }
+                    else
+                    {
+                        AppUpdateTxt.Visibility = Visibility.Collapsed;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error checking for updates. {e.Message}");
+                }
+
+            }
+        }
+
+        private void GameVersionCheck()
+        {
+            string gameExePath = LaunchUtils.GetDarkSouls3ExePath();
             if (!string.IsNullOrEmpty(gameExePath) && File.Exists(gameExePath))
             {
                 FileVersionInfo fileVersionInfo = FileVersionInfo.GetVersionInfo(gameExePath);
@@ -173,6 +250,11 @@ namespace DS3Tool
                 MessageBox.Show("Your Dark Souls 3 patch may not be 1.15 or the game might not be located at the expected path. Ensure the game is updated to this version for proper functionality.",
                         "Version Check Failed", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
+        }
+
+        public void OpenNewVersionInBrowser(object sender, RoutedEventArgs e)
+        {
+            System.Diagnostics.Process.Start("https://github.com/LankSSBM/DS3Tool/releases");
         }
 
         private string GetDarkSouls3ExePath()
@@ -897,7 +979,7 @@ namespace DS3Tool
             FREE_CAMERA, FREE_CAMERA_CONTROL, NO_CLIP,
             DISABLE_STEAM_INPUT_ENUM,
             GAME_SPEED_50PC, GAME_SPEED_75PC, GAME_SPEED_100PC, GAME_SPEED_150PC, GAME_SPEED_200PC, GAME_SPEED_300PC, GAME_SPEED_500PC, GAME_SPEED_1000PC,
-
+            CINDER_SWORD, CINDER_STAFF, CINDER_LANCE, CINDER_CURVED, CINDER_GWYN,
         }
 
 
@@ -1140,6 +1222,11 @@ namespace DS3Tool
                 case HOTKEY_ACTIONS.GAME_SPEED_300PC: _process.getSetGameSpeed(3.0f); break;
                 case HOTKEY_ACTIONS.GAME_SPEED_500PC: _process.getSetGameSpeed(5.0f); break;
                 case HOTKEY_ACTIONS.GAME_SPEED_1000PC: _process.getSetGameSpeed(10.0f); break;
+                case HOTKEY_ACTIONS.CINDER_SWORD:   if (_process.GetSetTargetEnemyID() == CINDER_ENEMY_ID) { _cinderManager.SetPhase(0, chkLockPhase.IsChecked ?? false); } break;
+                case HOTKEY_ACTIONS.CINDER_LANCE:   if (_process.GetSetTargetEnemyID() == CINDER_ENEMY_ID) { _cinderManager.SetPhase(1, chkLockPhase.IsChecked ?? false); } break;
+                case HOTKEY_ACTIONS.CINDER_CURVED:  if (_process.GetSetTargetEnemyID() == CINDER_ENEMY_ID) { _cinderManager.SetPhase(2, chkLockPhase.IsChecked ?? false); } break;
+                case HOTKEY_ACTIONS.CINDER_STAFF:   if (_process.GetSetTargetEnemyID() == CINDER_ENEMY_ID) { _cinderManager.SetPhase(3, chkLockPhase.IsChecked ?? false); } break;
+                case HOTKEY_ACTIONS.CINDER_GWYN:    if (_process.GetSetTargetEnemyID() == CINDER_ENEMY_ID) { _cinderManager.SetPhase(4, chkLockPhase.IsChecked ?? false); } break;
 
 
                 default: Utils.debugWrite("Action not handled: " + act.ToString()); break;

@@ -292,6 +292,23 @@ namespace DS3Tool
             }
         }
 
+        public static bool checkGameRunning()
+        {
+            var processes = Process.GetProcesses();
+            foreach (var process in processes)
+            {
+                if (process.ProcessName.ToLower().Equals(ds3ProName.ToLower()) && !process.HasExited)
+                {
+                    return true;
+                }
+                if (process.ProcessName.ToLower().Equals(ds3ProName.ToLower()) && !process.HasExited)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         private void findBaseAddress()
         {//kinda pointless since the base address is always the same (0x140000000), however this isn't true in other games. (this is due to ASLR)
             try
