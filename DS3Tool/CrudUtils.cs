@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using DS3Tool;
-using System.Threading.Tasks;
 
 namespace DS3Tool
 {

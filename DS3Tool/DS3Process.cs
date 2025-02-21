@@ -16,7 +16,7 @@ namespace DS3Tool
         public IntPtr _targetProcessHandle = IntPtr.Zero;
         public IntPtr ds3Base = IntPtr.Zero;
         public const int CodeCavePtrLoc = 0x1914670;
-        
+
         //1.15 stuff by shilkey
         const int WORLD_CHR_MAN_OFFSET = 0x4768E78;
         const int WORLD_CHR_MAN_PLAYER_INS_OFFSET = 0x80; //NS_SPRJ::PlayerIns?
@@ -817,7 +817,7 @@ namespace DS3Tool
                     }
                 case DebugOpts.EVENT_STOP:
                     {
-                        var ptr =   CrudUtils.ReadUInt64(_targetProcessHandle, ds3Base + SPRJ_DEBUG_EVENT_OFFSET);
+                        var ptr = CrudUtils.ReadUInt64(_targetProcessHandle, ds3Base + SPRJ_DEBUG_EVENT_OFFSET);
                         return ((IntPtr)(ptr + 0xD4), 1); //was D4, changed in 1.15.1 to E4
                     }
                 case DebugOpts.EVENT_DRAW:
@@ -1198,7 +1198,7 @@ namespace DS3Tool
                 int soulLevel = CrudUtils.ReadInt32(_targetProcessHandle, soulLevelAddress);
 
                 soulLevel += newValue - oldStat;
-                    
+
                 CrudUtils.WriteInt32(_targetProcessHandle, statAddress, newValue);
                 CrudUtils.WriteInt32(_targetProcessHandle, soulLevelAddress, soulLevel);
             }
