@@ -310,7 +310,8 @@ namespace DS3Tool
         }
 
         private void findBaseAddress()
-        {//kinda pointless since the base address is always the same (0x140000000), however this isn't true in other games. (this is due to ASLR)
+        {
+            //kinda pointless since the base address is always the same (0x140000000), however this isn't true in other games. (this is due to ASLR)
             try
             {
                 foreach (var module in _targetProcess.Modules)
@@ -348,162 +349,6 @@ namespace DS3Tool
                 }
             }
         }
-
-        //all read/write funcs just fail silently, except this one:
-        //public bool ReadTest(IntPtr addr)
-        //{
-        //    var array = new byte[1];
-        //    var lpNumberOfBytesRead = 1;
-        //    return ReadProcessMemory(_targetProcessHandle, addr, array, 1, ref lpNumberOfBytesRead) && lpNumberOfBytesRead == 1;
-        //}
-
-        //public void ReadTestFull(IntPtr addr)
-        //{
-        //    Console.WriteLine($"Testing Address: 0x{addr.ToInt64():X}");
-
-        //    bool available = ReadTest(addr);
-        //    Console.WriteLine($"Availability: {available}");
-
-        //    if (!available)
-        //    {
-        //        Console.WriteLine("Memory is not readable at this address.");
-        //        return;
-        //    }
-
-        //    try
-        //    {
-        //        Console.WriteLine($"Int32: {ReadInt32(addr)}");
-        //        Console.WriteLine($"Int64: {ReadInt64(addr)}");
-        //        Console.WriteLine($"UInt8: {ReadUInt8(addr)}");
-        //        Console.WriteLine($"UInt32: {ReadUInt32(addr)}");
-        //        Console.WriteLine($"UInt64: {ReadUInt64(addr)}");
-        //        Console.WriteLine($"Float: {ReadFloat(addr)}");
-        //        Console.WriteLine($"Double: {ReadDouble(addr)}");
-        //        Console.WriteLine($"String: {ReadString(addr)}");
-
-        //        byte[] bytes = ReadBytes(addr, 16);
-        //        Console.WriteLine("Bytes: " + BitConverter.ToString(bytes));
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine("Error reading memory: " + ex.Message);
-        //    }
-        //}
-
-        //public int ReadInt32(IntPtr addr)
-        //{
-        //    var bytes = ReadBytes(addr, 4);
-        //    return BitConverter.ToInt32(bytes, 0);
-        //}
-
-        //public long ReadInt64(IntPtr addr)
-        //{
-        //    var bytes = ReadBytes(addr, 8);
-        //    return BitConverter.ToInt64(bytes, 0);
-        //}
-
-        //public byte ReadUInt8(IntPtr addr)
-        //{
-        //    var bytes = ReadBytes(addr, 1);
-        //    return bytes[0];
-        //}
-
-        //public uint ReadUInt32(IntPtr addr)
-        //{
-        //    var bytes = ReadBytes(addr, 4);
-        //    return BitConverter.ToUInt32(bytes, 0);
-        //}
-
-        //public ulong ReadUInt64(IntPtr addr)
-        //{
-        //    var bytes = ReadBytes(addr, 8);
-        //    return BitConverter.ToUInt64(bytes, 0);
-        //}
-
-        //public float ReadFloat(IntPtr addr)
-        //{
-        //    var bytes = ReadBytes(addr, 4);
-        //    return BitConverter.ToSingle(bytes, 0);
-        //}
-
-        //public double ReadDouble(IntPtr addr)
-        //{
-        //    var bytes = ReadBytes(addr, 8);
-        //    return BitConverter.ToDouble(bytes, 0);
-        //}
-
-        //public byte[] ReadBytes(IntPtr addr, int size)
-        //{
-        //    var array = new byte[size];
-        //    var targetProcessHandle = _targetProcessHandle;
-        //    var lpNumberOfBytesRead = 1;
-        //    ReadProcessMemory(targetProcessHandle, addr, array, size, ref lpNumberOfBytesRead);
-        //    return array;
-        //}
-
-        //public string ReadString(IntPtr addr, int maxLength = 32)
-        //{
-        //    var bytes = ReadBytes(addr, maxLength * 2);
-
-        //    int stringLength = 0;
-        //    for (int i = 0; i < bytes.Length - 1; i += 2)
-        //    {
-        //        if (bytes[i] == 0 && bytes[i + 1] == 0)
-        //        {
-        //            stringLength = i;
-        //            break;
-        //        }
-        //    }
-
-        //    if (stringLength == 0)
-        //    {
-        //        stringLength = bytes.Length - (bytes.Length % 2);
-        //    }
-
-        //    return System.Text.Encoding.Unicode.GetString(bytes, 0, stringLength);
-        //}
-
-        //public void WriteInt32(IntPtr addr, int val)
-        //{
-        //    WriteBytes(addr, BitConverter.GetBytes(val));
-        //}
-
-        //public void WriteUInt32(IntPtr addr, uint val)
-        //{
-        //    WriteBytes(addr, BitConverter.GetBytes(val));
-        //}
-
-        //public void WriteFloat(IntPtr addr, float val)
-        //{
-        //    WriteBytes(addr, BitConverter.GetBytes(val));
-        //}
-
-        //public void WriteUInt8(IntPtr addr, byte val)
-        //{
-        //    var bytes = new byte[] { val };
-        //    WriteBytes(addr, bytes);
-        //}
-
-        //public void WriteBytes(IntPtr addr, byte[] val, bool useNewWrite = true)
-        //{
-        //    if (useNewWrite)
-        //    {
-        //        uint written = 0;
-        //        NtWriteVirtualMemory(_targetProcessHandle, addr, val, (uint)val.Length, ref written); //MUCH faster, <1ms
-        //    }
-        //    else
-        //    {
-        //        WriteProcessMemory(_targetProcessHandle, addr, val, val.Length, 0); //can take as long as 15ms!
-        //    }
-        //}
-
-        //public void WriteString(IntPtr addr, string value, int maxLength = 32)
-        //{
-        //    var bytes = new byte[maxLength];
-        //    var stringBytes = System.Text.Encoding.Unicode.GetBytes(value);
-        //    Array.Copy(stringBytes, bytes, Math.Min(stringBytes.Length, maxLength));
-        //    WriteBytes(addr, bytes);
-        //}
 
         //replacement code contains the offset from the following instruction (basically hook loc + 5) to the code cave.
         //then it just nops to fill out the rest of the old instructions
@@ -583,8 +428,6 @@ namespace DS3Tool
             CrudUtils.WriteBytes(_targetProcessHandle, ds3Base + CODE_CAVE_PTR_LOCATION, new byte[8]);
             CrudUtils.WriteBytes(_targetProcessHandle, ds3Base + CODE_CAVE_CODE_LOCATION, new byte[22]);
         }
-
-
 
         public void setEnemyRepeatActionPatch(bool on)
         {
@@ -675,7 +518,8 @@ namespace DS3Tool
         //free cam 'look at matrix' is at +10
 
         public (float x, float y, float z) getSetFreeCamCoords((float, float, float)? pos = null)
-        {//literally identical to ER
+        {
+            //literally identical to ER
             var ptr3 = getFreeCamPtr();
             var ptrX = (IntPtr)(ptr3 + 0x40);
             var ptrY = (IntPtr)(ptr3 + 0x44);
@@ -717,7 +561,8 @@ namespace DS3Tool
 
         bool _fontPatchesDone = false;
         void doFontPatch()
-        {//all from DS3-Debug-Patch. not 100% sure but i assume it prevents drawing with a font that doesn't exist. only first one seems necessary for sound draw.
+        {
+            //all from DS3-Debug-Patch. not 100% sure but i assume it prevents drawing with a font that doesn't exist. only first one seems necessary for sound draw.
             if (_fontPatchesDone) { return; }
             CrudUtils.WriteBytes(_targetProcessHandle, ds3Base + FONT_DRAW_FIRST_PATCH_OFFSET, new byte[] { 0x90, 0x90, 0x90, 0x90, 0x90 });//all nop
             /*WriteUInt8(ds3Base + 0x2352600, 0xC3);
@@ -729,7 +574,8 @@ namespace DS3Tool
         }
 
         public void setAllSoundDebug(bool on)
-        {//seems that a patch is needed or else it will crash the game when it tries to draw
+        {
+            //seems that a patch is needed or else it will crash the game when it tries to draw
             //alternative to this enabling method is to patch the instruction that reads it
             //40 56 48 83EC ?? 8079 ?? 00 48 8BF2 74 ??    <--- works in sekiro and DS3 but in DS3 it's obfuscated in the exe. patch the cmp of 00 to 01.
             doFontPatch();
@@ -748,7 +594,8 @@ namespace DS3Tool
         }
 
         (IntPtr, byte) lookupOpt(DebugOpts opt)
-        {//second value is "value for on state" if it's just one byte.
+        {
+            //second value is "value for on state" if it's just one byte.
             (IntPtr, byte) badVal = (IntPtr.Zero, 0);
             switch (opt)
             {
@@ -1037,7 +884,8 @@ namespace DS3Tool
         int? targetHpFreeze = null;
 
         public double getSetTargetInfo(TargetInfo info, int? setVal = null)
-        {//most are actually ints but it's easier just to use a common type. double can store fairly large ints exactly.
+        {
+            //most are actually ints but it's easier just to use a common type. double can store fairly large ints exactly.
             double ret = double.NaN;
             var targetPtr = CrudUtils.ReadUInt64(_targetProcessHandle, ds3Base + CODE_CAVE_PTR_LOCATION); //NS_SPRJ::EnemyIns
             if (targetPtr < SANE_MINIMUM || targetPtr > SANE_MAXIMUM) { return ret; }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -32,5 +33,57 @@ namespace DS3Tool
                 return ret;
             }
         }
+
+        public static string getFnameInAppdata(string fname, string appName, bool localAppData = false)
+        {
+            //will create dir if needed, otherwise return a full filename.
+            var appData = Environment.GetFolderPath(localAppData ? Environment.SpecialFolder.LocalApplicationData : Environment.SpecialFolder.ApplicationData);
+            var appFolder = Path.Combine(appData, appName);
+            if (!Directory.Exists(appFolder))
+            {
+                Directory.CreateDirectory(appFolder);
+            }
+            return Path.Combine(appFolder, fname);
+        }
+
+        public static DateTime getFileDate(string fname)
+        {
+            //will create a file if needed
+            var ret = new DateTime(0);
+            try
+            {
+                if (File.Exists(fname))
+                {
+                    ret = File.GetLastWriteTime(fname);
+                }
+                else
+                {
+                    File.Create(fname).Dispose();
+                }
+            }
+            catch (Exception ex) { Utils.debugWrite(ex.ToString()); }
+            return ret;
+        }
+
+        public static bool setFileDate(string fname)
+        {
+            try
+            {
+                File.SetLastWriteTime(fname, DateTime.Now);
+                return true;
+            }
+            catch (Exception ex) { Utils.debugWrite(ex.ToString()); }
+            return false;
+        }
+
+        public static void removeFile(string fname)
+        {
+            try
+            {
+                if (File.Exists(fname)) { File.Delete(fname); }
+            }
+            catch (Exception ex) { Utils.debugWrite(ex.ToString()); }
+        }
+
     }
 }

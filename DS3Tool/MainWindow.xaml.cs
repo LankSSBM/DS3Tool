@@ -79,7 +79,8 @@ namespace DS3Tool
                         MessageBox.Show("Could not launch game.", "Sadge", MessageBoxButton.OK, MessageBoxImage.Warning);
                     }
                     else
-                    {//success but wait a bit for it to start.
+                    {
+                        //success but wait a bit for it to start.
                         for (int i = 0; i < 30; i++)
                         {
                             System.Threading.Thread.Sleep(1000);
@@ -107,8 +108,6 @@ namespace DS3Tool
 
                 _cinderManager = new CinderPhaseManager(_process);
                 noclipService = new NoClipService(_process);
-
-
             }
         }
 
@@ -180,8 +179,8 @@ namespace DS3Tool
         public async void doUpdateCheck(bool force = false)
         {
             HttpClient httpClient = new HttpClient();
-            var checkFile = Utils.getFnameInAppdata("LastUpdateCheck", "DS3Tool");
-            var lastCheckDate = Utils.getFileDate(checkFile);
+            var checkFile = FileUtils.getFnameInAppdata("LastUpdateCheck", "DS3Tool");
+            var lastCheckDate = FileUtils.getFileDate(checkFile);
             var sinceLastCheck = DateTime.Now - lastCheckDate;
             Utils.debugWrite($"Last check was {sinceLastCheck.TotalDays} days ago");
 
@@ -257,35 +256,6 @@ namespace DS3Tool
             System.Diagnostics.Process.Start("https://github.com/LankSSBM/DS3Tool/releases");
         }
 
-        public class Item
-        {
-            public string Name { get; set; }
-            public string Address { get; set; }
-            public string Type { get; set; }
-
-            public Item(string name, string address, string type = null)
-            {
-                Name = name;
-                Address = address;
-                Type = type;
-            }
-        }
-
-        public struct BonfireLocation
-        {
-            public int Offset { get; }
-            public int StartBit { get; }
-            public int Id { get; }
-
-            public BonfireLocation(int offset, int startBit, int Id)
-            {
-                Offset = offset;
-                StartBit = startBit;
-                this.Id = Id;
-            }
-        }
-
-
         private void LoadItemsFromCsv(string fileName)
         {
             ItemDictionary = new Dictionary<string, Item>();
@@ -355,7 +325,7 @@ namespace DS3Tool
 
         static string windowStateFile()
         {
-            return Utils.getFnameInAppdata("windowstate.txt", "DS3Tool");
+            return FileUtils.getFnameInAppdata("windowstate.txt", "DS3Tool");
         }
 
         private void _timer_Tick(object sender, EventArgs e)
@@ -393,7 +363,6 @@ namespace DS3Tool
                 {
                     cinderPanel.Visibility = Visibility.Visible;
                 }
-
             }
             else
             {
@@ -402,7 +371,6 @@ namespace DS3Tool
                     cinderPanel.Visibility = Visibility.Collapsed;
                 }
             }
-
 
             //Console.WriteLine($"{hp} {hpmax} {poise} {poisemax} {poisetimer}");
             if (double.IsNaN(hp)) { return; }
@@ -447,8 +415,6 @@ namespace DS3Tool
                 }
             }
         }
-
-
 
         private void MainWindow_Closed(object sender, EventArgs e)
         {
@@ -844,15 +810,11 @@ namespace DS3Tool
         private void noClipOn(object sender, RoutedEventArgs e)
         {
             noclipService.EnableNoClip();
-
-
         }
 
         private void noClipOff(object sender, RoutedEventArgs e)
         {
-
             noclipService.disableNoClip();
-
         }
 
         private void savePos(object sender, RoutedEventArgs e)
@@ -878,16 +840,6 @@ namespace DS3Tool
         {
             _process.offAndUnFreeze(DS3Process.DebugOpts.ALL_CHR_NO_DEATH);
         }
-
-        /*private void emberOn(object sender, RoutedEventArgs e)
-        {
-
-        }
-
-        private void emberOff(object sender, RoutedEventArgs e)
-        {
-
-        }*/
 
         private void instantDeath(object sender, RoutedEventArgs e)
         {
@@ -954,14 +906,14 @@ namespace DS3Tool
 
         static string getHotkeyFileAppData()
         {
-            return Utils.getFnameInAppdata(hotkeyFileName, "DS3Tool");
+            return FileUtils.getFnameInAppdata(hotkeyFileName, "DS3Tool");
         }
         static string hotkeyFile()
-        {//local file can override (an older tool version used a local file)
+        {
+            //local file can override (an older tool version used a local file)
             if (File.Exists(hotkeyFileName)) { return hotkeyFileName; }
             return getHotkeyFileAppData();
         }
-
 
         private void hotkeySetup(object sender, RoutedEventArgs e)
         {
@@ -1195,7 +1147,8 @@ namespace DS3Tool
         }
 
         void hotkeyInit()
-        {//called from main window loaded
+        {
+            //called from main window loaded
             try
             {
                 //register for message passing

@@ -127,6 +127,7 @@ namespace DS3Tool.services
                 0x48, 0x83, 0xEC, 0x28,  // sub rsp, 28h
                 0x48, 0xB9               // mov rcx, mapItemMan
             };
+
             shellcode.AddRange(BitConverter.GetBytes(mapItemMan));
             shellcode.AddRange(new byte[] { 0x48, 0xBA });  // mov rdx, requestPtr
             shellcode.AddRange(BitConverter.GetBytes(requestPtr));
