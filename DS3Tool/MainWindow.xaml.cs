@@ -1367,18 +1367,6 @@ namespace DS3Tool
             unlockBonFire.Show();
         }
 
-        private void RadioButton_Checked(object sender, RoutedEventArgs e)
-        {
-            var button = (RadioButton)sender;
-            if (int.TryParse(button.Tag?.ToString(), out int phaseIndex))
-            {
-                _cinderManager.SetPhase(phaseIndex, chkLockPhase.IsChecked ?? false);
-            }
-            else
-            {
-                Debug.WriteLine($"Failed to parse phase index from button tag: {button.Tag}");
-            }
-        }
 
         private void OnPhaseButtonClick(object sender, RoutedEventArgs e)
         {
@@ -1393,10 +1381,16 @@ namespace DS3Tool
             }
         }
 
+        private void OnCastSoulMass(object sender, RoutedEventArgs e)
+        {
+            _cinderManager.CastSoulMass();
+        }
+
         private void OnLockPhaseChanged(object sender, RoutedEventArgs e)
         {
             _cinderManager.TogglePhaseLock(chkLockPhase.IsChecked ?? false);
         }
+
 
         int? lastSetHP = null;
         private void btnSetPlayerHP_Click(object sender, RoutedEventArgs e)

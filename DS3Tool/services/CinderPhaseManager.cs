@@ -16,8 +16,14 @@ internal class CinderPhaseManager : IDisposable
     private const int AnimationFinalOffset = 0x20;
     private const int LuaStateOffset = 0x58;
     private const int LuaNumbersBaseOffset = 0x320;
-    private const int LuaCounterOffset = 0x6C4;
 
+    private const int CurrentAnimationPtr = 0x28;
+    private const int CurrentAnimationOffset = 0x898;
+    private const int CurrentPhaseOffset = 0x960;
+
+    private const int Gwyn5HitComboOffset = 0x6BC;
+    private const int GwynLightningRainOffset = 0x6C0;
+    private const int PhaseTransitionCounterOffset = 0x6C4;
 
     private readonly DS3Process _ds3Process;
 
@@ -55,6 +61,15 @@ internal class CinderPhaseManager : IDisposable
         { 4, new PhaseInfo("Gwyn", 20010)}
     };
 
+    private readonly Dictionary<int, int> _currentPhaseLookUp = new Dictionary<int, int>
+    {
+        {2, 0},
+        {16, 1},
+        {4, 2},
+        {8, 3},
+        {32, 4},
+    };
+
 
     public void SetPhase(int phaseIndex, bool lockPhase)
     {
@@ -74,7 +89,7 @@ internal class CinderPhaseManager : IDisposable
         var phase = _phases[phaseIndex];
 
         ForceAnimation(phase.AnimationId);
-        ResetLuaNumbers();
+        ClearCounters();
 
         if (lockPhase && !_isLocked)
         {
@@ -174,14 +189,14 @@ internal class CinderPhaseManager : IDisposable
             var luaBase = _ds3Process.ReadInt64(new IntPtr(luaPtr) + LuaNumbersBaseOffset);
             if (luaBase != 0)
             {
-                var currentValue = _ds3Process.ReadFloat(new IntPtr(luaBase) + LuaCounterOffset);
-                _ds3Process.WriteFloat(new IntPtr(luaBase) + LuaCounterOffset, 0);
+                var currentValue = _ds3Process.ReadFloat(new IntPtr(luaBase) + PhaseTransitionCounterOffset);
+                _ds3Process.WriteFloat(new IntPtr(luaBase) + PhaseTransitionCounterOffset, 0);
 
                 if (currentValue > 50)
                 {
                     var phase = _phases[_currentPhase];
                     ForceAnimation(phase.AnimationId);
-                    ResetLuaNumbers();
+                    _ds3Process.WriteFloat(new IntPtr(luaBase) + PhaseTransitionCounterOffset, 0);
                 }
             }
         }
@@ -203,20 +218,15 @@ internal class CinderPhaseManager : IDisposable
         _ds3Process.WriteInt32(finalAddr, animationId);
     }
 
-    private void ResetLuaNumbers()
-    {
-        SetLuaNumber(0, 0);
-        SetLuaNumber(1, 0);
-        SetLuaNumber(2, 0);
-    }
-
-    private void SetLuaNumber(int numberIndex, float value)
+    private void ClearCounters()
     {
         var codeCavePointer = _ds3Process.ReadInt64(_ds3Process.ds3Base + CodeCavePointerOffset);
         var luaStatePointer = _ds3Process.ReadInt64(new IntPtr(codeCavePointer) + LuaStateOffset);
         var luaBaseAddress = _ds3Process.ReadInt64(new IntPtr(luaStatePointer) + LuaNumbersBaseOffset);
-        var finalAddr = new IntPtr(luaBaseAddress) + 0x6BC + (4 * numberIndex);
-        _ds3Process.WriteFloat(finalAddr, value);
+        _ds3Process.WriteFloat((IntPtr)luaBaseAddress + Gwyn5HitComboOffset, 0);
+        _ds3Process.WriteFloat((IntPtr)luaBaseAddress + GwynLightningRainOffset, 0);
+        _ds3Process.WriteFloat((IntPtr)luaBaseAddress + PhaseTransitionCounterOffset, 0);
+
     }
 
     public void Dispose()
@@ -232,6 +242,63 @@ internal class CinderPhaseManager : IDisposable
 
         string targetId = _ds3Process.GetSetTargetEnemyID();
         return targetId == CINDER_ENEMY_ID;
+    }
+
+    public void CastSoulMass()
+    {
+        var targetPtr = _ds3Process.ReadInt64(_ds3Process.ds3Base + CodeCavePointerOffset);
+        var luaPtr = _ds3Process.ReadInt64(new IntPtr(targetPtr) + LuaStateOffset);
+        var currentPhaseAddr = (IntPtr)(luaPtr + LuaNumbersBaseOffset + CurrentPhaseOffset);
+        int phaseBeforeSoulmass = _ds3Process.ReadInt32(currentPhaseAddr);
+
+        //First sword phase doesnt change this number, so set to 2 (Sword) if 0
+        if (phaseBeforeSoulmass == 0)
+        {
+            phaseBeforeSoulmass = 2;
+        }
+
+        ForceAnimation(_phases[3].AnimationId);
+
+        bool isStaffPhase = false;
+
+        while (isStaffPhase == false)
+        {
+            int currentPhase = _ds3Process.ReadInt32(currentPhaseAddr);
+            isStaffPhase = currentPhase == 8;
+            Thread.Sleep(10);
+        }
+
+
+        var ptr1 = _ds3Process.ReadInt64(new IntPtr(targetPtr) + AnimationPointerChainOffset1);
+        var ptr2 = _ds3Process.ReadInt64(new IntPtr(ptr1) + AnimationPointerChainOffset2);
+        var finalAddr = new IntPtr(ptr2) + AnimationFinalOffset;
+        _ds3Process.WriteInt32(finalAddr, 3003);
+
+        var currentAnimPtr2 = _ds3Process.ReadInt64(new IntPtr(ptr1) + CurrentAnimationPtr);
+
+
+        bool hasStartedSoulmass = false;
+        while (hasStartedSoulmass == false)
+        {
+            string currentAnim = _ds3Process.ReadString(new IntPtr(currentAnimPtr2) + CurrentAnimationOffset, 20);
+            hasStartedSoulmass = currentAnim == "Attack3003";
+            Thread.Sleep(10);
+        }
+
+
+
+        bool hasFinishedSoulmass = false;
+        while (hasFinishedSoulmass == false)
+        {
+            string currentAnim = _ds3Process.ReadString(new IntPtr(currentAnimPtr2) + CurrentAnimationOffset, 20);
+
+            hasFinishedSoulmass = currentAnim != "Attack3003";
+            Thread.Sleep(10);
+        }
+
+        int previousPhase = _currentPhaseLookUp[phaseBeforeSoulmass];
+
+        ForceAnimation(_phases[previousPhase].AnimationId);
     }
 
 }
