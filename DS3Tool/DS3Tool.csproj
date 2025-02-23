@@ -62,11 +62,13 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="AobScanner.cs" />
+    <Compile Include="BonfireLocation.cs" />
     <Compile Include="BonfireUnlock.xaml.cs">
       <DependentUpon>BonfireUnlock.xaml</DependentUpon>
     </Compile>
     <Compile Include="CrudUtils.cs" />
     <Compile Include="FileUtils.cs" />
+    <Compile Include="Item.cs" />
     <Compile Include="ItemSpawn.xaml.cs">
       <DependentUpon>ItemSpawn.xaml</DependentUpon>
     </Compile>
