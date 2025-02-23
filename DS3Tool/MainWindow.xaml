@@ -191,6 +191,8 @@
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
                         <CheckBox x:Name="chkLockPhase" Content="Lock Phase" Margin="0,2" Checked="OnLockPhaseChanged" Unchecked="OnLockPhaseChanged"/>
+                        <Button Content="Cast Soulmass" Tag="4" Margin="2,0,2,0" Click="OnCastSoulMass"/>
+
                     </StackPanel>
                 </StackPanel>
             </StackPanel>
