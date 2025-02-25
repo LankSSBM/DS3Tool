@@ -14,16 +14,17 @@ internal class CinderPhaseManager : IDisposable
     private const int AnimationPointerChainOffset1 = 0x1F90;
     private const int AnimationPointerChainOffset2 = 0x58;
     private const int AnimationFinalOffset = 0x20;
-    private const int LuaStateOffset = 0x58;
-    private const int LuaNumbersBaseOffset = 0x320;
+    private const int ComManipulatorOffset = 0x58;
+    private const int AiInsOffset = 0x320;
+    private const int LuaNumbersOffset = 0x6BC;
 
     private const int CurrentAnimationPtr = 0x28;
     private const int CurrentAnimationOffset = 0x898;
-    private const int CurrentPhaseOffset = 0x960;
+    private const int CurrentPhaseOffset = 0xC80;
 
-    private const int Gwyn5HitComboOffset = 0x6BC;
-    private const int GwynLightningRainOffset = 0x6C0;
-    private const int PhaseTransitionCounterOffset = 0x6C4;
+    private const int Gwyn5HitComboNumberIndex = 0;
+    private const int GwynLightningRainNumberIndex = 1;
+    private const int PhaseTransitionCounterNumberIndex = 2;
 
     private readonly DS3Process _ds3Process;
 
@@ -183,20 +184,24 @@ internal class CinderPhaseManager : IDisposable
 
     private void CheckAndResetLuaCounter(long targetPtr)
     {
-        var luaPtr = _ds3Process.ReadInt64(new IntPtr(targetPtr) + LuaStateOffset);
-        if (luaPtr != 0)
+        var comManipulator = _ds3Process.ReadInt64(new IntPtr(targetPtr) + ComManipulatorOffset);
+        if (comManipulator != 0)
         {
-            var luaBase = _ds3Process.ReadInt64(new IntPtr(luaPtr) + LuaNumbersBaseOffset);
-            if (luaBase != 0)
+            var aiIns = _ds3Process.ReadInt64(new IntPtr(comManipulator) + AiInsOffset);
+            if (aiIns != 0)
             {
-                var currentValue = _ds3Process.ReadFloat(new IntPtr(luaBase) + PhaseTransitionCounterOffset);
-                _ds3Process.WriteFloat(new IntPtr(luaBase) + PhaseTransitionCounterOffset, 0);
+                var phaseTransitionCounter = GetLuaNumber(aiIns, PhaseTransitionCounterNumberIndex);
 
-                if (currentValue > 50)
+                // Why is this here?
+                // The main point of preserving PhaseTransCounter until 50 is to preserve slight behavior changes dependent on it.
+                // E.g increased spear grab chance over time
+                SetLuaNumber(aiIns, PhaseTransitionCounterNumberIndex, 0);
+
+                if (phaseTransitionCounter > 50)
                 {
                     var phase = _phases[_currentPhase];
                     ForceAnimation(phase.AnimationId);
-                    _ds3Process.WriteFloat(new IntPtr(luaBase) + PhaseTransitionCounterOffset, 0);
+                    SetLuaNumber(aiIns, PhaseTransitionCounterNumberIndex, 0);
                 }
             }
         }
@@ -218,15 +223,24 @@ internal class CinderPhaseManager : IDisposable
         _ds3Process.WriteInt32(finalAddr, animationId);
     }
 
+    private void SetLuaNumber(long aiIns, int index, float value) 
+    {
+        _ds3Process.WriteFloat(new IntPtr(aiIns + LuaNumbersOffset + 4 * index), value);
+    }
+    
+    private float GetLuaNumber(long aiIns, int index)
+    {
+        return _ds3Process.ReadFloat(new IntPtr(aiIns + LuaNumbersOffset + 4 * index));
+    }
+
     private void ClearCounters()
     {
         var codeCavePointer = _ds3Process.ReadInt64(_ds3Process.ds3Base + CodeCavePointerOffset);
-        var luaStatePointer = _ds3Process.ReadInt64(new IntPtr(codeCavePointer) + LuaStateOffset);
-        var luaBaseAddress = _ds3Process.ReadInt64(new IntPtr(luaStatePointer) + LuaNumbersBaseOffset);
-        _ds3Process.WriteFloat((IntPtr)luaBaseAddress + Gwyn5HitComboOffset, 0);
-        _ds3Process.WriteFloat((IntPtr)luaBaseAddress + GwynLightningRainOffset, 0);
-        _ds3Process.WriteFloat((IntPtr)luaBaseAddress + PhaseTransitionCounterOffset, 0);
-
+        var comManipulator = _ds3Process.ReadInt64(new IntPtr(codeCavePointer) + ComManipulatorOffset);
+        var aiIns = _ds3Process.ReadInt64(new IntPtr(comManipulator) + AiInsOffset);
+        SetLuaNumber(aiIns, Gwyn5HitComboNumberIndex, 0);
+        SetLuaNumber(aiIns, GwynLightningRainNumberIndex, 0);
+        SetLuaNumber(aiIns, PhaseTransitionCounterNumberIndex, 0);
     }
 
     public void Dispose()
@@ -247,8 +261,8 @@ internal class CinderPhaseManager : IDisposable
     public void CastSoulMass()
     {
         var targetPtr = _ds3Process.ReadInt64(_ds3Process.ds3Base + CodeCavePointerOffset);
-        var luaPtr = _ds3Process.ReadInt64(new IntPtr(targetPtr) + LuaStateOffset);
-        var currentPhaseAddr = (IntPtr)(luaPtr + LuaNumbersBaseOffset + CurrentPhaseOffset);
+        var comManipulatorPtr = _ds3Process.ReadInt64(new IntPtr(targetPtr) + ComManipulatorOffset);
+        var currentPhaseAddr = (IntPtr)(comManipulatorPtr + CurrentPhaseOffset);
         int phaseBeforeSoulmass = _ds3Process.ReadInt32(currentPhaseAddr);
 
         //First sword phase doesnt change this number, so set to 2 (Sword) if 0
