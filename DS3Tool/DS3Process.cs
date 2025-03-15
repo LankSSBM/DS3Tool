@@ -391,28 +391,28 @@ namespace DS3Tool
 
 
         //1.15 stuff by shilkey
-        const int WORLD_CHR_MAN_OFFSET = 0x4768E78;
-        const int WORLD_CHR_MAN_PLAYER_INS_OFFSET = 0x80; //NS_SPRJ::PlayerIns?
-        const int PLAYER_DEBUG_FLAGS_OFFSET = 0x1EEA;
-        const int HITBOX_OFFSET = 0x4766B80;
-        const int GAME_DATA_MAN_OFFSET = 0x4740178;
-        const int MENU_MAN_OFF = 0x474c2e8;
-        const int DEBUG_FLAGS_OFFSET = 0x4768f68;
-        const int MESHES_OFFSET = 0x4766C6C;
-        const int ENEMY_TARGET_DRAW_A_OFFSET = 0x4739AC4;
-        const int GLOBAL_SPEED_OFFSET = 0x999C28;
-        const int TARGET_HOOK_LOCATION = 0x85A74A;
-        const int CODE_CAVE_PTR_LOCATION = 0x1914670;
-        const int CODE_CAVE_CODE_LOCATION = CODE_CAVE_PTR_LOCATION + 0x10;
-        const int ENEMY_REPEAT_ACTION_OFFSET = 0x3E2510 + 4 + 3;
-        const int FIELD_AREA_OFFSET = 0x4743A80;
-        const int SPRJ_DEBUG_EVENT_OFFSET = 0x473AD78; //BaseF
-        const int NEW_MENU_SYSTEMS_OFFSET = 0x4776B08;
-        const int WORLD_CHR_MAN_DEBUG_OFFSET = 0x4768F98;
-        const int GROUP_MASK_OFFSET = 0x4555CF0;
-        const int USER_INPUT_MGR_IMPL_OFFSET = 0x494E9D8;
-        const int FONT_DRAW_FIRST_PATCH_OFFSET = 0x236E076;
-        const int WORLD_AI_MAN_OFFSET = 0x473A410;
+        const int WorldChrManOffset = 0x4768E78;
+        const int WorldChrManPlayerInsOffset = 0x80; //NS_SPRJ::PlayerIns?
+        const int PlayerDebugFlagsOffset = 0x1EEA;
+        const int HitboxOffset = 0x4766B80;
+        const int GameDataManOffset = 0x4740178;
+        const int MenuManOff = 0x474c2e8;
+        const int DebugFlagsOffset = 0x4768f68;
+        const int MeshesOffset = 0x4766C6C;
+        const int EnemyTargetDrawAOffset = 0x4739AC4;
+        const int GlobalSpeedOffset = 0x999C28;
+        const int TargetHookLocation = 0x85A74A;
+        const int CodeCavePtrLocation = 0x1914670;
+        const int CodeCaveCodeLocation = CodeCavePtrLocation + 0x10;
+        const int EnemyRepeatActionOffset = 0x3E2510 + 4 + 3;
+        const int FieldAreaOffset = 0x4743A80;
+        const int SprjDebugEventOffset = 0x473AD78; //BaseF
+        const int NewMenuSystemsOffset = 0x4776B08;
+        const int WorldChrManDebugOffset = 0x4768F98;
+        const int GroupMaskOffset = 0x4555CF0;
+        const int UserInputMgrImplOffset = 0x494E9D8;
+        const int FontDrawFirstPatchOffset = 0x236E076;
+        const int WorldAiManOffset = 0x473A410;
 
 
 
@@ -463,7 +463,7 @@ namespace DS3Tool
         //const int globalSpeedOff = 0x9A3D48;
         public float getSetGameSpeed(float? val = null)
         {
-            var ptr = ds3Base + GLOBAL_SPEED_OFFSET;
+            var ptr = ds3Base + GlobalSpeedOffset;
             var ret = ReadFloat(ptr);
             if (val.HasValue)
             {
@@ -538,7 +538,7 @@ namespace DS3Tool
         static byte[] getTargetHookReplacementCode()
         {
             var ret = new byte[targetHookReplacementCodeTemplate.Length];
-            int addrOffset = CODE_CAVE_CODE_LOCATION - (TARGET_HOOK_LOCATION + 5); //target minus next instruction location (ie. the NOP 5 bytes in)
+            int addrOffset = CodeCaveCodeLocation - (TargetHookLocation + 5); //target minus next instruction location (ie. the NOP 5 bytes in)
             Array.Copy(targetHookReplacementCodeTemplate, ret, ret.Length);
             Array.Copy(BitConverter.GetBytes(addrOffset), 0, ret, 1, 4);
             return ret;
@@ -554,7 +554,7 @@ namespace DS3Tool
         static byte[] getTargetHookCaveCodeTemplate()
         {
             var ret = new byte[targetHookCaveCodeTemplate.Length];
-            int addrOffset = TARGET_HOOK_LOCATION + targetHookReplacementCodeTemplate.Length - (CODE_CAVE_CODE_LOCATION + ret.Length); //again, target (after the hook) minus next instruction location (the NOPs after the end of our injection)
+            int addrOffset = TargetHookLocation + targetHookReplacementCodeTemplate.Length - (CodeCaveCodeLocation + ret.Length); //again, target (after the hook) minus next instruction location (the NOPs after the end of our injection)
             Array.Copy(targetHookCaveCodeTemplate, ret, ret.Length);
             Array.Copy(BitConverter.GetBytes(addrOffset), 0, ret, ret.Length - 4, 4);
             return ret;
@@ -567,7 +567,7 @@ namespace DS3Tool
             var targetHookReplacementCode = getTargetHookReplacementCode();
             var targetHookCaveCode = getTargetHookCaveCodeTemplate(); //still needs to have ptr addr added in
 
-            var code = ReadBytes(ds3Base + TARGET_HOOK_LOCATION, targetHookOrigCode.Length);
+            var code = ReadBytes(ds3Base + TargetHookLocation, targetHookOrigCode.Length);
             if (code.SequenceEqual(targetHookReplacementCode))
             {
                 Console.WriteLine("Already hooked");
@@ -579,8 +579,8 @@ namespace DS3Tool
                 return false;
             }
 
-            var caveCheck1 = ReadUInt64(ds3Base + CODE_CAVE_PTR_LOCATION);
-            var caveCheck2 = ReadUInt64(ds3Base + CODE_CAVE_CODE_LOCATION);
+            var caveCheck1 = ReadUInt64(ds3Base + CodeCavePtrLocation);
+            var caveCheck2 = ReadUInt64(ds3Base + CodeCaveCodeLocation);
             if (caveCheck1 != 0 || caveCheck2 != 0)
             {
                 Console.WriteLine("Code cave not empty");
@@ -588,37 +588,37 @@ namespace DS3Tool
             }
 
             //set up cave first
-            var targetHookFullAddr = ds3Base + CODE_CAVE_PTR_LOCATION;
+            var targetHookFullAddr = ds3Base + CodeCavePtrLocation;
             var caveCode = new byte[targetHookCaveCode.Length];
             Array.Copy(targetHookCaveCode, caveCode, targetHookCaveCode.Length);
             var fullAddrBytes = BitConverter.GetBytes((Int64)targetHookFullAddr);
             Array.Copy(fullAddrBytes, 0, caveCode, 2, 8);
             //patch cave
-            WriteBytes(ds3Base + CODE_CAVE_CODE_LOCATION, caveCode);
+            WriteBytes(ds3Base + CodeCaveCodeLocation, caveCode);
             //patch hook loc
-            WriteBytes(ds3Base + TARGET_HOOK_LOCATION, targetHookReplacementCode);
+            WriteBytes(ds3Base + TargetHookLocation, targetHookReplacementCode);
             return true;
         }
 
         public void cleanUpTargetHook()
         {
-            WriteBytes(ds3Base + TARGET_HOOK_LOCATION, targetHookOrigCode);
-            WriteBytes(ds3Base + CODE_CAVE_PTR_LOCATION, new byte[8]);
-            WriteBytes(ds3Base + CODE_CAVE_CODE_LOCATION, new byte[22]);
+            WriteBytes(ds3Base + TargetHookLocation, targetHookOrigCode);
+            WriteBytes(ds3Base + CodeCavePtrLocation, new byte[8]);
+            WriteBytes(ds3Base + CodeCaveCodeLocation, new byte[22]);
         }
 
 
 
         public void setEnemyRepeatActionPatch(bool on)
         {
-            var b = ReadUInt8(ds3Base + ENEMY_REPEAT_ACTION_OFFSET);
+            var b = ReadUInt8(ds3Base + EnemyRepeatActionOffset);
             if (on && b == enemyRepeatActionOrigVal)
             {
-                WriteUInt8(ds3Base + ENEMY_REPEAT_ACTION_OFFSET, enemyRepeatActionPatchVal);
+                WriteUInt8(ds3Base + EnemyRepeatActionOffset, enemyRepeatActionPatchVal);
             }
             else if (!on && b == enemyRepeatActionPatchVal)
             {
-                WriteUInt8(ds3Base + ENEMY_REPEAT_ACTION_OFFSET, enemyRepeatActionOrigVal);
+                WriteUInt8(ds3Base + EnemyRepeatActionOffset, enemyRepeatActionOrigVal);
             }
             else
             {
@@ -652,8 +652,8 @@ namespace DS3Tool
 
         ulong getPlayerInsPtr()
         {
-            var ptr1 = ReadUInt64(ds3Base + WORLD_CHR_MAN_OFFSET);
-            var ptr2 = ReadUInt64((IntPtr)(ptr1 + WORLD_CHR_MAN_PLAYER_INS_OFFSET));
+            var ptr1 = ReadUInt64(ds3Base + WorldChrManOffset);
+            var ptr2 = ReadUInt64((IntPtr)(ptr1 + WorldChrManPlayerInsOffset));
             return ptr2;
         }
 
@@ -693,7 +693,7 @@ namespace DS3Tool
 
         public IntPtr getFreeCamPtr()
         {//pointer to CSDebugCam
-            var ptr1 = ReadUInt64(ds3Base + FIELD_AREA_OFFSET);
+            var ptr1 = ReadUInt64(ds3Base + FieldAreaOffset);
             var ptr2 = ReadUInt64((IntPtr)(ptr1 + 0x18)); //GameRend
             var ptr3 = ReadUInt64((IntPtr)(ptr2 + 0xE8)); //SprjDebugCam
             return (IntPtr)ptr3;
@@ -748,7 +748,7 @@ namespace DS3Tool
         void doFontPatch()
         {//all from DS3-Debug-Patch. not 100% sure but i assume it prevents drawing with a font that doesn't exist. only first one seems necessary for sound draw.
             if (_fontPatchesDone) { return; }
-            WriteBytes(ds3Base + FONT_DRAW_FIRST_PATCH_OFFSET, new byte[] { 0x90, 0x90, 0x90, 0x90, 0x90 });//all nop
+            WriteBytes(ds3Base + FontDrawFirstPatchOffset, new byte[] { 0x90, 0x90, 0x90, 0x90, 0x90 });//all nop
             /*WriteUInt8(ds3Base + 0x2352600, 0xC3);
             WriteUInt8(ds3Base + 0x23B7670, 0xC3);
             WriteUInt8(ds3Base + 0x1915370, 0xC3);
@@ -762,7 +762,7 @@ namespace DS3Tool
             //alternative to this enabling method is to patch the instruction that reads it
             //40 56 48 83EC ?? 8079 ?? 00 48 8BF2 74 ??    <--- works in sekiro and DS3 but in DS3 it's obfuscated in the exe. patch the cmp of 00 to 01.
             doFontPatch();
-            var ptr1 = (IntPtr)ReadUInt64(ds3Base + WORLD_AI_MAN_OFFSET);
+            var ptr1 = (IntPtr)ReadUInt64(ds3Base + WorldAiManOffset);
             var ptr2 = (IntPtr)ReadUInt64(ptr1 + 0x28); //WorldBlockAi
             for (int off = 0; off <= 0x3200; off += 0x200)
             {
@@ -781,24 +781,24 @@ namespace DS3Tool
             (IntPtr, byte) badVal = (IntPtr.Zero, 0);
             switch (opt)
             {
-                case DebugOpts.COL_MESH_MAIN: return (ds3Base + MESHES_OFFSET + 0, 1); //6c
-                case DebugOpts.COL_MESH_VISUAL: return (ds3Base + MESHES_OFFSET + 1, 1); //6d
+                case DebugOpts.COL_MESH_MAIN: return (ds3Base + MeshesOffset + 0, 1); //6c
+                case DebugOpts.COL_MESH_VISUAL: return (ds3Base + MeshesOffset + 1, 1); //6d
                                                                                          //there's a character mesh at +3, but it requires 'all debug drawing' to also be on. (or switched on individually for a character)
-                case DebugOpts.COL_MESH_HIGH_PERF: return (ds3Base + MESHES_OFFSET + 5, 1); //71
-                case DebugOpts.COL_MESH_COLOURS: return (ds3Base + MESHES_OFFSET + 8, 1); //74
-                case DebugOpts.CHARACTER_MESH: return (ds3Base + MESHES_OFFSET + 3, 1); //6f
+                case DebugOpts.COL_MESH_HIGH_PERF: return (ds3Base + MeshesOffset + 5, 1); //71
+                case DebugOpts.COL_MESH_COLOURS: return (ds3Base + MeshesOffset + 8, 1); //74
+                case DebugOpts.CHARACTER_MESH: return (ds3Base + MeshesOffset + 3, 1); //6f
                 case DebugOpts.HITBOX_VIEW:
                 case DebugOpts.IMPACT_VIEW:
                     {
-                        var ptr = ReadUInt64(ds3Base + HITBOX_OFFSET);
+                        var ptr = ReadUInt64(ds3Base + HitboxOffset);
                         if (ptr < SANE_MINIMUM) { return badVal; }
                         ptr += 0x30;
                         if (opt == DebugOpts.IMPACT_VIEW) { ptr += 1; }
                         //Utils.debugWrite(ptr.ToString("X16"));
                         return ((IntPtr)ptr, 1);
                     }
-                case DebugOpts.DISABLE_MAP: return (ds3Base + GROUP_MASK_OFFSET, 0);
-                case DebugOpts.DISABLE_CHARACTER: return (ds3Base + GROUP_MASK_OFFSET + 2, 0); //TODO - what was todo?
+                case DebugOpts.DISABLE_MAP: return (ds3Base + GroupMaskOffset, 0);
+                case DebugOpts.DISABLE_CHARACTER: return (ds3Base + GroupMaskOffset + 2, 0); //TODO - what was todo?
                 case DebugOpts.NO_DEATH:
                     {
                         var ptr3 = getCharPtrModules();
@@ -806,13 +806,13 @@ namespace DS3Tool
                         var ptr5 = (IntPtr)(ptr4 + 0x1C0); //character debug flags?
                         return (ptr5, 0x12); //bitfield, bit 2
                     }
-                case DebugOpts.ALL_CHR_NO_DEATH: return (ds3Base + DEBUG_FLAGS_OFFSET + 0x8, 1);
-                case DebugOpts.HIDDEN: return (ds3Base + DEBUG_FLAGS_OFFSET + 6, 1);
-                case DebugOpts.SILENT: return (ds3Base + DEBUG_FLAGS_OFFSET + 7, 1);
+                case DebugOpts.ALL_CHR_NO_DEATH: return (ds3Base + DebugFlagsOffset + 0x8, 1);
+                case DebugOpts.HIDDEN: return (ds3Base + DebugFlagsOffset + 6, 1);
+                case DebugOpts.SILENT: return (ds3Base + DebugFlagsOffset + 7, 1);
                 case DebugOpts.INSTANT_QUITOUT:
                     {
 
-                        var ptr = ReadUInt64(ds3Base + MENU_MAN_OFF);
+                        var ptr = ReadUInt64(ds3Base + MenuManOff);
                         return ((IntPtr)(ptr + 0x250), 1); //likely other menu functions nearby
                     }
                 case DebugOpts.ONE_HP:
@@ -826,47 +826,47 @@ namespace DS3Tool
                     }
                 case DebugOpts.ALL_CHRS_DBG_DRAW_FLAG:
                     {
-                        var ptr = ReadUInt64((IntPtr)(ds3Base + WORLD_CHR_MAN_DEBUG_OFFSET));
+                        var ptr = ReadUInt64((IntPtr)(ds3Base + WorldChrManDebugOffset));
                         return ((IntPtr)(ptr + 0x65), 1);
                     }
-                case DebugOpts.DISABLE_AI: return (ds3Base + DEBUG_FLAGS_OFFSET + 0xD, 1);
-                case DebugOpts.NO_STAM: return (ds3Base + DEBUG_FLAGS_OFFSET + 0x2, 1);
-                case DebugOpts.NO_FP: return (ds3Base + DEBUG_FLAGS_OFFSET + 0x3, 1);
-                case DebugOpts.NO_ARROW_CONSUM: return (ds3Base + DEBUG_FLAGS_OFFSET + 0x4, 1);
-                case DebugOpts.ONE_SHOT: return (ds3Base + DEBUG_FLAGS_OFFSET + 1, 1);
+                case DebugOpts.DISABLE_AI: return (ds3Base + DebugFlagsOffset + 0xD, 1);
+                case DebugOpts.NO_STAM: return (ds3Base + DebugFlagsOffset + 0x2, 1);
+                case DebugOpts.NO_FP: return (ds3Base + DebugFlagsOffset + 0x3, 1);
+                case DebugOpts.NO_ARROW_CONSUM: return (ds3Base + DebugFlagsOffset + 0x4, 1);
+                case DebugOpts.ONE_SHOT: return (ds3Base + DebugFlagsOffset + 1, 1);
                 case DebugOpts.NO_GOODS_CONSUM:
                     {
                         var ptr = getPlayerInsPtr();
-                        return ((IntPtr)(ptr + PLAYER_DEBUG_FLAGS_OFFSET), 0x13);
+                        return ((IntPtr)(ptr + PlayerDebugFlagsOffset), 0x13);
                     }
                 case DebugOpts.DISABLE_STEAM_INPUT_ENUM:
                     {
-                        var ptr = ReadUInt64(ds3Base + USER_INPUT_MGR_IMPL_OFFSET);
+                        var ptr = ReadUInt64(ds3Base + UserInputMgrImplOffset);
                         return ((IntPtr)(ptr + 0x24b), 1);
                     }
                 case DebugOpts.EVENT_STOP:
                     {
-                        var ptr = ReadUInt64(ds3Base + SPRJ_DEBUG_EVENT_OFFSET);
+                        var ptr = ReadUInt64(ds3Base + SprjDebugEventOffset);
                         return ((IntPtr)(ptr + 0xD4), 1); //was D4, changed in 1.15.1 to E4
                     }
                 case DebugOpts.EVENT_DRAW:
                     {
-                        var ptr = ReadUInt64(ds3Base + SPRJ_DEBUG_EVENT_OFFSET);
+                        var ptr = ReadUInt64(ds3Base + SprjDebugEventOffset);
                         return ((IntPtr)(ptr + 0xA8), 1);
                     }
                 case DebugOpts.HIDDEN_DEBUG_MENU:
                     {
-                        var ptr = ReadUInt64(ds3Base + NEW_MENU_SYSTEMS_OFFSET);
+                        var ptr = ReadUInt64(ds3Base + NewMenuSystemsOffset);
                         return ((IntPtr)(ptr + 0x3083), 1);
                     }
                 case DebugOpts.ALL_DEBUG_DRAWING:
                     {
-                        var ptr = ReadUInt64(ds3Base + WORLD_CHR_MAN_DEBUG_OFFSET);
+                        var ptr = ReadUInt64(ds3Base + WorldChrManDebugOffset);
                         return ((IntPtr)(ptr + 0x65), 1);
                     }
                 case DebugOpts.ENEMY_TARGETING_A:
                     {
-                        return (ds3Base + ENEMY_TARGET_DRAW_A_OFFSET, 1);
+                        return (ds3Base + EnemyTargetDrawAOffset, 1);
                     }
                 case DebugOpts.ENEMY_TARGETING_B:
                     {
@@ -874,13 +874,13 @@ namespace DS3Tool
                     }
                 case DebugOpts.FREE_CAMERA:
                     {
-                        var ptr = ReadUInt64(ds3Base + FIELD_AREA_OFFSET);
+                        var ptr = ReadUInt64(ds3Base + FieldAreaOffset);
                         var ptr2 = ReadUInt64((IntPtr)ptr + 0x18); //GameRend
                         return ((IntPtr)(ptr2 + 0xE0), 1);
                     }
                 case DebugOpts.COLLISION:
                     {
-                        var ptr = ReadUInt64(ds3Base + FIELD_AREA_OFFSET);
+                        var ptr = ReadUInt64(ds3Base + FieldAreaOffset);
                         var ptr2 = ReadUInt64((IntPtr)ptr + 0x60);
                         return ((IntPtr)(ptr2 + 0x48), 0);
                     }
@@ -928,7 +928,7 @@ namespace DS3Tool
 
         public void cycleMeshColours()
         {
-            IntPtr addr = ds3Base + MESHES_OFFSET + 8;
+            IntPtr addr = ds3Base + MeshesOffset + 8;
             int meshColours = ReadInt32(addr);
             meshColours++;
             if (meshColours > 3) { meshColours = 0; }
@@ -1068,7 +1068,7 @@ namespace DS3Tool
         public double getSetTargetInfo(TargetInfo info, int? setVal = null)
         {//most are actually ints but it's easier just to use a common type. double can store fairly large ints exactly.
             double ret = double.NaN;
-            var targetPtr = ReadUInt64(ds3Base + CODE_CAVE_PTR_LOCATION); //NS_SPRJ::EnemyIns
+            var targetPtr = ReadUInt64(ds3Base + CodeCavePtrLocation); //NS_SPRJ::EnemyIns
             if (targetPtr < SANE_MINIMUM || targetPtr > SANE_MAXIMUM) { return ret; }
             var p1 = ReadUInt64((IntPtr)(targetPtr + playerInsModulesOff));
             if (p1 < SANE_MINIMUM || p1 > SANE_MAXIMUM) { return ret; }
@@ -1157,7 +1157,7 @@ namespace DS3Tool
 
         public int GetSetPlayerStat(PlayerStats stat, int? newValue = null)
         {
-            var gameDataPtr = ReadUInt64(ds3Base + GAME_DATA_MAN_OFFSET);
+            var gameDataPtr = ReadUInt64(ds3Base + GameDataManOffset);
             var playerStatsPtr = ReadUInt64((IntPtr)(gameDataPtr + 0x10));
             var statAddress = (IntPtr)(playerStatsPtr + (ulong)statOffsets[stat]);
 
@@ -1171,7 +1171,7 @@ namespace DS3Tool
 
         public List<(string, int)> GetSetPlayerStats(List<(string, int)> newStats = null)
         {
-            var gameDataPtr = ReadUInt64(ds3Base + GAME_DATA_MAN_OFFSET);
+            var gameDataPtr = ReadUInt64(ds3Base + GameDataManOffset);
             var playerStatsPtr = ReadUInt64((IntPtr)(gameDataPtr + 0x10));
 
             var ret = new List<(string, int)>();
@@ -1236,7 +1236,7 @@ namespace DS3Tool
 
         public int GetSetNewGameLevel(int? newValue = null)
         {
-            var ptr1 = ReadUInt64(ds3Base + GAME_DATA_MAN_OFFSET);
+            var ptr1 = ReadUInt64(ds3Base + GameDataManOffset);
             var finalAddress = (IntPtr)(ptr1 + 0x78);
             if (newValue.HasValue && newValue >= 0)
             {

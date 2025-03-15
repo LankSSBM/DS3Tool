@@ -7,11 +7,11 @@ namespace DS3Tool.services
 {
     internal class ItemSpawnService
     {
-        private const int ITEM_SPAWN_OFFSET = 0x7bba70;
-        private const int MAP_ITEM_MANAGER_OFFSET = 0x4752300;
-        private const long BASE_MEMORY_LOCATION = 0x143B40C1E;
+        private const int ItemSpawnOffset = 0x7bba70;
+        private const int MapItemManagerOffset = 0x4752300;
+        private const long BaseMemoryLocation = 0x143B40C1E;
 
-        public readonly Dictionary<string, uint> INFUSION_TYPES = new Dictionary<string, uint>
+        public readonly Dictionary<string, uint> InfusionTypes = new Dictionary<string, uint>
         {
             { "Normal", 0 }, { "Heavy", 100 }, { "Sharp", 200 },
             { "Refined", 300 }, { "Simple", 400 }, { "Crystal", 500 },
@@ -21,14 +21,14 @@ namespace DS3Tool.services
             { "Hollow", 1500 }
         };
 
-        public readonly Dictionary<string, uint> UPGRADES = new Dictionary<string, uint>
+        public readonly Dictionary<string, uint> Upgrades = new Dictionary<string, uint>
         {
             { "+0", 0 }, { "+1", 1 }, { "+2", 2 }, { "+3", 3 }, { "+4", 4 },
             { "+5", 5 }, { "+6", 6 }, { "+7", 7 }, { "+8", 8 }, { "+9", 9 },
             { "+10", 10 }
         };
 
-        private DS3Process process;
+        private readonly DS3Process _process;
 
         [StructLayout(LayoutKind.Sequential)]
         public struct SpawnRequest
@@ -49,33 +49,33 @@ namespace DS3Tool.services
 
         public ItemSpawnService(DS3Process process)
         {
-            this.process = process;
+            this._process = process;
         }
 
         public void SpawnItem(uint baseItemId, string infusionType = "Normal", string upgradeLevel = "+0", uint quantity = 1, uint durability = 0)
         {
 
-            IntPtr requestLocation = new IntPtr(BASE_MEMORY_LOCATION);
-            IntPtr outputLocation = new IntPtr(BASE_MEMORY_LOCATION + 100);
-            IntPtr shellcodeLocation = new IntPtr(BASE_MEMORY_LOCATION + 200);
+            IntPtr requestLocation = new IntPtr(BaseMemoryLocation);
+            IntPtr outputLocation = new IntPtr(BaseMemoryLocation + 100);
+            IntPtr shellcodeLocation = new IntPtr(BaseMemoryLocation + 200);
             try
             {
 
-                uint finalItemId = baseItemId + INFUSION_TYPES[infusionType] + UPGRADES[upgradeLevel];
+                uint finalItemId = baseItemId + InfusionTypes[infusionType] + Upgrades[upgradeLevel];
 
                 var request = new SpawnRequest(finalItemId, quantity, durability);
 
                 ValidateMemoryRegions(requestLocation, outputLocation, shellcodeLocation);
 
-                process.WriteBytes(requestLocation, StructToBytes(request));
+                _process.WriteBytes(requestLocation, StructToBytes(request));
 
-                process.WriteBytes(outputLocation, new byte[16]);
+                _process.WriteBytes(outputLocation, new byte[16]);
 
-                IntPtr spawnFuncPtr = IntPtr.Add(process.ds3Base, ITEM_SPAWN_OFFSET);
+                IntPtr spawnFuncPtr = IntPtr.Add(_process.ds3Base, ItemSpawnOffset);
 
-                IntPtr mapItemManPtr = IntPtr.Add(process.ds3Base, MAP_ITEM_MANAGER_OFFSET);
+                IntPtr mapItemManPtr = IntPtr.Add(_process.ds3Base, MapItemManagerOffset);
 
-                IntPtr actualMapItemMan = (IntPtr)process.ReadUInt64(mapItemManPtr);
+                IntPtr actualMapItemMan = (IntPtr)_process.ReadUInt64(mapItemManPtr);
 
                 byte[] shellcode = GenerateSpawnShellcode(
                     spawnFuncPtr.ToInt64(),
@@ -84,15 +84,15 @@ namespace DS3Tool.services
                     outputLocation.ToInt64()
                 );
 
-                process.WriteBytes(shellcodeLocation, shellcode);
-                process.RunThread(shellcodeLocation);
+                _process.WriteBytes(shellcodeLocation, shellcode);
+                _process.RunThread(shellcodeLocation);
 
             }
             finally
             {
-                process.WriteBytes(requestLocation, new byte[Marshal.SizeOf<SpawnRequest>()]);
-                process.WriteBytes(outputLocation, new byte[16]);
-                process.WriteBytes(shellcodeLocation, new byte[50]);
+                _process.WriteBytes(requestLocation, new byte[Marshal.SizeOf<SpawnRequest>()]);
+                _process.WriteBytes(outputLocation, new byte[16]);
+                _process.WriteBytes(shellcodeLocation, new byte[50]);
             }
         }
 
@@ -112,7 +112,7 @@ namespace DS3Tool.services
         {
             try
             {
-                byte[] currentMemory = process.ReadBytes(address, size);
+                byte[] currentMemory = _process.ReadBytes(address, size);
                 return currentMemory.All(b => b == 0);
             }
             catch

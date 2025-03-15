@@ -27,11 +27,11 @@ namespace DS3Tool
         void populate()
         {
             infusionTypeComboBox.Items.Clear();
-            infusionTypeComboBox.ItemsSource = _itemSpawnService.INFUSION_TYPES.Keys;
+            infusionTypeComboBox.ItemsSource = _itemSpawnService.InfusionTypes.Keys;
             infusionTypeComboBox.SelectedIndex = 0;
 
             upgradeComboBox.Items.Clear();
-            upgradeComboBox.ItemsSource = _itemSpawnService.UPGRADES.Keys;
+            upgradeComboBox.ItemsSource = _itemSpawnService.Upgrades.Keys;
             upgradeComboBox.SelectedIndex = 0;
 
             itemList.Items.Clear();
