@@ -18,9 +18,13 @@ internal class CinderPhaseManager : IDisposable
     private const int AiInsOffset = 0x320;
     private const int LuaNumbersOffset = 0x6BC;
 
+    public const int EnemyIns = 0x1914670;
+    public const int EnemyCtrl = 0x50;
+    public const int ActionCtrl = 0x48;
+    public const int CurrentPhaseOffset = 0xF0;
+    
     private const int CurrentAnimationPtr = 0x28;
     private const int CurrentAnimationOffset = 0x898;
-    private const int CurrentPhaseOffset = 0xC80;
 
     private const int Gwyn5HitComboNumberIndex = 0;
     private const int GwynLightningRainNumberIndex = 1;
@@ -194,7 +198,6 @@ internal class CinderPhaseManager : IDisposable
 
                 if (phaseTransitionCounter > 50)
                 {
-                    Console.WriteLine("Resetting phase counter");
                     SetLuaNumber(aiIns, PhaseTransitionCounterNumberIndex, 0);
                 }
             }
@@ -255,9 +258,12 @@ internal class CinderPhaseManager : IDisposable
     public void CastSoulMass()
     {
         var targetPtr = _ds3Process.ReadInt64(_ds3Process.ds3Base + CodeCavePointerOffset);
-        var comManipulatorPtr = _ds3Process.ReadInt64(new IntPtr(targetPtr) + ComManipulatorOffset);
-        var currentPhaseAddr = (IntPtr)(comManipulatorPtr + CurrentPhaseOffset);
+        var enemyInsPtr = _ds3Process.ReadInt64(_ds3Process.ds3Base + EnemyIns);
+        var enemyCtrlPtr = _ds3Process.ReadInt64(new IntPtr(enemyInsPtr) + EnemyCtrl);
+        var actionCtrlPtr = _ds3Process.ReadInt64(new IntPtr(enemyCtrlPtr) + ActionCtrl);
+        var currentPhaseAddr = (IntPtr)(actionCtrlPtr + CurrentPhaseOffset);
         int phaseBeforeSoulmass = _ds3Process.ReadInt32(currentPhaseAddr);
+        
 
         //First sword phase doesnt change this number, so set to 2 (Sword) if 0
         if (phaseBeforeSoulmass == 0)
@@ -274,6 +280,7 @@ internal class CinderPhaseManager : IDisposable
         while (isStaffPhase == false)
         {
             int currentPhase = _ds3Process.ReadInt32(currentPhaseAddr);
+            Console.WriteLine(currentPhase);
             isStaffPhase = currentPhase == 8;
             Thread.Sleep(10);
             
@@ -283,16 +290,14 @@ internal class CinderPhaseManager : IDisposable
                 return;
             }
         }
-
-
+        
         var ptr1 = _ds3Process.ReadInt64(new IntPtr(targetPtr) + AnimationPointerChainOffset1);
         var ptr2 = _ds3Process.ReadInt64(new IntPtr(ptr1) + AnimationPointerChainOffset2);
         var finalAddr = new IntPtr(ptr2) + AnimationFinalOffset;
         _ds3Process.WriteInt32(finalAddr, 3003);
 
         var currentAnimPtr2 = _ds3Process.ReadInt64(new IntPtr(ptr1) + CurrentAnimationPtr);
-
-
+        
         bool hasStartedSoulmass = false;
         waitCounter = 0;
         while (hasStartedSoulmass == false)
