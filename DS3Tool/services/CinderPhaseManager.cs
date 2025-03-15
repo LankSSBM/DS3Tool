@@ -44,44 +44,43 @@ internal class CinderPhaseManager : IDisposable
     {
         public string Name { get; }
         public int AnimationId { get; }
+
         public PhaseInfo(string name, int animationId)
         {
             Name = name;
             AnimationId = animationId;
-
         }
     }
 
     private readonly Dictionary<int, PhaseInfo> _phases = new Dictionary<int, PhaseInfo>
     {
-        { 0, new PhaseInfo("Sword", 20000)},
-        { 1, new PhaseInfo("Lance", 20001)},
-        { 2, new PhaseInfo("Curved", 20002)},
-        { 3, new PhaseInfo("Staff", 20004)},
-        { 4, new PhaseInfo("Gwyn", 20010)}
+        { 0, new PhaseInfo("Sword", 20000) },
+        { 1, new PhaseInfo("Lance", 20001) },
+        { 2, new PhaseInfo("Curved", 20002) },
+        { 3, new PhaseInfo("Staff", 20004) },
+        { 4, new PhaseInfo("Gwyn", 20010) }
     };
 
     private readonly Dictionary<int, int> _currentPhaseLookUp = new Dictionary<int, int>
     {
-        {2, 0},
-        {16, 1},
-        {4, 2},
-        {8, 3},
-        {32, 4},
+        { 2, 0 },
+        { 16, 1 },
+        { 4, 2 },
+        { 8, 3 },
+        { 32, 4 },
     };
 
 
     public void SetPhase(int phaseIndex, bool lockPhase)
     {
-
         if (!_phases.ContainsKey(phaseIndex))
             throw new ArgumentException($"Invalid phase index: {phaseIndex}");
 
         if (!ValidateTargetIsCinder())
         {
             MessageBox.Show("Please ensure you are locked onto Soul of Cinder before changing phases.",
-                          "Invalid Target",
-                          MessageBoxButton.OK);
+                "Invalid Target",
+                MessageBoxButton.OK);
             return;
         }
 
@@ -100,6 +99,7 @@ internal class CinderPhaseManager : IDisposable
             StopPhaseLock();
         }
     }
+
     public void TogglePhaseLock(bool enableLock)
     {
         if (enableLock && !_isLocked)
@@ -134,8 +134,12 @@ internal class CinderPhaseManager : IDisposable
                 {
                     _monitoringTask?.Wait(TimeSpan.FromSeconds(2));
                 }
-                catch (AggregateException) { }
-                catch (TaskCanceledException) { }
+                catch (AggregateException)
+                {
+                }
+                catch (TaskCanceledException)
+                {
+                }
             });
 
 
@@ -164,6 +168,7 @@ internal class CinderPhaseManager : IDisposable
                 {
                     CheckAndResetLuaCounter(codeCavePointer);
                 }
+
                 await Task.Delay(1000, token);
             }
             catch (OperationCanceledException)
@@ -172,7 +177,6 @@ internal class CinderPhaseManager : IDisposable
             }
             catch (Exception ex)
             {
-
                 Debug.WriteLine($"Error in phase monitoring: {ex.Message}");
                 await Task.Delay(1000, token);
             }
@@ -207,7 +211,8 @@ internal class CinderPhaseManager : IDisposable
         var codeCavePointer = _ds3Process.ReadInt64(_ds3Process.ds3Base + CodeCavePointerOffset);
         if (codeCavePointer == 0)
         {
-            MessageBox.Show("Please lock on to Cinder and Enable target options before selecting a phase", "Error", MessageBoxButton.OK);
+            MessageBox.Show("Please lock on to Cinder and Enable target options before selecting a phase", "Error",
+                MessageBoxButton.OK);
             return;
         }
 
@@ -226,7 +231,6 @@ internal class CinderPhaseManager : IDisposable
         _ds3Process.WriteFloat((IntPtr)luaBaseAddress + Gwyn5HitComboOffset, 0);
         _ds3Process.WriteFloat((IntPtr)luaBaseAddress + GwynLightningRainOffset, 0);
         _ds3Process.WriteFloat((IntPtr)luaBaseAddress + PhaseTransitionCounterOffset, 0);
-
     }
 
     public void Dispose()
@@ -286,7 +290,6 @@ internal class CinderPhaseManager : IDisposable
         }
 
 
-
         bool hasFinishedSoulmass = false;
         while (hasFinishedSoulmass == false)
         {
@@ -301,4 +304,50 @@ internal class CinderPhaseManager : IDisposable
         ForceAnimation(_phases[previousPhase].AnimationId);
     }
 
+    private bool _isSoulmassHookInstalled;
+    private long _codecaveStart = 0x143B536D0;
+    public void EnableEndlessSoulmass()
+    {
+        if (!_isSoulmassHookInstalled)
+        {
+            var origin = 0x140E30719;
+            
+            byte[] soulmassBytes =
+            {
+                0x48, 0x81, 0xFB, 0x30, 0x67, 0x12, 0x00, // cmp    rbx,0x126730
+                0x0F, 0x85, 0x00, 0x00, 0x00, 0x00, // jne    d <_main+0xd>
+                0x48, 0x01, 0xD3, // add    rbx,rdx
+                0xC7, 0x43, 0x08, 0x00, 0x00, 0x80, 0xBF, // mov    DWORD PTR [rbx+0x8],0xbf800000
+                0xE9, 0x00, 0x00, 0x00, 0x00, // jmp    1c <_main+0x1c>
+                0x48, 0x01, 0xD3, // add    rbx,rdx
+                0x48, 0x89, 0x6C, 0x24, 0x28, // mov    QWORD PTR [rsp+0x28],rbp
+                0xE9, 0x00, 0x00, 0x00, 0x00 // jmp    29 <_main+0x29>
+            };
+
+            byte[] bytes = BitConverter.GetBytes(15); //Not soul mass, skip
+            Array.Copy(bytes, 0, soulmassBytes, 9, 4);
+            bytes = BitConverter.GetBytes(3); // Skip original add
+            Array.Copy(bytes, 0, soulmassBytes, 24, 4);
+            bytes = BitConverter.GetBytes((int)(origin + 8 - (_codecaveStart + 41))); //Jmp origin
+            Array.Copy(bytes, 0, soulmassBytes, 37, 4);
+
+            _ds3Process.WriteBytes((IntPtr)_codecaveStart, soulmassBytes);
+
+            byte[] jmpBytes = { 0xE9, 0x00, 0x00, 0x00, 0x00, 0x90, 0x90, 0x90 };
+            bytes = BitConverter.GetBytes((int)(_codecaveStart - (origin + 5)));
+            Array.Copy(bytes, 0, jmpBytes, 1, 4);
+            _ds3Process.WriteBytes((IntPtr)origin, jmpBytes);
+        }
+        else
+        {
+            byte[] enableBytes = { 0x00, 0x00, 0x80, 0xBF };
+            _ds3Process.WriteBytes((IntPtr)_codecaveStart + 0x13, enableBytes);
+        }
+    }
+
+    public void DisableEndlessSoulmass()
+    {
+        byte[] disableBytes = { 0x00, 0x00, 0x20, 0x42 };
+        _ds3Process.WriteBytes((IntPtr)_codecaveStart + 0x13, disableBytes);
+    }
 }

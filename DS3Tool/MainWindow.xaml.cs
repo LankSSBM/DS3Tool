@@ -1391,8 +1391,21 @@ namespace DS3Tool
             _cinderManager.TogglePhaseLock(chkLockPhase.IsChecked ?? false);
         }
 
+        private void OnEndlessSoulmassChanged(object sender, RoutedEventArgs e)
+        {
+            if (chkEndlessSoulmass.IsChecked == true)
+            {
+               _cinderManager.EnableEndlessSoulmass();
+            }
+            else
+            {
+                _cinderManager.DisableEndlessSoulmass();
+            }
+        }
+
 
         int? lastSetHP = null;
+
         private void btnSetPlayerHP_Click(object sender, RoutedEventArgs e)
         {
             var existing = _process.getSetPlayerHP();
