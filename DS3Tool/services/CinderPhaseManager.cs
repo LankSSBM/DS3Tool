@@ -9,7 +9,7 @@ using System.Windows;
 internal class CinderPhaseManager : IDisposable
 
 {
-    private const string CINDER_ENEMY_ID = "c5280_0000";
+    private const string CinderEnemyId = "c5280_0000";
     private const int CodeCavePointerOffset = 0x1914670;
     private const int AnimationPointerChainOffset1 = 0x1F90;
     private const int AnimationPointerChainOffset2 = 0x58;
@@ -192,15 +192,9 @@ internal class CinderPhaseManager : IDisposable
             {
                 var phaseTransitionCounter = GetLuaNumber(aiIns, PhaseTransitionCounterNumberIndex);
 
-                // Why is this here?
-                // The main point of preserving PhaseTransCounter until 50 is to preserve slight behavior changes dependent on it.
-                // E.g increased spear grab chance over time
-                SetLuaNumber(aiIns, PhaseTransitionCounterNumberIndex, 0);
-
                 if (phaseTransitionCounter > 50)
                 {
-                    var phase = _phases[_currentPhase];
-                    ForceAnimation(phase.AnimationId);
+                    Console.WriteLine("Resetting phase counter");
                     SetLuaNumber(aiIns, PhaseTransitionCounterNumberIndex, 0);
                 }
             }
@@ -255,7 +249,7 @@ internal class CinderPhaseManager : IDisposable
             return false;
 
         string targetId = _ds3Process.GetSetTargetEnemyID();
-        return targetId == CINDER_ENEMY_ID;
+        return targetId == CinderEnemyId;
     }
 
     public void CastSoulMass()
@@ -273,6 +267,8 @@ internal class CinderPhaseManager : IDisposable
 
         ForceAnimation(_phases[3].AnimationId);
 
+        int maxWaitTime = 500;
+        int waitCounter = 0;
         bool isStaffPhase = false;
 
         while (isStaffPhase == false)
@@ -280,6 +276,12 @@ internal class CinderPhaseManager : IDisposable
             int currentPhase = _ds3Process.ReadInt32(currentPhaseAddr);
             isStaffPhase = currentPhase == 8;
             Thread.Sleep(10);
+            
+            waitCounter++;
+            if (waitCounter > maxWaitTime) {
+                MessageBox.Show("Something went wrong with the forced transition, please try again or reload the game", "Operation Failed");
+                return;
+            }
         }
 
 
@@ -292,27 +294,86 @@ internal class CinderPhaseManager : IDisposable
 
 
         bool hasStartedSoulmass = false;
+        waitCounter = 0;
         while (hasStartedSoulmass == false)
         {
             string currentAnim = _ds3Process.ReadString(new IntPtr(currentAnimPtr2) + CurrentAnimationOffset, 20);
             hasStartedSoulmass = currentAnim == "Attack3003";
             Thread.Sleep(10);
+            
+            waitCounter++;
+            if (waitCounter > maxWaitTime) {
+                MessageBox.Show("Something went wrong with the forced soulmass, please try again or reload the game", "Operation Failed");
+                return;
+            }
         }
-
-
-
         bool hasFinishedSoulmass = false;
+        waitCounter = 0;
         while (hasFinishedSoulmass == false)
         {
             string currentAnim = _ds3Process.ReadString(new IntPtr(currentAnimPtr2) + CurrentAnimationOffset, 20);
 
             hasFinishedSoulmass = currentAnim != "Attack3003";
             Thread.Sleep(10);
+            waitCounter++;
+            if (waitCounter > maxWaitTime) {
+                MessageBox.Show("Soulmass animation didn't start in time", "Operation Failed");
+                return;
+            }
         }
 
         int previousPhase = _currentPhaseLookUp[phaseBeforeSoulmass];
 
         ForceAnimation(_phases[previousPhase].AnimationId);
+    }
+    
+    
+     private bool _isSoulmassHookInstalled;
+    private long _codecaveStart = 0x143B536D0;
+    public void EnableEndlessSoulmass()
+    {
+        if (!_isSoulmassHookInstalled)
+        {
+            var origin = 0x140E30719;
+            
+            byte[] soulmassBytes =
+            {
+                0x48, 0x81, 0xFB, 0x30, 0x67, 0x12, 0x00, // cmp    rbx,0x126730
+                0x0F, 0x85, 0x00, 0x00, 0x00, 0x00, // jne    d <_main+0xd>
+                0x48, 0x01, 0xD3, // add    rbx,rdx
+                0xC7, 0x43, 0x08, 0x00, 0x00, 0x80, 0xBF, // mov    DWORD PTR [rbx+0x8],0xbf800000
+                0xE9, 0x00, 0x00, 0x00, 0x00, // jmp    1c <_main+0x1c>
+                0x48, 0x01, 0xD3, // add    rbx,rdx
+                0x48, 0x89, 0x6C, 0x24, 0x28, // mov    QWORD PTR [rsp+0x28],rbp
+                0xE9, 0x00, 0x00, 0x00, 0x00 // jmp    29 <_main+0x29>
+            };
+
+            byte[] bytes = BitConverter.GetBytes(15); //Not soul mass, skip
+            Array.Copy(bytes, 0, soulmassBytes, 9, 4);
+            bytes = BitConverter.GetBytes(3); // Skip original add
+            Array.Copy(bytes, 0, soulmassBytes, 24, 4);
+            bytes = BitConverter.GetBytes((int)(origin + 8 - (_codecaveStart + 41))); //Jmp origin
+            Array.Copy(bytes, 0, soulmassBytes, 37, 4);
+
+            _ds3Process.WriteBytes((IntPtr)_codecaveStart, soulmassBytes);
+
+            byte[] jmpBytes = { 0xE9, 0x00, 0x00, 0x00, 0x00, 0x90, 0x90, 0x90 };
+            bytes = BitConverter.GetBytes((int)(_codecaveStart - (origin + 5)));
+            Array.Copy(bytes, 0, jmpBytes, 1, 4);
+            _ds3Process.WriteBytes((IntPtr)origin, jmpBytes);
+            _isSoulmassHookInstalled = true;
+        }
+        else
+        {
+            byte[] enableBytes = { 0x00, 0x00, 0x80, 0xBF };
+            _ds3Process.WriteBytes((IntPtr)_codecaveStart + 0x13, enableBytes);
+        }
+    }
+
+    public void DisableEndlessSoulmass()
+    {
+        byte[] disableBytes = { 0x00, 0x00, 0x20, 0x42 };
+        _ds3Process.WriteBytes((IntPtr)_codecaveStart + 0x13, disableBytes);
     }
 
 }
