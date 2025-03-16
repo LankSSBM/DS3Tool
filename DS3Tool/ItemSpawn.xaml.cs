@@ -42,7 +42,9 @@ namespace DS3Tool
             {
                 LoadoutPreset.MetaLeveled,
                 LoadoutPreset.SL1NoUpgrades,
-                LoadoutPreset.SL1
+                LoadoutPreset.SL1,
+                LoadoutPreset.AllRings,
+                LoadoutPreset.AllWeapons
             };
             TemplateComboBox.ItemsSource = Templates;
             TemplateComboBox.SelectedIndex = 0;
